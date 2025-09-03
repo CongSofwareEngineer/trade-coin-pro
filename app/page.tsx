@@ -215,6 +215,8 @@ export default function Home() {
                   outputSwapRef.current = outputSwapTempRef.current = token?.outPutSwap!
                   // tokenBTC!.perETHLastSwap = token?.perETH
                   arrCloneRef.current[indexCurrentRef.current].isSwap = true
+                  arrCloneRef.current[indexCurrentRef.current].estETH = amountOutCheck
+                  arrCloneRef.current[indexCurrentRef.current].outputSwap = token.outPutSwap!
                 } else {
                 }
 
@@ -259,6 +261,8 @@ export default function Home() {
 
                   // token.perETHLastSwap = token?.perETH
                   arrCloneRef.current[indexCurrentRef.current].isSwap = true
+                  arrCloneRef.current[indexCurrentRef.current].estETH = amountOutCheck
+                  arrCloneRef.current[indexCurrentRef.current].outputSwap = token.outPutSwap!
                 }
 
                 getEstETH(token)
@@ -376,7 +380,7 @@ export default function Home() {
       await calculateData()
       setArrData(arrCloneRef.current)
       filterSwap()
-      console.log({ arrFinal: arrCloneRef.current })
+      console.log({ arrFinal: arrCloneRef.current, amountInput: amountInputRef.current })
     }, 500)
   }
 
@@ -514,7 +518,6 @@ export default function Home() {
                     strokeLinejoin='round'
                   />
                 </svg>
-                vxcvcxv
               </div>
             )}
             {isUpload && (
@@ -600,6 +603,8 @@ export default function Home() {
               <div>
                 Item {index + 1} - Time {item.time}.
               </div>
+              <div>est ETH :{item.estETH}</div>
+              <div>output Token :{item.outputSwap}.</div>
               <div className='flex flex-col gap-3'>
                 <div key={index} className='w-full pl-4 flex flex-col '>
                   {Object.entries(item.eth!).map(([key, value]) => {
@@ -617,6 +622,10 @@ export default function Home() {
                   return (
                     <div key={index} className='w-full pl-4 flex flex-col '>
                       {Object.entries(token).map(([key, value]) => {
+                        if (key === 'outPutSwap' || key === 'address') {
+                          return null
+                        }
+
                         return (
                           <div key={key}>
                             {key}: {value}

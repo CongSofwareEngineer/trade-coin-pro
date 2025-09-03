@@ -16,6 +16,9 @@ export interface PoolToken {
   eth?: Token
   arrToken?: Token[]
   isSwap?: boolean
+  inputSwap?: string
+  outputSwap?: string
+  estETH?: string
 }
 
 export type ETHLastSwapTemp = {
