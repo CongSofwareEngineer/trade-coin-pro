@@ -99,8 +99,6 @@ export default function Home() {
       tokenInputPre = poolTokenPre.eth!
     }
 
-    let outputSwapTempRefTemp = outputSwapTempRef.current
-
     //Nếu số MIN đó nhỏ hơn âm của VolatilityPercentage thì làm tiếp bước kế tiếp
     console.log(`======================Dòng ${indexCurrentRef.current + 1}======================`)
     console.log({
@@ -142,7 +140,7 @@ export default function Home() {
         outputSwap: outputSwapRef.current,
       })
 
-      outputSwapTempRefTemp = token.outPutSwap!
+      outputSwapTempRef.current = token.outPutSwap!
 
       console.log('So sánh output và input phải khác nhau & SwapOutputToken khác "RỖNG"')
       if (outputSwapRef.current !== token?.outPutSwap) {
@@ -212,7 +210,7 @@ export default function Home() {
                 if (BigNumber(ETHLastSwapTempRef.current[tokenBTC!.outPutSwap!]).gte(perETHOriginalRef.current[tokenBTC!.outPutSwap!])) {
                   //go to swap and finish
                   amountInputRef.current = amountOut
-                  outputSwapRef.current = outputSwapTempRef.current = token?.outPutSwap!
+                  outputSwapRef.current = token?.outPutSwap!
                   // tokenBTC!.perETHLastSwap = token?.perETH
                   arrCloneRef.current[indexCurrentRef.current].isSwap = true
                   arrCloneRef.current[indexCurrentRef.current].estETH = amountOutCheck
@@ -256,7 +254,7 @@ export default function Home() {
               if (BigNumber(amountOutCheck).gte(amountStart)) {
                 if (BigNumber(ETHLastSwapTempRef.current[token!.outPutSwap!]).gte(perETHOriginalRef.current[token!.outPutSwap!])) {
                   //go to swap and finish
-                  outputSwapRef.current = outputSwapTempRef.current = token?.outPutSwap!
+                  outputSwapRef.current = token?.outPutSwap!
                   amountInputRef.current = amountOut
 
                   // token.perETHLastSwap = token?.perETH
