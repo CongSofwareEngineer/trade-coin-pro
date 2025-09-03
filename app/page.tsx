@@ -99,6 +99,8 @@ export default function Home() {
       tokenInputPre = poolTokenPre.eth!
     }
 
+    let outputSwapTempRefTemp = outputSwapTempRef.current
+
     //Nếu số MIN đó nhỏ hơn âm của VolatilityPercentage thì làm tiếp bước kế tiếp
     console.log(`======================Dòng ${indexCurrentRef.current + 1}======================`)
     console.log({
@@ -112,6 +114,7 @@ export default function Home() {
       Number(token.perETHChangePercentage!) < BigNumber(BigNumber(volatilityPercentage).dividedBy(100)).multipliedBy(-1).toNumber()
     ) {
       console.log('So sánh âm volatilityPercentage thành cong')
+      console.log({ outputSwapTempRef: outputSwapTempRef.current })
 
       //update ETHLastSwapTemp
       if (token!.outPutSwap === 'ETH') {
@@ -139,7 +142,7 @@ export default function Home() {
         outputSwap: outputSwapRef.current,
       })
 
-      outputSwapTempRef.current = token.outPutSwap!
+      outputSwapTempRefTemp = token.outPutSwap!
 
       console.log('So sánh output và input phải khác nhau & SwapOutputToken khác "RỖNG"')
       if (outputSwapRef.current !== token?.outPutSwap) {
@@ -209,9 +212,10 @@ export default function Home() {
                 if (BigNumber(ETHLastSwapTempRef.current[tokenBTC!.outPutSwap!]).gte(perETHOriginalRef.current[tokenBTC!.outPutSwap!])) {
                   //go to swap and finish
                   amountInputRef.current = amountOut
-                  outputSwapRef.current = token?.outPutSwap!
+                  outputSwapRef.current = outputSwapTempRef.current = token?.outPutSwap!
                   // tokenBTC!.perETHLastSwap = token?.perETH
                   arrCloneRef.current[indexCurrentRef.current].isSwap = true
+                } else {
                 }
 
                 getEstETH(tokenBTC!)
@@ -250,7 +254,7 @@ export default function Home() {
               if (BigNumber(amountOutCheck).gte(amountStart)) {
                 if (BigNumber(ETHLastSwapTempRef.current[token!.outPutSwap!]).gte(perETHOriginalRef.current[token!.outPutSwap!])) {
                   //go to swap and finish
-                  outputSwapRef.current = outputSwapTempRef.current
+                  outputSwapRef.current = outputSwapTempRef.current = token?.outPutSwap!
                   amountInputRef.current = amountOut
 
                   // token.perETHLastSwap = token?.perETH
@@ -510,6 +514,7 @@ export default function Home() {
                     strokeLinejoin='round'
                   />
                 </svg>
+                vxcvcxv
               </div>
             )}
             {isUpload && (
