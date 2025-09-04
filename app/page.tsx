@@ -426,7 +426,7 @@ export default function Home() {
       }
 
       const poolToken: PoolToken = {
-        time: excelDateToJSDate((e['Time'] || e['Time.'] || e['time']) as number),
+        time: excelDateToJSDate((e['Time'] || e['Time.'] || e['time'] || e['TIME']) as number),
         eth: {
           perETH: '1',
           price: e.ETH as number,
@@ -437,7 +437,7 @@ export default function Home() {
       }
 
       Object.entries(e).forEach(([key, value]) => {
-        if (key !== 'ETH' && key !== 'Time' && key !== 'No.' && key !== 'Date' && key !== 'Time.') {
+        if (key !== 'ETH' && key !== 'TIME' && key !== 'Time' && key !== 'No.' && key !== 'Date' && key !== 'Time.') {
           poolToken.arrToken!.push({
             symbol: key,
             price: value as number,
