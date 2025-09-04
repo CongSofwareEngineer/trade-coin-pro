@@ -598,6 +598,19 @@ export default function Home() {
           </button>
         </div>
         {/* <ShowCode /> */}
+        <div className=' gap-3 flex-wrap'>
+          {arrData.map((e, index) => {
+            if (!e?.isSwap) {
+              return null
+            }
+
+            return (
+              <div key={index} className=' px-2 rounded-[4px]'>
+                {index + 1}
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       <div className='flex flex-col gap-4 w-full'>
