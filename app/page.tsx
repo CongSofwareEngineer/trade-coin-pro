@@ -5,6 +5,8 @@ import { BigNumber } from 'bignumber.js'
 
 import { ETHLastSwapTemp, PoolToken, Token } from '@/types/app'
 
+const amountMaxReceived = 2000000000000000
+
 export default function Home() {
   const perETHOriginalRef = useRef<ETHLastSwapTemp>({})
   const ETHLastSwapTempRef = useRef<ETHLastSwapTemp>({})
@@ -17,7 +19,7 @@ export default function Home() {
   const indexCurrentRef = useRef(0)
   const [arrData, setArrData] = useState<PoolToken[]>([])
   const [amountStart, setAmountStart] = useState<number>(1)
-  const [amountMaxReceived, setAmountMaxReceived] = useState<number>(20000000000000)
+  const [outputStart, setOutputStart] = useState<string>('ETH')
   const [volatilityPercentage, setVolatilityPercentage] = useState<number>(0.481)
   const [affiliate, setAffiliate] = useState<number>(0.18)
   const [isUpload, setIsUpload] = useState(false)
@@ -341,7 +343,7 @@ export default function Home() {
 
         ETHLastSwapRef.current[poolTrade.eth!.outPutSwap!] = poolTrade.eth!.perETH!
         ETHLastSwapTempRef.current[poolTrade.eth!.outPutSwap!] = poolTrade.eth!.perETH!
-        outputSwapTempRef.current = 'ETH'
+
         perETHOriginalRef.current[poolTrade.eth!.outPutSwap!] = poolTrade.eth!.perETH!
       }
 
@@ -365,8 +367,13 @@ export default function Home() {
 
     console.log({ arrSwap })
   }
+
+  console.log({ amountStart, outputStart })
+
   const rollUpData = async () => {
     amountInputRef.current = amountStart + ''
+    outputSwapTempRef.current = outputStart.toLocaleUpperCase().trim()
+    outputSwapRef.current = outputStart
     if (arrCloneDefaultRef.current.length === 0) {
       arrCloneRef.current = arrCloneDefaultRef.current = JSON.parse(JSON.stringify(arrData))
     } else {
@@ -537,7 +544,7 @@ export default function Home() {
           </div>
         </div>
         <div>
-          <div>ETHOriginalAmount (số ETH đầu vào mà user bỏ vào):</div>
+          <div>ETHOriginalAmount (số Token đầu vào mà user bỏ vào):</div>
           <input
             className='w-full border-[1px] !border-gray-500 rounded-[4px] p-2'
             value={amountStart}
@@ -545,11 +552,11 @@ export default function Home() {
           />
         </div>
         <div>
-          <div>MaxETHExpected (Số lượng ETH mà user mong muốn sẽ nhận được sau quá trình):</div>
+          <div>Out token ban đầu</div>
           <input
             className='w-full border-[1px] !border-gray-500 rounded-[4px] p-2'
-            value={amountMaxReceived}
-            onChange={(e) => setAmountMaxReceived(e.target.value as any)}
+            value={outputStart}
+            onChange={(e) => setOutputStart(e.target.value as any)}
           />
         </div>
         <div>
