@@ -11,7 +11,7 @@ export interface Token {
   outPutSwap?: string
 }
 
-export interface PoolToken {
+export type PoolToken = {
   time?: string
   eth?: Token
   arrToken?: Token[]
@@ -19,6 +19,7 @@ export interface PoolToken {
   inputSwap?: string
   outputSwap?: string
   estETH?: string
+  [key: string]: unknown
 }
 
 export type ETHLastSwapTemp = {

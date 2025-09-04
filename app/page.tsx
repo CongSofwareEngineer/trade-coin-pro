@@ -68,11 +68,18 @@ export default function Home() {
     arrCloneRef.current[indexCurrentRef.current] = poolToken
   }
 
-  const getEstETH = (toke: Token) => {
-    const poolTrade = arrCloneRef.current[indexCurrentRef.current]
-    const estETH = BigNumber(toke.perETH!).multipliedBy(amountInputRef.current).toFixed()
+  const getEstETH = (token: Token, amount: string) => {
+    const poolToken = arrCloneRef.current[indexCurrentRef.current]
 
-    console.log({ estETH })
+    if (outputStart !== 'ETH') {
+      const tokenOutput = poolToken.arrToken!.find((e) => {
+        return e.outPutSwap === token.outPutSwap
+      })!
+
+      return BigNumber(amount).multipliedBy(poolToken.eth?.price!).dividedBy(tokenOutput.price!).toFixed()
+    }
+
+    return amount
   }
 
   const checkToSwap = async (token: Token) => {
@@ -215,12 +222,11 @@ export default function Home() {
                   outputSwapRef.current = token?.outPutSwap!
                   // tokenBTC!.perETHLastSwap = token?.perETH
                   arrCloneRef.current[indexCurrentRef.current].isSwap = true
-                  arrCloneRef.current[indexCurrentRef.current].estETH = amountOutCheck
+
+                  arrCloneRef.current[indexCurrentRef.current][`est${outputStart}`] = getEstETH(tokenBTC!, amountOutCheck)
                   arrCloneRef.current[indexCurrentRef.current].outputSwap = token.outPutSwap!
                 } else {
                 }
-
-                getEstETH(tokenBTC!)
               }
             }
 
@@ -261,11 +267,9 @@ export default function Home() {
 
                   // token.perETHLastSwap = token?.perETH
                   arrCloneRef.current[indexCurrentRef.current].isSwap = true
-                  arrCloneRef.current[indexCurrentRef.current].estETH = amountOutCheck
+                  arrCloneRef.current[indexCurrentRef.current][`est${outputStart}`] = getEstETH(token, amountOutCheck)
                   arrCloneRef.current[indexCurrentRef.current].outputSwap = token.outPutSwap!
                 }
-
-                getEstETH(token)
               }
             }
 
@@ -608,7 +612,9 @@ export default function Home() {
               <div>
                 Item {index + 1} - Time {item.time}.
               </div>
-              <div>est ETH :{item.estETH}</div>
+              <div>
+                est {outputStart} : {item[`est${outputStart}`]?.toString()}.
+              </div>
               <div>output Token :{item.outputSwap}.</div>
               <div className='flex flex-col gap-3'>
                 <div key={index} className='w-full pl-4 flex flex-col '>
