@@ -373,7 +373,7 @@ export default function Home() {
   const rollUpData = async () => {
     amountInputRef.current = amountStart + ''
     outputSwapTempRef.current = outputStart.toLocaleUpperCase().trim()
-    outputSwapRef.current = outputStart
+    outputSwapRef.current = outputStart.toLocaleUpperCase().trim()
     if (arrCloneDefaultRef.current.length === 0) {
       arrCloneRef.current = arrCloneDefaultRef.current = JSON.parse(JSON.stringify(arrData))
     } else {
