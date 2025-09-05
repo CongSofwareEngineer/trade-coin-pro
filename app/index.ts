@@ -88,35 +88,17 @@ export const getTokenOut = (listToken: Token[]): Token => {
   return token!
 }
 
-export const updateETHLastSwapTemp = async (configTemp: ConfigTemp, token: Token) => {
-  configTemp.ETHLastSwapTemp[token!.outPutSwap!] = token?.perETH!
-}
-
-export const updatePerETHOriginal = async (configTemp: ConfigTemp, token: Token) => {
-  configTemp.perETHOriginal[token!.outPutSwap!] = token?.perETH!
-}
-
-export const updateETHLastSwap = async (configTemp: ConfigTemp, token: Token) => {
-  configTemp.ETHLastSwap[token!.outPutSwap!] = token?.perETH!
-}
-
-export const updateOutputSwapTemp = async (configTemp: ConfigTemp, value: OutputSwapTemp) => {
-  configTemp.outputSwapTemp = value
-}
-
-export const updateOutputSwap = async (configTemp: ConfigTemp, value: OutputSwapTemp) => {
-  configTemp.outputSwap = value
-}
-
-export const updateAmountInput = async (configTemp: ConfigTemp, value: OutputSwapTemp) => {
-  configTemp.amountInput = value
-}
-
-export const updateItemIsSwap = async (item: Item) => {
-  item.isSwap = true
-}
-
 export const checkValidSwap = async ({ item, userConfig, configTemp }: PramCheckValidSwap) => {
+  let isSwap = false
+  let isStopAll = false
+
+  let amountInput = configTemp.amountInput
+  let ETHLastSwap = configTemp.ETHLastSwap
+  let ETHLastSwapTemp = configTemp.ETHLastSwapTemp
+
+  let outputSwap = configTemp.outputSwap
+  let outputSwapTemp = configTemp.outputSwapTemp
+
   const tokenOutput = getTokenOut(item.listToken)
   const tokenInput = getTokenInput(configTemp.outputSwap, item.listToken)
 
@@ -126,18 +108,19 @@ export const checkValidSwap = async ({ item, userConfig, configTemp }: PramCheck
 
   //demo trên file là outPutSwap=symbol.
   if (
-    configTemp.outputSwapTemp == tokenOutput.outPutSwap &&
+    outputSwapTemp == tokenOutput.outPutSwap &&
     Number(tokenOutput.perETHChangePercentage!) < BigNumber(BigNumber(userConfig.volatilityPercentage).dividedBy(100)).multipliedBy(-1).toNumber()
   ) {
     if (tokenOutput.outPutSwap === 'ETH') {
       //update ETHLastSwapTemp
-      await updateETHLastSwapTemp(configTemp, tokenBTC!)
+      outputSwapTemp = tokenOutput.outPutSwap
+      ETHLastSwapTemp[tokenOutput.outPutSwap!] = tokenOutput.perETH!
     } else {
-      await updateETHLastSwapTemp(configTemp, tokenOutput!)
+      ETHLastSwapTemp[tokenOutput.outPutSwap!] = tokenOutput.perETH!
     }
 
     //demo trên file là outPutSwap = symbol.
-    await updateOutputSwapTemp(configTemp, tokenOutput.outPutSwap)
+    outputSwapTemp = tokenOutput.outPutSwap
 
     //demo trên file là outPutSwap = symbol.
     if (configTemp.outputSwap !== tokenOutput.outPutSwap) {
@@ -153,8 +136,9 @@ export const checkValidSwap = async ({ item, userConfig, configTemp }: PramCheck
 
       // So sánh khi vượt qua amountMaxReceived
       if (BigNumber(amount2).gte(userConfig.amountMaxReceived)) {
-        await updateAmountInput(configTemp, amount1)
-        await updateItemIsSwap(item)
+        amountInput = amount1
+        isSwap = true
+        isStopAll = true
         // dừng lại toàn bộ hệ thống
       } else {
         //demo dựa trên file là symbol = outPutSwap.
@@ -166,14 +150,14 @@ export const checkValidSwap = async ({ item, userConfig, configTemp }: PramCheck
             if (BigNumber(amount1).gte(userConfig.amountInput)) {
               if (BigNumber(configTemp.ETHLastSwapTemp[tokenBTC!.outPutSwap!]).gte(configTemp.perETHOriginal[tokenBTC!.outPutSwap!])) {
                 //tiến hành swap
-                await updateAmountInput(configTemp, amount1)
-                await updateOutputSwap(configTemp, tokenBTC!.outPutSwap!)
-                await updateItemIsSwap(item)
+                amountInput = amount1
+                outputSwap = tokenBTC!.outPutSwap!
+                isSwap = true
               }
             }
           }
-          await updateETHLastSwap(configTemp, tokenInput!)
-          await updateETHLastSwap(configTemp, tokenBTC!)
+          ETHLastSwap[tokenOutput!.outPutSwap!] = tokenOutput!.perETH!
+          ETHLastSwap[tokenBTC!.outPutSwap!] = tokenOutput!.perETH!
         } else {
           //demo dựa trên file là symbol = outPutSwap.
           //outPutSwap=symbol token
@@ -183,16 +167,26 @@ export const checkValidSwap = async ({ item, userConfig, configTemp }: PramCheck
             if (BigNumber(amount1).gte(userConfig.amountInput)) {
               if (BigNumber(configTemp.ETHLastSwapTemp[tokenBTC!.outPutSwap!]).gte(configTemp.perETHOriginal[tokenOutput!.outPutSwap!])) {
                 //tiến hành swap
-                await updateAmountInput(configTemp, amount1)
-                await updateOutputSwap(configTemp, tokenOutput!.outPutSwap!)
-                await updateItemIsSwap(item)
+                amountInput = amount1
+                outputSwap = tokenBTC!.outPutSwap!
+                isSwap = true
               }
             }
           }
-          await updateETHLastSwap(configTemp, tokenOutput!)
+          ETHLastSwap[tokenOutput!.outPutSwap!] = tokenOutput!.perETH!
         }
       }
     }
+  }
+
+  return {
+    isSwap,
+    isStopAll,
+    amountInput,
+    outputSwap,
+    outputSwapTemp,
+    ETHLastSwap,
+    ETHLastSwapTemp,
   }
 }
 
