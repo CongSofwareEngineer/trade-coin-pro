@@ -99,7 +99,7 @@ export const getTokenOut = (listToken: Token[]): Token => {
   return token!
 }
 
-export const checkValidSwap = async ({ item, userConfig, configTemp }: PramCheckValidSwap) => {
+export const checkValidSwap = ({ item, userConfig, configTemp }: PramCheckValidSwap) => {
   let isSwap = false
   let isStopAll = false
 
@@ -119,7 +119,7 @@ export const checkValidSwap = async ({ item, userConfig, configTemp }: PramCheck
 
   //demo trên file là outPutSwap=symbol.
   if (
-    outputSwapTemp == tokenOutput.outPutSwap &&
+    outputSwapTemp !== tokenOutput.outPutSwap &&
     Number(tokenOutput.perETHChangePercentage!) < BigNumber(BigNumber(userConfig.volatilityPercentage).dividedBy(100)).multipliedBy(-1).toNumber()
   ) {
     if (tokenOutput.outPutSwap === 'ETH') {
@@ -364,4 +364,63 @@ const configTemp: ConfigTemp = {
   },
 }
 
-callData(DATA_FAKE_INPUT, userConfig, configTemp)
+// callData(DATA_FAKE_INPUT, userConfig, configTemp)
+
+// TEST
+const listToken = [
+  {
+    price: 4570.443523,
+    perETH: 1, // giá token / giá eth
+    perETHChangePercentage: -0.0066491023134039688,
+    outPutSwap: 'ETH', // token có % giảm nhiều nhất
+  },
+  {
+    price: 111370.6301,
+    perETH: 24.36757604366966816144, // giá token / giá eth
+    perETHChangePercentage: 0.00284530962540310489, //
+    outPutSwap: 'BTC', // token có % giảm nhiều nhất
+  },
+  {
+    price: 860.3339751,
+    perETH: 0.18823861858712656058, // giá token / giá eth
+    perETHChangePercentage: 0.00276376658562398642,
+    outPutSwap: 'BNB', // token có % giảm nhiều nhất
+  },
+]
+const userConfig0 = {
+  volatilityPercentage: '0.3', // 0.3%
+  affiliate: '0.1', // 0.1%
+  amountInput: '1', // 1 ETH
+  amountMaxReceived: '2000000000000000', // MAX ETH
+  inputStart: 'ETH', // token đầu vào
+}
+const configTemp0 = {
+  amountInput: 1, // amount token đang có
+  outputSwap: 'ETH', // token giảm nhiều nhất
+  outputSwapTemp: 'ETH',
+  ETHLastSwap: {
+    ETH: '1',
+    BTC: '24.36757604366966816144',
+    BNB: '0.18823861858712656058',
+  },
+  ETHLastSwapTemp: {
+    // tokenPerETH
+    ETH: '1',
+    BTC: '24.36757604366966816144',
+    BNB: '0.18823861858712656058',
+  },
+  perETHOriginal: {
+    // tokenPerETH lần đầu tiên
+    ETH: '1',
+    BTC: '24.36757604366966816144',
+    BNB: '0.18823861858712656058',
+  },
+}
+
+const r = checkValidSwap({
+  item: { listToken },
+  userConfig: userConfig0,
+  configTemp: configTemp0,
+})
+
+console.log('r', r)
