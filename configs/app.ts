@@ -3,5 +3,5 @@ export const META_DATA_APP = {
   title: 'TRADE COIN PRO',
   des: 'TRADE COIN PROr',
   icon: '/favicon.ico',
-  url: process.env.NEXT_PUBLIC_APP_URL,
+  url: 'https://tradecoinpro.com',
 }
