@@ -1,6 +1,17 @@
 import { BigNumber } from 'bignumber.js'
 
-import { Token } from '@/types/app'
+export interface Token {
+  symbol?: string
+  address?: string
+  price?: number
+  perETH?: string
+  perETHChangePercentage?: string
+  isNative?: boolean
+  decimals?: number
+  amountSwap?: number
+  balance?: number
+  outPutSwap?: string
+}
 
 //demo trên file là symbol.
 // ETHLastSwap={
@@ -190,7 +201,76 @@ export const checkValidSwap = async ({ item, userConfig, configTemp }: PramCheck
   }
 }
 
-//data fake
+const formatData = (listData: Item[], userConfig: UserConfig, configTem: ConfigTemp) => {
+  const arrFormat = listData.map((item, index) => {
+    if (index > 0) {
+      const listDataPrev = listData[index - 1]
+      const tokenStart = item.listToken!.find((e) => {
+        return e.symbol === userConfig.inputStart
+      })
+
+      item.listToken.forEach((token, index) => {
+        const tokenPrev = listDataPrev.listToken[index]
+
+        token.perETH = BigNumber(token!.price!).dividedBy(tokenStart!.price!).toFixed()
+        token.perETHChangePercentage = BigNumber(BigNumber(token.perETH!).minus(tokenPrev!.perETH!)).dividedBy(tokenPrev!.perETH!).toFixed()
+
+        item.listToken[index] = token
+      })
+    } else {
+      const tokenStart = item.listToken!.find((e) => {
+        return e.symbol === userConfig.inputStart
+      })
+
+      item.listToken.forEach((token, index) => {
+        token.perETH = BigNumber(token!.price!).dividedBy(tokenStart!.price!).toFixed()
+        token.perETHChangePercentage = '0'
+        configTem.ETHLastSwap[token!.symbol!] = token.perETH
+        configTem.ETHLastSwapTemp[token.symbol!] = token.perETH
+        configTem.perETHOriginal[token.symbol!] = token.perETH
+
+        item.listToken[index] = token
+      })
+    }
+
+    return item
+  })
+
+  return {
+    arrFormat,
+    configTem,
+  }
+}
+
+const callData = (listDataBase: Item[], userConfig: UserConfig, configTemp: ConfigTemp) => {
+  const data = formatData(listDataBase, userConfig, configTemp)
+}
+
+//data fake input
+const DATA_FAKE_INPUT: Item[] = [
+  {
+    time: 45858.333333333336,
+    listToken: [
+      {
+        price: 4601.036284,
+        outPutSwap: 'ETH',
+        symbol: 'ETH',
+      },
+      {
+        symbol: 'BNB',
+        price: 863.7056334,
+        outPutSwap: 'BNB',
+      },
+      {
+        symbol: 'BTC',
+        price: 111798.0016,
+        outPutSwap: 'BTC',
+      },
+    ],
+  },
+]
+
+//tokens: BNB, ETH, BTC
 const ListItem: Item[] = [
   {
     time: 45858.333333333336,
@@ -283,3 +363,5 @@ const configTemp: ConfigTemp = {
     BNB: '0.15',
   },
 }
+
+callData(DATA_FAKE_INPUT, userConfig, configTemp)
