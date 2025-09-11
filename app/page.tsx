@@ -86,9 +86,6 @@ export default function Home() {
     const ETHOriginalAmount = getDataLocal(KEY_STORAGE.ETHOriginalAmount) as string
 
     const poolToken = arrCloneRef.current[indexCurrentRef.current]
-    // const tokenInputDefault = poolToken.arrToken!.find((e) => {
-    //   return e.symbol === outputStart
-    // })
 
     const tokenETH = poolToken.arrToken!.find((e) => {
       return e.symbol === 'ETH'
@@ -96,12 +93,6 @@ export default function Home() {
 
     const tokenInput: Token = poolToken.arrToken!.find((e) => {
       if (e.symbol === outputSwap) {
-        return e
-      }
-    })!
-
-    const tokenInputStart: Token = poolToken.arrToken!.find((e) => {
-      if (e.symbol === outputStart) {
         return e
       }
     })!
@@ -141,7 +132,7 @@ export default function Home() {
         const amountAfterSwap = BigNumber(amountInput!)
           .multipliedBy(BigNumber(1).minus(BigNumber(affiliate).dividedBy(100)))
           .multipliedBy(tokenInput?.price!)
-          .dividedBy(tokenOutput.price!)
+          .dividedBy(tokenOutput!.price!)
           .toFixed()
 
         console.log('step 2')
@@ -172,7 +163,7 @@ export default function Home() {
                 amountInput = amountAfterSwap
                 outputSwap = tokenOutput?.symbol!
                 isSwap = true
-                arrCloneRef.current[indexCurrentRef.current][`est_${tokenOutput.symbol!}`] = getEstETH(tokenOutput, amountAfterSwap)
+                arrCloneRef.current[indexCurrentRef.current][`est_${tokenOutput.symbol!}`] = amountAfterSwap
                 arrCloneRef.current[indexCurrentRef.current].outputSwap = tokenOutput.symbol!
               }
             }
@@ -200,7 +191,7 @@ export default function Home() {
                 outputSwap = tokenOutput?.symbol!
                 amountInput = amountAfterSwap
                 isSwap = true
-                arrCloneRef.current[indexCurrentRef.current][`est_${tokenOutput.symbol!}`] = getEstETH(tokenOutput, amountAfterSwap)
+                arrCloneRef.current[indexCurrentRef.current][`est_${tokenOutput.symbol!}`] = amountAfterSwap
                 arrCloneRef.current[indexCurrentRef.current].outputSwap = tokenOutput.symbol!
               }
             }
