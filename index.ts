@@ -40,7 +40,7 @@ interface ConfigTemp {
 }
 
 // ================== Utility Functions ==================
-const deepClone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj))
+export const deepClone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj))
 
 function getTokenInput(outputSwap: TokenSymbol, arrToken: Token[]): Token | undefined {
   return arrToken.find((token) => token.symbol === outputSwap)

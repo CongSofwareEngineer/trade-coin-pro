@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import { read, utils } from 'xlsx'
 import { BigNumber } from 'bignumber.js'
 
+import { deepClone } from '..'
+
 import { ETHLastSwapTemp, PoolToken, Token } from '@/types/app'
 
 const amountMaxReceived = 2000000000000000
@@ -30,10 +32,10 @@ export default function Home() {
   const arrCloneDefaultRef = useRef<PoolToken[]>([])
   const indexCurrentRef = useRef(0)
   const [arrData, setArrData] = useState<PoolToken[]>([])
-  const [amountStart, setAmountStart] = useState<number>(1)
-  const [outputStart, setOutputStart] = useState<string>('ETH')
-  const [volatilityPercentage, setVolatilityPercentage] = useState<number>(0.481)
-  const [affiliate, setAffiliate] = useState<number>(0.18)
+  const [amountStart, setAmountStart] = useState<number>(2)
+  const [outputStart, setOutputStart] = useState<string>('BNB')
+  const [volatilityPercentage, setVolatilityPercentage] = useState<number>(0.3)
+  const [affiliate, setAffiliate] = useState<number>(0.4)
   const [isUpload, setIsUpload] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [fileImport, setFileImport] = useState<any>(null)
@@ -67,7 +69,7 @@ export default function Home() {
   //   return amount
   // }
 
-  const checkToSwap = async (token: Token) => {
+  const checkToSwap = async (tokenOutput: Token) => {
     let isSwap = false
     let isStopAll = false
 
@@ -75,107 +77,129 @@ export default function Home() {
     let ETHLastSwap = getDataLocal(KEY_STORAGE.ETHLastSwap) as ETHLastSwapTemp
     let ETHLastSwapTemp = getDataLocal(KEY_STORAGE.ETHLastSwapTemp) as ETHLastSwapTemp
     let perETHOriginal = getDataLocal(KEY_STORAGE.perETHOriginal) as ETHLastSwapTemp
-
     let outputSwap = getDataLocal(KEY_STORAGE.outputSwap) as string
     let outputSwapTemp = getDataLocal(KEY_STORAGE.outputSwapTemp) as string
 
     const poolToken = arrCloneRef.current[indexCurrentRef.current]
-    const tokenETH = poolToken.arrToken!.find((e) => {
-      return e.symbol === 'ETH'
-    })
-    let tokenInput: Token = poolToken.arrToken!.find((e) => {
+    // const tokenInputDefault = poolToken.arrToken!.find((e) => {
+    //   return e.symbol === outputStart
+    // })
+
+    // const tokenETH = poolToken.arrToken!.find((e) => {
+    //   return e.symbol === 'ETH'
+    // })
+
+    const tokenInput: Token = poolToken.arrToken!.find((e) => {
       if (e.symbol === outputSwap) {
-        return token
+        return e
+      }
+    })!
+    const tokenInputStart: Token = poolToken.arrToken!.find((e) => {
+      if (e.symbol === outputStart) {
+        return e
       }
     })!
 
-    if (!tokenInput) {
-      tokenInput = poolToken.eth!
-    }
+    const ETHOriginalAmount = amountStart
 
     if (
-      outputSwapTemp !== token.symbol &&
-      Number(token.perETHChangePercentage!) < BigNumber(BigNumber(volatilityPercentage).dividedBy(100)).multipliedBy(-1).toNumber()
+      outputSwapTemp !== tokenOutput.symbol &&
+      Number(tokenOutput.perETHChangePercentage!) < BigNumber(BigNumber(volatilityPercentage).dividedBy(100)).multipliedBy(-1).toNumber()
     ) {
-      if (token!.symbol === 'ETH') {
+      console.log(`=================== Item ${indexCurrentRef.current + 1} ==================`)
+
+      console.log('step 1')
+
+      if (tokenOutput!.symbol === 'ETH') {
         const indexBTC = poolToken.arrToken!.findIndex((e) => {
           return e.symbol === 'BTC'
         })
 
         if (indexBTC !== -1) {
+          console.log(`update ETHLastSwapTemp BTC = ${poolToken.arrToken![indexBTC].perETH}`)
           ETHLastSwapTemp[poolToken.arrToken![indexBTC]!.symbol!] = poolToken.arrToken![indexBTC].perETH!
         }
       } else {
-        ETHLastSwapTemp[token!.symbol!] = token!.perETH!
+        console.log(`update ETHLastSwapTemp ${tokenOutput.symbol} = ${tokenOutput.perETH}`)
+        ETHLastSwapTemp[tokenOutput.symbol!] = tokenOutput.perETH!
       }
 
-      outputSwapTemp = token.symbol!
+      console.log(`update outputSwapTemp = ${tokenOutput.symbol}`)
 
-      if (outputSwap !== token?.symbol) {
-        const amountOutCheck = BigNumber(amountInput!).multipliedBy(tokenInput?.price!).dividedBy(tokenETH?.price!).toFixed()
+      outputSwapTemp = tokenOutput.symbol!
+      console.log({ outputSwap, tokenOutput, tokenInput, amountInput })
+
+      if (outputSwap !== tokenOutput.symbol) {
+        const amountOutCheck = BigNumber(amountInput!).multipliedBy(tokenInput?.price!).dividedBy(tokenInputStart?.price!).toFixed()
 
         //(SwapInputTokenAmount * (1 - AFFILIATE_FEE_PERENT))* SwapInputTokenPrice) / ETHPrice của giờ đó
         const amountOut = BigNumber(amountInput!)
           .multipliedBy(BigNumber(1).minus(BigNumber(affiliate).dividedBy(100)))
           .multipliedBy(tokenInput?.price!)
-          .dividedBy(token.price!)
+          .dividedBy(tokenOutput.price!)
           .toFixed()
 
-        if (BigNumber(amountOut).gte(amountMaxReceived)) {
-          //go to swap and finish
-          amountInput = amountOut
-          // token.perETHLastSwap = token?.perETH
-          arrCloneRef.current[indexCurrentRef.current].isSwap = true
+        console.log('step 2')
+        console.log({ amountOutCheck, ETHOriginalAmount, amountOut })
 
-          indexCurrentRef.current = arrCloneRef.current.length + 1
-          isStopAll = true
-        } else {
-          if (token?.symbol === 'ETH' || token?.symbol === 'BTC') {
-            const tokenBTC = poolToken.arrToken!.find((token) => {
-              if (token.symbol === 'BTC') {
-                return token
-              }
-            })
+        if (tokenOutput?.symbol === 'ETH' || tokenOutput?.symbol === 'BTC') {
+          const tokenBTC = poolToken.arrToken!.find((token) => {
+            if (token.symbol === 'BTC') {
+              return token
+            }
+          })
 
-            if (BigNumber(tokenBTC?.perETH!).gt(ETHLastSwap[tokenBTC!.symbol!])) {
-              if (BigNumber(amountOutCheck).gte(amountStart)) {
-                if (BigNumber(ETHLastSwapTemp[tokenBTC!.symbol!]).gte(perETHOriginal[tokenBTC!.symbol!])) {
-                  amountInput = amountOut
-                  outputSwap = token?.symbol!
-                  isSwap = true
-                  // arrCloneRef.current[indexCurrentRef.current].isSwap = true
+          console.log('step 3 token ETH or BTC')
+          console.log({ ETHLastSwap: deepClone(ETHLastSwap), tokenBTC })
 
-                  // arrCloneRef.current[indexCurrentRef.current][`est${outputStart}`] = getEstETH(tokenBTC!, amountOutCheck)
-                  arrCloneRef.current[indexCurrentRef.current].outputSwap = token.symbol!
-                } else {
-                }
+          if (BigNumber(tokenBTC?.perETH!).gt(ETHLastSwap[tokenBTC!.symbol!])) {
+            console.log('step 4')
+            console.log({ ETHLastSwapTemp: deepClone(ETHLastSwapTemp), perETHOriginal: deepClone(perETHOriginal), tokenOutput })
+
+            // (SwapInputTokenAmount * SwapInputTokenPrice) / ETHPrice của giờ đó
+            // So sánh con số này với ETHOriginalAmount
+            //(SwapInputTokenAmount * SwapInputTokenPrice)/ ETHPrice của giờ đó => đem so sánh với ETHOriginalAmount
+            if (BigNumber(amountOutCheck).gte(ETHOriginalAmount)) {
+              console.log('step 4.1')
+
+              if (BigNumber(ETHLastSwapTemp[tokenBTC!.symbol!]).gte(perETHOriginal[tokenBTC!.symbol!])) {
+                amountInput = amountOut
+                outputSwap = tokenOutput?.symbol!
+                isSwap = true
+                arrCloneRef.current[indexCurrentRef.current].outputSwap = tokenOutput.symbol!
               }
             }
-
-            ETHLastSwap[tokenInput!.symbol!] = ETHLastSwapTemp[tokenInput!.symbol!]
-            ETHLastSwap[tokenBTC!.symbol!] = ETHLastSwapTemp[tokenBTC!.symbol!]
-          } else {
-            if (BigNumber(token?.perETH!).gte(ETHLastSwap[token?.symbol!]!)) {
-              //(SwapInputTokenAmount * SwapInputTokenPrice) / ETHPrice của giờ đó
-              if (BigNumber(amountOutCheck).gte(amountStart)) {
-                if (BigNumber(ETHLastSwapTemp[token!.symbol!]).gte(perETHOriginal[token!.symbol!])) {
-                  outputSwap = token?.symbol!
-                  amountInput = amountOut
-                  isSwap = true
-
-                  // arrCloneRef.current[indexCurrentRef.current].isSwap = true
-                  // arrCloneRef.current[indexCurrentRef.current][`est${outputStart}`] = getEstETH(token, amountOutCheck)
-                  arrCloneRef.current[indexCurrentRef.current].outputSwap = token.symbol!
-                }
-              }
-            }
-
-            ETHLastSwap[token!.symbol!] = ETHLastSwapTemp[token!.symbol!]
           }
+
+          console.log(`update ETHLastSwap ${tokenInput!.symbol} = ${ETHLastSwapTemp[tokenInput!.symbol!]}`)
+          console.log(`update ETHLastSwap ${tokenBTC!.symbol} = ${ETHLastSwapTemp[tokenBTC!.symbol!]}`)
+          ETHLastSwap[tokenInput!.symbol!] = ETHLastSwapTemp[tokenInput!.symbol!]
+          ETHLastSwap[tokenBTC!.symbol!] = ETHLastSwapTemp[tokenBTC!.symbol!]
+        } else {
+          console.log('step 5 token other')
+          console.log({ ETHLastSwap: deepClone(ETHLastSwap), tokenOutput })
+          if (BigNumber(tokenOutput?.perETH!).gte(ETHLastSwap[tokenOutput?.symbol!]!)) {
+            console.log('step 6')
+            console.log({ ETHLastSwapTemp: deepClone(ETHLastSwapTemp), perETHOriginal: deepClone(perETHOriginal), tokenOutput })
+
+            // (SwapInputTokenAmount * SwapInputTokenPrice) / ETHPrice của giờ đó
+            // So sánh con số này với ETHOriginalAmount
+            //(SwapInputTokenAmount * SwapInputTokenPrice)/ ETHPrice của giờ đó => đem so sánh với ETHOriginalAmount
+            if (BigNumber(amountOutCheck).gte(ETHOriginalAmount)) {
+              console.log('step 6.1')
+              if (BigNumber(ETHLastSwapTemp[tokenOutput!.symbol!]).gte(perETHOriginal[tokenOutput!.symbol!])) {
+                outputSwap = tokenOutput?.symbol!
+                amountInput = amountOut
+                isSwap = true
+                arrCloneRef.current[indexCurrentRef.current].outputSwap = tokenOutput.symbol!
+              }
+            }
+          }
+          console.log(`update ETHLastSwap ${tokenInput!.symbol} = ${ETHLastSwapTemp[tokenInput!.symbol!]}`)
+
+          ETHLastSwap[tokenOutput!.symbol!] = ETHLastSwapTemp[tokenOutput!.symbol!]
         }
       }
-    } else {
-      // outputSwapTempRef.current = 'ETH'
     }
 
     return {
@@ -224,6 +248,7 @@ export default function Home() {
   const initData = (index = 0) => {
     try {
       const poolTrade = arrCloneRef.current[index]
+      const isETH = outputStart === 'ETH'
 
       const tokenETH = poolTrade.arrToken!.find((e) => {
         return e.symbol === 'ETH'
@@ -263,7 +288,16 @@ export default function Home() {
 
           ETHLastSwap[token!.symbol!] = token.perETH
           ETHLastSwapTemp[token.symbol!] = token.perETH
-          perETHOriginal[token.symbol!] = token.perETH
+          if (token.symbol === outputStart) {
+            // if (isETH) {
+            //   perETHOriginal[token.symbol!] = token.perETH
+            // } else {
+            //   perETHOriginal[token.symbol!] = BigNumber(amountStart).multipliedBy(token!.price!).dividedBy(tokenETH!.price!).toFixed()
+            // }
+            perETHOriginal[token.symbol!] = amountStart
+          } else {
+            perETHOriginal[token.symbol!] = 0
+          }
 
           saveDataLocal(KEY_STORAGE.ETHLastSwap, ETHLastSwap)
           saveDataLocal(KEY_STORAGE.ETHLastSwapTemp, ETHLastSwapTemp)
