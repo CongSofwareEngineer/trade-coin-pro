@@ -9,6 +9,8 @@ import { ETHLastSwapTemp, PoolToken, Token } from '@/types/app'
 
 const amountMaxReceived = 2000000000000000
 
+const DECIMAL = 8
+
 const KEY_STORAGE = {
   perETHOriginal: 'perETHOriginal',
   ETHOriginalAmount: 'ETHOriginalAmount',
@@ -33,10 +35,10 @@ export default function Home() {
   const arrCloneDefaultRef = useRef<PoolToken[]>([])
   const indexCurrentRef = useRef(0)
   const [arrData, setArrData] = useState<PoolToken[]>([])
-  const [amountStart, setAmountStart] = useState<number>(2)
-  const [outputStart, setOutputStart] = useState<string>('BNB')
+  const [amountStart, setAmountStart] = useState<number>(3)
+  const [outputStart, setOutputStart] = useState<string>('BTC')
   const [volatilityPercentage, setVolatilityPercentage] = useState<number>(0.3)
-  const [affiliate, setAffiliate] = useState<number>(0.4)
+  const [affiliate, setAffiliate] = useState<number>(0.15)
   const [isUpload, setIsUpload] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [fileImport, setFileImport] = useState<any>(null)
@@ -54,23 +56,6 @@ export default function Home() {
     })!
 
     return token
-  }
-
-  const getEstETH = (token: Token, amount: string) => {
-    const poolToken = arrCloneRef.current[indexCurrentRef.current]
-    const tokenETH = poolToken.arrToken!.find((e) => {
-      return e.symbol === 'ETH'
-    })
-
-    if (outputStart !== 'ETH') {
-      const tokenOutput = poolToken.arrToken!.find((e) => {
-        return e.symbol === token.symbol
-      })!
-
-      return BigNumber(amount).multipliedBy(tokenETH?.price!).dividedBy(tokenOutput.price!).toFixed()
-    }
-
-    return amount
   }
 
   const checkToSwap = async (tokenOutput: Token) => {
@@ -98,13 +83,13 @@ export default function Home() {
     })!
 
     if (
+      // outputSwapTemp !== tokenInput.symbol &&
       outputSwapTemp !== tokenOutput.symbol &&
       Number(tokenOutput.perETHChangePercentage!) < BigNumber(BigNumber(volatilityPercentage).dividedBy(100)).multipliedBy(-1).toNumber()
     ) {
       console.log(`=================== Item ${indexCurrentRef.current + 1} ==================`)
 
       console.log('step 1')
-
       if (tokenOutput!.symbol === 'ETH') {
         const indexBTC = poolToken.arrToken!.findIndex((e) => {
           return e.symbol === 'BTC'
@@ -124,15 +109,16 @@ export default function Home() {
       outputSwapTemp = tokenOutput.symbol!
       console.log({ outputSwap, tokenOutput, tokenInput, amountInput, ETHOriginalAmount })
 
-      if (outputSwap !== tokenOutput.symbol) {
+      if (outputSwap !== tokenOutput.symbol && tokenInput.symbol !== tokenOutput.symbol) {
         // ;(SwapInputTokenAmount * SwapInputTokenPrice) / ETHPrice
-        const amountOutCheck = BigNumber(amountInput!).multipliedBy(tokenInput?.price!).dividedBy(tokenETH?.price!).toFixed()
+        const amountOutCheck = BigNumber(amountInput!).multipliedBy(tokenInput?.price!).dividedBy(tokenETH?.price!).decimalPlaces(DECIMAL).toFixed()
 
         //(SwapInputTokenAmount * (1 - AFFILIATE_FEE_PERENT))* SwapInputTokenPrice) / ETHPrice của giờ đó
         const amountAfterSwap = BigNumber(amountInput!)
           .multipliedBy(BigNumber(1).minus(BigNumber(affiliate).dividedBy(100)))
           .multipliedBy(tokenInput?.price!)
           .dividedBy(tokenOutput!.price!)
+          .decimalPlaces(DECIMAL)
           .toFixed()
 
         console.log('step 2')
@@ -169,10 +155,9 @@ export default function Home() {
             }
           }
 
-          console.log(`update ETHLastSwap ${tokenInput!.symbol} = ${ETHLastSwapTemp[tokenInput!.symbol!]}`)
           console.log(`update ETHLastSwap ${tokenBTC!.symbol} = ${ETHLastSwapTemp[tokenBTC!.symbol!]}`)
-          ETHLastSwap[tokenInput!.symbol!] = ETHLastSwapTemp[tokenInput!.symbol!]
           ETHLastSwap[tokenBTC!.symbol!] = ETHLastSwapTemp[tokenBTC!.symbol!]
+          // ETHLastSwap[tokenETH!.symbol!] = ETHLastSwapTemp[tokenETH!.symbol!]
         } else {
           console.log('step 5 token other')
           console.log('so sánh perETH token vs ETHLastSwap token')
@@ -268,11 +253,17 @@ export default function Home() {
 
           if (token.symbol === 'ETH') {
             token.perETH = '1'
-            token.perETHChangePercentage = BigNumber(BigNumber(token!.price!).minus(tokenPre?.price!)).dividedBy(tokenPre!.price!).toFixed()
+            token.perETHChangePercentage = BigNumber(BigNumber(token!.price!).minus(tokenPre?.price!))
+              .dividedBy(tokenPre!.price!)
+              .decimalPlaces(DECIMAL)
+              .toFixed()
           } else {
-            token.perETH = BigNumber(token!.price!).dividedBy(tokenETH!.price!).toFixed()
+            token.perETH = BigNumber(token!.price!).dividedBy(tokenETH!.price!).decimalPlaces(DECIMAL).toFixed()
 
-            token.perETHChangePercentage = BigNumber(BigNumber(token.perETH!).minus(tokenPre.perETH!)).dividedBy(tokenPre.perETH!).toFixed()
+            token.perETHChangePercentage = BigNumber(BigNumber(token.perETH!).minus(tokenPre.perETH!))
+              .dividedBy(tokenPre.perETH!)
+              .decimalPlaces(DECIMAL)
+              .toFixed()
           }
 
           poolTrade.arrToken![indexToken] = token
@@ -283,7 +274,7 @@ export default function Home() {
             token.perETHChangePercentage = '0'
             token.perETH = '1'
           } else {
-            token.perETH = BigNumber(token!.price!).dividedBy(tokenETH!.price!).toFixed()
+            token.perETH = BigNumber(token!.price!).dividedBy(tokenETH!.price!).decimalPlaces(DECIMAL).toFixed()
             token.perETHChangePercentage = '0'
           }
           //save to local
@@ -300,7 +291,7 @@ export default function Home() {
             if (isETH) {
               saveDataLocal(KEY_STORAGE.ETHOriginalAmount, amountStart + '')
             } else {
-              const amount = BigNumber(amountStart).multipliedBy(token!.price!).dividedBy(tokenETH!.price!).toFixed()
+              const amount = BigNumber(amountStart).multipliedBy(token!.price!).dividedBy(tokenETH!.price!).decimalPlaces(DECIMAL).toFixed()
 
               saveDataLocal(KEY_STORAGE.ETHOriginalAmount, amount)
             }
