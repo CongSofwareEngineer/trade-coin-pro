@@ -9,7 +9,7 @@ import { ETHLastSwapTemp, PoolToken, Token } from '@/types/app'
 
 const amountMaxReceived = 2000000000000000
 
-const DECIMAL = 30
+const DECIMAL = 8
 
 const KEY_STORAGE = {
   perETHOriginal: 'perETHOriginal',
