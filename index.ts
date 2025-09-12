@@ -37,7 +37,10 @@ interface ConfigTemp {
   ETHLastSwap: SwapState
   ETHLastSwapTemp: SwapState
   perETHOriginal: SwapState
+  originalAmount: string
 }
+
+let indexCurrent = 0
 
 // ================== Utility Functions ==================
 export const deepClone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj))
@@ -78,52 +81,86 @@ function checkValidSwap({ item, userConfig, configTemp }: { item: Item; userConf
   const tokenBTC = item.arrToken.find((t) => t.symbol === 'BTC')
   const tokenETH = item.arrToken.find((t) => t.symbol === 'ETH')
 
-  const volatilityThreshold = BigNumber(userConfig.volatilityPercentage).dividedBy(100).multipliedBy(-1).toNumber()
-
-  if (outputSwapTemp !== tokenOutput.symbol && Number(tokenOutput.perETHChangePercentage!) < volatilityThreshold) {
-    if (tokenOutput.symbol === 'ETH' && tokenBTC) {
-      ETHLastSwapTemp[tokenBTC.symbol!] = tokenBTC.perETH!
+  if (
+    outputSwapTemp !== tokenOutput.symbol &&
+    Number(tokenOutput.perETHChangePercentage!) < BigNumber(BigNumber(userConfig.volatilityPercentage).dividedBy(100)).multipliedBy(-1).toNumber()
+  ) {
+    if (indexCurrent === 546) {
+      console.log('step 1')
+    }
+    if (tokenOutput!.symbol === 'ETH') {
+      ETHLastSwapTemp[tokenBTC!.symbol!] = tokenBTC!.perETH!
     } else {
       ETHLastSwapTemp[tokenOutput.symbol!] = tokenOutput.perETH!
     }
     outputSwapTemp = tokenOutput.symbol!
-    if (outputSwap !== tokenOutput.symbol) {
-      const amountOutCheck = BigNumber(amountInput).multipliedBy(tokenInput?.price!).dividedBy(tokenETH?.price!).toFixed()
-      const amountOut = BigNumber(amountInput)
+
+    if (outputSwap !== tokenOutput.symbol && tokenInput!.symbol !== tokenOutput.symbol) {
+      if (indexCurrent === 546) {
+        console.log('step 2')
+      }
+      //(SwapInputTokenAmount * SwapInputTokenPrice) / ETHPrice
+      const amountOutCheck = BigNumber(amountInput!).multipliedBy(tokenInput?.price!).dividedBy(tokenETH?.price!).toFixed()
+
+      //(SwapInputTokenAmount * (1 - AFFILIATE_FEE_PERENT))* SwapInputTokenPrice) / ETHPrice của giờ đó
+      const amountAfterSwap = BigNumber(amountInput!)
         .multipliedBy(BigNumber(1).minus(BigNumber(userConfig.affiliate).dividedBy(100)))
         .multipliedBy(tokenInput?.price!)
-        .dividedBy(tokenOutput.price!)
+        .dividedBy(tokenOutput!.price!)
         .toFixed()
 
-      if (BigNumber(amountOut).gte(userConfig.amountMaxReceived)) {
-        amountInput = amountOut
-        isSwap = true
-        isStopAll = true
-      } else {
-        if (tokenOutput.symbol === 'ETH' || tokenOutput.symbol === 'BTC') {
-          if (tokenBTC && BigNumber(tokenBTC.perETH!).gt(ETHLastSwap[tokenBTC.symbol!])) {
-            if (BigNumber(amountOutCheck).gte(userConfig.amountInput)) {
-              if (BigNumber(ETHLastSwapTemp[tokenBTC.symbol!]).gte(perETHOriginal[tokenBTC.symbol!])) {
-                amountInput = amountOut
-                outputSwap = tokenOutput.symbol!
-                isSwap = true
-              }
-            }
-          }
-          if (tokenInput) ETHLastSwap[tokenInput.symbol!] = ETHLastSwapTemp[tokenInput.symbol!]
-          if (tokenBTC) ETHLastSwap[tokenBTC.symbol!] = ETHLastSwapTemp[tokenBTC.symbol!]
-        } else {
-          if (BigNumber(tokenOutput.perETH!).gt(ETHLastSwap[tokenOutput.symbol!])) {
-            if (BigNumber(amountOutCheck).gte(userConfig.amountInput)) {
-              if (BigNumber(ETHLastSwapTemp[tokenOutput.symbol!]).gte(perETHOriginal[tokenOutput.symbol!])) {
-                amountInput = amountOut
-                outputSwap = tokenOutput.symbol!
-                isSwap = true
-              }
-            }
-          }
-          ETHLastSwap[tokenOutput.symbol!] = ETHLastSwapTemp[tokenOutput.symbol!]
+      if (tokenOutput?.symbol === 'ETH' || tokenOutput?.symbol === 'BTC') {
+        if (indexCurrent === 546) {
+          console.log('step 3')
         }
+        if (BigNumber(tokenBTC?.perETH!).gt(ETHLastSwap[tokenBTC!.symbol!])) {
+          if (indexCurrent === 546) {
+            console.log('step 4')
+          }
+          //(SwapInputTokenAmount * SwapInputTokenPrice)/ ETHPrice của giờ đó => đem so sánh với ETHOriginalAmount
+          if (BigNumber(amountOutCheck).gte(configTemp.originalAmount)) {
+            if (indexCurrent === 546) {
+              console.log('step 5')
+            }
+            if (BigNumber(tokenBTC?.perETH!).gte(perETHOriginal[tokenBTC!.symbol!])) {
+              if (indexCurrent === 546) {
+                console.log('step 6')
+              }
+              amountInput = amountAfterSwap
+              outputSwap = tokenOutput?.symbol!
+              isSwap = true
+            }
+          }
+        }
+        //update ETHLastSwapTemp BTC
+        ETHLastSwap[tokenBTC!.symbol!] = ETHLastSwapTemp[tokenBTC!.symbol!]
+      } else {
+        if (indexCurrent === 546) {
+          console.log('step 7')
+          console.log({ tokenOutput, ETHLastSwap })
+        }
+        if (BigNumber(tokenOutput?.perETH!).gte(ETHLastSwap[tokenOutput?.symbol!]!)) {
+          if (indexCurrent === 546) {
+            console.log('step 7.1')
+          }
+          //(SwapInputTokenAmount * SwapInputTokenPrice)/ ETHPrice của giờ đó => đem so sánh với ETHOriginalAmount
+          if (BigNumber(amountOutCheck).gte(configTemp.originalAmount)) {
+            if (indexCurrent === 546) {
+              console.log('step 8')
+            }
+            if (BigNumber(tokenOutput!.perETH!).gte(perETHOriginal[tokenOutput!.symbol!])) {
+              if (indexCurrent === 546) {
+                console.log('step 9')
+              }
+              outputSwap = tokenOutput?.symbol!
+              amountInput = amountAfterSwap
+              isSwap = true
+            }
+          }
+        }
+
+        //update  ETHLastSwapTemp tokenOutput
+        ETHLastSwap[tokenOutput!.symbol!] = ETHLastSwapTemp[tokenOutput!.symbol!]
       }
     }
   }
@@ -139,7 +176,9 @@ function checkValidSwap({ item, userConfig, configTemp }: { item: Item; userConf
   }
 }
 
-function formatData(listData: Item[], configTem: ConfigTemp) {
+function formatData(listData: Item[], configTemp: ConfigTemp, userConfig: UserConfig) {
+  const isETH = userConfig.inputStart === 'ETH'
+  let originalAmount = '0'
   const arrFormat = listData.map((item, index) => {
     const tokenETH = item.arrToken.find((e) => e.symbol === 'ETH')
 
@@ -150,11 +189,11 @@ function formatData(listData: Item[], configTem: ConfigTemp) {
         const tokenPre = prev.arrToken[idx]
 
         if (token.symbol === 'ETH') {
-          token.perETHChangePercentage = BigNumber(token.price!).minus(tokenPre.price!).dividedBy(tokenPre.price!).toFixed()
+          token.perETHChangePercentage = BigNumber(BigNumber(token!.price!).minus(tokenPre?.price!)).dividedBy(tokenPre!.price!).toFixed()
           token.perETH = '1'
         } else {
-          token.perETH = BigNumber(token.price!).dividedBy(tokenETH!.price!).toFixed()
-          token.perETHChangePercentage = BigNumber(token.perETH!).minus(tokenPre.perETH!).dividedBy(tokenPre.perETH!).toFixed()
+          token.perETH = BigNumber(token!.price!).dividedBy(tokenETH!.price!).toFixed()
+          token.perETHChangePercentage = BigNumber(BigNumber(token.perETH!).minus(tokenPre.perETH!)).dividedBy(tokenPre.perETH!).toFixed()
         }
         item.arrToken[idx] = token
       })
@@ -166,12 +205,19 @@ function formatData(listData: Item[], configTem: ConfigTemp) {
           token.perETHChangePercentage = '0'
           token.perETH = '1'
         } else {
-          token.perETH = BigNumber(token.price!).dividedBy(tokenETH!.price!).toFixed()
+          token.perETH = BigNumber(token!.price!).dividedBy(tokenETH!.price!).toFixed()
           token.perETHChangePercentage = '0'
         }
-        configTem.ETHLastSwap[token.symbol!] = token.perETH!
-        configTem.ETHLastSwapTemp[token.symbol!] = token.perETH!
-        configTem.perETHOriginal[token.symbol!] = token.perETH!
+        configTemp.ETHLastSwap[token.symbol!] = token.perETH!
+        configTemp.ETHLastSwapTemp[token.symbol!] = token.perETH!
+        configTemp.perETHOriginal[token.symbol!] = token.perETH!
+        if (token.symbol === userConfig.inputStart) {
+          if (isETH) {
+            originalAmount = userConfig.amountInput
+          } else {
+            originalAmount = BigNumber(userConfig.amountInput).multipliedBy(token!.price!).dividedBy(tokenETH!.price!).toFixed()
+          }
+        }
         item.arrToken[idx] = token
       })
     }
@@ -179,15 +225,20 @@ function formatData(listData: Item[], configTem: ConfigTemp) {
     return item
   })
 
-  return { arrFormat, configTem }
+  configTemp.originalAmount = originalAmount
+
+  return { arrFormat, configTemp }
 }
 
-function callData(listDataBase: Item[], userConfig: UserConfig, configTemp: ConfigTemp) {
-  const { arrFormat, configTem } = formatData(listDataBase, configTemp)
+function callData(listDataBase: Item[], userConfig: UserConfig, configTempBase: ConfigTemp) {
+  const { arrFormat, configTemp } = formatData(listDataBase, configTempBase, userConfig)
   const listData = arrFormat
-  let configTempCurrent = deepClone(configTem)
+  let configTempCurrent = deepClone(configTemp)
+
+  console.log({ configTempCurrent, userConfig })
 
   listData.forEach((item, index) => {
+    indexCurrent = index
     const res = checkValidSwap({ item, userConfig, configTemp: deepClone(configTempCurrent) })
 
     configTempCurrent.ETHLastSwap = res.ETHLastSwap
@@ -207,14 +258,14 @@ function callData(listDataBase: Item[], userConfig: UserConfig, configTemp: Conf
 
 // ================== Default Config ==================
 const userConfig: UserConfig = {
-  volatilityPercentage: '0.3',
-  affiliate: '0.1',
+  volatilityPercentage: '0.4',
+  affiliate: '0.15',
   amountInput: '1',
   amountMaxReceived: '2000000000000000',
-  inputStart: 'ETH',
+  inputStart: 'BTC',
 }
 
-const configTemp: ConfigTemp = {
+const configTemp: Partial<ConfigTemp> = {
   amountInput: userConfig.amountInput,
   outputSwap: userConfig.inputStart!,
   outputSwapTemp: userConfig.inputStart!,
@@ -224,7 +275,7 @@ const configTemp: ConfigTemp = {
 }
 
 // ================== Run Swap ==================
-const result = callData(DATA_FAKE, userConfig, configTemp)
+const result = callData(DATA_FAKE, userConfig, configTemp as any)
 
 console.log({ result })
 

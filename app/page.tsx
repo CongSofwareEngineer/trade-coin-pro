@@ -9,7 +9,7 @@ import { ETHLastSwapTemp, PoolToken, Token } from '@/types/app'
 
 const amountMaxReceived = 2000000000000000
 
-const DECIMAL = 8
+const DECIMAL = 30
 
 const KEY_STORAGE = {
   perETHOriginal: 'perETHOriginal',
@@ -75,6 +75,9 @@ export default function Home() {
     const tokenETH = poolToken.arrToken!.find((e) => {
       return e.symbol === 'ETH'
     })
+    const tokenBTC = poolToken.arrToken!.find((e) => {
+      return e.symbol === 'BTC'
+    })
 
     const tokenInput: Token = poolToken.arrToken!.find((e) => {
       if (e.symbol === outputSwap) {
@@ -91,14 +94,8 @@ export default function Home() {
 
       console.log('step 1')
       if (tokenOutput!.symbol === 'ETH') {
-        const indexBTC = poolToken.arrToken!.findIndex((e) => {
-          return e.symbol === 'BTC'
-        })
-
-        if (indexBTC !== -1) {
-          console.log(`update ETHLastSwapTemp BTC = ${poolToken.arrToken![indexBTC].perETH}`)
-          ETHLastSwapTemp[poolToken.arrToken![indexBTC]!.symbol!] = poolToken.arrToken![indexBTC].perETH!
-        }
+        console.log(`update ETHLastSwapTemp BTC = ${tokenBTC!.perETH}`)
+        ETHLastSwapTemp[tokenBTC!.symbol!] = tokenBTC!.perETH!
       } else {
         console.log(`update ETHLastSwapTemp ${tokenOutput.symbol} = ${tokenOutput.perETH}`)
         ETHLastSwapTemp[tokenOutput.symbol!] = tokenOutput.perETH!
@@ -125,12 +122,6 @@ export default function Home() {
         console.log({ amountOutCheck, amountAfterSwap })
 
         if (tokenOutput?.symbol === 'ETH' || tokenOutput?.symbol === 'BTC') {
-          const tokenBTC = poolToken.arrToken!.find((token) => {
-            if (token.symbol === 'BTC') {
-              return token
-            }
-          })
-
           console.log('step 3 so sánh perETH BTC vs ETHLastSwap BTC ')
           console.log({ ETHLastSwap: deepClone(ETHLastSwap), tokenBTC })
 
@@ -240,10 +231,6 @@ export default function Home() {
         return e.symbol === 'ETH'
       })
 
-      const tokenInputStart = poolTrade.arrToken!.find((e) => {
-        return e.symbol === outputStart
-      })
-
       if (index > 0) {
         const poolTradePre = arrCloneRef.current[index - 1]
 
@@ -347,8 +334,6 @@ export default function Home() {
   }
 
   const formatData = (data: any[] = []): PoolToken[] => {
-    console.log({ data })
-
     function excelDateToJSDate(serial: number) {
       try {
         const excelEpoch = new Date(Date.UTC(1899, 11, 30)) // dùng UTC để cố định
@@ -401,6 +386,8 @@ export default function Home() {
 
       return poolToken
     })
+
+    console.log({ arrData })
 
     return arrData
   }
