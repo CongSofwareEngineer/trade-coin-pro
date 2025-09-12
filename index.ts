@@ -40,8 +40,6 @@ interface ConfigTemp {
   originalAmount: string
 }
 
-let indexCurrent = 0
-
 // ================== Utility Functions ==================
 export const deepClone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj))
 
@@ -85,9 +83,6 @@ function checkValidSwap({ item, userConfig, configTemp }: { item: Item; userConf
     outputSwapTemp !== tokenOutput.symbol &&
     Number(tokenOutput.perETHChangePercentage!) < BigNumber(BigNumber(userConfig.volatilityPercentage).dividedBy(100)).multipliedBy(-1).toNumber()
   ) {
-    if (indexCurrent === 546) {
-      console.log('step 1')
-    }
     if (tokenOutput!.symbol === 'ETH') {
       ETHLastSwapTemp[tokenBTC!.symbol!] = tokenBTC!.perETH!
     } else {
@@ -96,9 +91,6 @@ function checkValidSwap({ item, userConfig, configTemp }: { item: Item; userConf
     outputSwapTemp = tokenOutput.symbol!
 
     if (outputSwap !== tokenOutput.symbol && tokenInput!.symbol !== tokenOutput.symbol) {
-      if (indexCurrent === 546) {
-        console.log('step 2')
-      }
       //(SwapInputTokenAmount * SwapInputTokenPrice) / ETHPrice
       const amountOutCheck = BigNumber(amountInput!).multipliedBy(tokenInput?.price!).dividedBy(tokenETH?.price!).toFixed()
 
@@ -110,22 +102,10 @@ function checkValidSwap({ item, userConfig, configTemp }: { item: Item; userConf
         .toFixed()
 
       if (tokenOutput?.symbol === 'ETH' || tokenOutput?.symbol === 'BTC') {
-        if (indexCurrent === 546) {
-          console.log('step 3')
-        }
         if (BigNumber(tokenBTC?.perETH!).gt(ETHLastSwap[tokenBTC!.symbol!])) {
-          if (indexCurrent === 546) {
-            console.log('step 4')
-          }
           //(SwapInputTokenAmount * SwapInputTokenPrice)/ ETHPrice của giờ đó => đem so sánh với ETHOriginalAmount
           if (BigNumber(amountOutCheck).gte(configTemp.originalAmount)) {
-            if (indexCurrent === 546) {
-              console.log('step 5')
-            }
             if (BigNumber(tokenBTC?.perETH!).gte(perETHOriginal[tokenBTC!.symbol!])) {
-              if (indexCurrent === 546) {
-                console.log('step 6')
-              }
               amountInput = amountAfterSwap
               outputSwap = tokenOutput?.symbol!
               isSwap = true
@@ -135,23 +115,10 @@ function checkValidSwap({ item, userConfig, configTemp }: { item: Item; userConf
         //update ETHLastSwapTemp BTC
         ETHLastSwap[tokenBTC!.symbol!] = ETHLastSwapTemp[tokenBTC!.symbol!]
       } else {
-        if (indexCurrent === 546) {
-          console.log('step 7')
-          console.log({ tokenOutput, ETHLastSwap })
-        }
         if (BigNumber(tokenOutput?.perETH!).gte(ETHLastSwap[tokenOutput?.symbol!]!)) {
-          if (indexCurrent === 546) {
-            console.log('step 7.1')
-          }
           //(SwapInputTokenAmount * SwapInputTokenPrice)/ ETHPrice của giờ đó => đem so sánh với ETHOriginalAmount
           if (BigNumber(amountOutCheck).gte(configTemp.originalAmount)) {
-            if (indexCurrent === 546) {
-              console.log('step 8')
-            }
             if (BigNumber(tokenOutput!.perETH!).gte(perETHOriginal[tokenOutput!.symbol!])) {
-              if (indexCurrent === 546) {
-                console.log('step 9')
-              }
               outputSwap = tokenOutput?.symbol!
               amountInput = amountAfterSwap
               isSwap = true
@@ -238,7 +205,6 @@ function callData(listDataBase: Item[], userConfig: UserConfig, configTempBase: 
   console.log({ configTempCurrent, userConfig })
 
   listData.forEach((item, index) => {
-    indexCurrent = index
     const res = checkValidSwap({ item, userConfig, configTemp: deepClone(configTempCurrent) })
 
     configTempCurrent.ETHLastSwap = res.ETHLastSwap
