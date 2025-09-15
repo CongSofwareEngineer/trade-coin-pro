@@ -436,7 +436,7 @@ export default function Home() {
   }
 
   return (
-    <section className='w-full overflow-hidden grid md:grid-cols-2 grid-cols-1 gap-10 p-5'>
+    <section className='w-full !text-white overflow-hidden grid md:grid-cols-2 grid-cols-1 gap-10 p-5'>
       <div className='flex flex-col gap-5 w-full overflow-hidden'>
         <div>
           <div>Upload file:</div>
@@ -515,7 +515,7 @@ export default function Home() {
           />
         </div>
         <div>
-          <div>Fee transaction (BNB) :</div>
+          <div>Fee transaction (affiliate) :</div>
           <input
             className='w-full border-[1px] !border-gray-500 rounded-[4px] p-2'
             value={affiliate}
