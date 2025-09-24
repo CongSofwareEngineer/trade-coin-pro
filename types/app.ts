@@ -4,6 +4,10 @@ export interface Token {
   perETH?: string
   perETHChangePercentage?: string
   amountSwap?: number
+  //v4
+  changeByPoint?: string
+  pointBeforeCheck?: string
+  pointAfterCheck?: string
 }
 
 export type PoolToken = {
