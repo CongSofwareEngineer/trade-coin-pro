@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test": "tsx index.ts",
+    "testV4": "tsx indexV4.ts",
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",

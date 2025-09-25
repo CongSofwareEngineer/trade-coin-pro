@@ -1,8 +1,8 @@
 // ================== Types & Config ==================
 import { BigNumber } from 'bignumber.js'
 
-import { DATA_FAKE } from './dataDake'
 import { PoolToken } from './types/app'
+import { DATA_V4 } from './DATA_V4'
 
 type TokenSymbol = string
 
@@ -235,6 +235,8 @@ function checkValidSwapV4({ item, itemPre, userConfig, configTemp }: { item: Ite
 function formatData(listData: Item[], configTemp: ConfigTemp, userConfig: UserConfig) {
   const isETH = userConfig.inputStart === 'ETH'
   let originalAmount = '0'
+
+  configTemp.price1Point = {}
   const arrFormat = listData.map((item, index) => {
     const tokenETH = item.arrToken.find((e) => e.symbol === 'ETH')
 
@@ -298,11 +300,72 @@ function formatData(listData: Item[], configTemp: ConfigTemp, userConfig: UserCo
 function callData(listDataBase: Item[], userConfig: UserConfig, configTempBase: ConfigTemp) {
   const { arrFormat, configTemp } = formatData(listDataBase, configTempBase, userConfig)
   const listData = arrFormat
+
+  console.log({ configTemp, arrFormat })
+
   let configTempCurrent = deepClone(configTemp)
 
   listData.forEach((item, index) => {
-    if (index > 0) {
-      const itemPre = listData[index - 1]
+    //BTC, ETH, BNB
+
+    // item.arrToken=   [
+    //     {
+    //       symbol: 'BTC',
+    //       price: 116049.8203,
+    //       perETH: '31.27788387405444448957',
+    //       perETHChangePercentage: '0.00120853152027634508',
+    //       changeByPoint: '-4.51224136450016873369'
+    //     },
+    //     {
+    //       symbol: 'ETH',
+    //       price: 3710.283623,
+    //       perETHChangePercentage: '-0.0053516600786371328',
+    //       perETH: '1',
+    //       changeByPoint: '-8.02632766410278207885'
+    //     },
+    //     {
+    //       symbol: 'BNB',
+    //       price: 787.4328098,
+    //       perETH: '0.21222981577977334052',
+    //       perETHChangePercentage: '0.00027417873292897599',
+    //       changeByPoint: '-6.11808301205808374461'
+    //     }
+    //   ]
+    // }
+
+    const itemPre = listData[index - 1]
+
+    // itemPre.arrToken = [
+    //   {
+    //     symbol: 'BTC',
+    //     price: 106933.693,
+    //     perETH: '43.43476022',
+    //     perETHChangePercentage: '0.00712956',
+    //     changeByPoint: '-2.76916382',
+    //     pointBeforeCheck: '997.81650055',
+    //     pointAfterCheck: '1000',
+    //   },
+    //   {
+    //     symbol: 'ETH',
+    //     price: 2461.938145,
+    //     perETH: '1',
+    //     perETHChangePercentage: '-0.00982704',
+    //     changeByPoint: '-9.82379859',
+    //     pointBeforeCheck: '989.84673458',
+    //     pointAfterCheck: '1000',
+    //   },
+    //   {
+    //     symbol: 'BNB',
+    //     price: 653.3153643,
+    //     perETH: '0.26536628',
+    //     perETHChangePercentage: '0.00590344',
+    //     changeByPoint: '-3.974939',
+    //     pointBeforeCheck: '994.35057262',
+    //     pointAfterCheck: '1000',
+    //   },
+    // ]
+
+    if (itemPre) {
       const res = checkValidSwapV4({ item, itemPre, userConfig, configTemp: deepClone(configTempCurrent) })
 
       configTempCurrent.ETHLastSwap = res.ETHLastSwap
@@ -327,7 +390,7 @@ function callData(listDataBase: Item[], userConfig: UserConfig, configTempBase: 
 
 // ================== Default Config ==================
 const userConfig: UserConfig = {
-  volatilityPercentage: '0.4',
+  volatilityPercentage: '0.3',
   affiliate: '0.15',
   amountInput: '1',
   amountMaxReceived: '2000000000000000',
@@ -341,10 +404,11 @@ const configTemp: Partial<ConfigTemp> = {
   ETHLastSwap: { ETH: '0', BTC: '0', BNB: '0' },
   ETHLastSwapTemp: { ETH: '0', BTC: '0', BNB: '0' },
   perETHOriginal: { ETH: '1', BTC: '0.05', BNB: '0.15' },
+  price1Point: {},
 }
 
 // ================== Run Swap ==================
-const result = callData(DATA_FAKE, userConfig, configTemp as any)
+const result = callData(DATA_V4, userConfig, configTemp as any)
 
 console.log({ result })
 

@@ -669,7 +669,7 @@ export default function Home() {
       rollUpData()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startData, isUpload])
+  }, [startData])
 
   const importData = async (file: File) => {
     try {
