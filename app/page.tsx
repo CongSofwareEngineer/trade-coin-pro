@@ -15,11 +15,12 @@ const KEY_STORAGE = {
   outputSwapTemp: 'outputSwapTemp',
   outputSwap: 'outputSwap',
 }
-const saveDataLocal = (key: string, value: any) => {
+
+export const saveDataLocal = (key: string, value: any) => {
   localStorage.setItem(key, JSON.stringify(value))
 }
 
-const getDataLocal = (key: string) => {
+export const getDataLocal = (key: string) => {
   const data = localStorage.getItem(key)
 
   return data ? JSON.parse(data) : null

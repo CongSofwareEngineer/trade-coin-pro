@@ -71,7 +71,7 @@ interface PramCheckValidSwap {
   configTemp: ConfigTemp
   index?: number
 }
-const clone = (params: any) => {
+export const clone = (params: any) => {
   return JSON.parse(JSON.stringify(params))
 }
 
@@ -287,7 +287,7 @@ export const callData = (listDataBase: Item[], userConfig: UserConfig, configTem
 
 export const userConfig: UserConfig = {
   volatilityPercentage: '0.3', //10%
-  affiliate: '0.2', //0.3%
+  affiliate: '0.1', //0.3%
   amountInput: '1', //1 ETH
   amountMaxReceived: '2000000000000000', //2 ETH
   inputStart: 'ETH', //demo file là symbol = outPutSwap
