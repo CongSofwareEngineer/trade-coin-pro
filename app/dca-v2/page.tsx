@@ -41,23 +41,38 @@ const DCA = () => {
     let configFinal = deepClone(config as DcaTokenConfig)
     let isStop = false
     let amountETH = '0'
+
+    //lấy token cần mua
     const token = item.arrToken.find((i) => i.tokenSymbol === config.tokenInput)!
 
+    //set gía mua lần đầu  với lần lấy giá đầu tiên
     if (BigNumber(config.priceBuyHistory).isEqualTo(0)) {
       configFinal.priceBuyHistory = token.price.toString()
     }
 
-    if (BigNumber(token.price).isLessThanOrEqualTo(configFinal.maxPrice) && BigNumber(token.price).isLessThan(configFinal.priceBuyHistory)) {
+    //nếu giá hiện tại < giá mua lần trước và <= giá max để dca thì mua
+    if (BigNumber(token.price).isLessThan(configFinal.maxPrice) && BigNumber(token.price).isLessThanOrEqualTo(configFinal.priceBuyHistory)) {
+      //lấy khoảng giá giữa max và min để tính số tiền mua theo giá hiện tại
       const rangePrice = BigNumber(config.maxPrice).minus(config.minPrice)
 
-      const ratePriceDrop = BigNumber(1).minus(BigNumber(token.price).dividedBy(rangePrice)).multipliedBy(config.stepSize).abs().toFixed()
+      //so sánh giá hiện tại với khoảng giá min và max để tính % giá giảm
+      let ratePriceDrop = BigNumber(1).minus(BigNumber(token.price).dividedBy(rangePrice)).multipliedBy(config.stepSize).abs().toFixed()
+
+      //nếu giá hiện tại < minPrice thì mua với số tiền = stepSize + % giá giảm(so voi khoảng giá min)
+      if (BigNumber(token.price).isLessThan(config.minPrice)) {
+        ratePriceDrop = BigNumber(rangePrice).dividedBy(token.price).multipliedBy(config.stepSize).toFixed()
+      }
+
+      //số tiền usd mua theo % giá giảm
       let amountUSD = BigNumber(ratePriceDrop).multipliedBy(config.stepSize).dividedBy(100).toFixed()
 
+      //quy đổi sang ETH với trượt giá
       amountETH = BigNumber(amountUSD)
         .dividedBy(token.price)
         .multipliedBy(BigNumber(100 - config.slippageTolerance).dividedBy(100))
         .toFixed()
 
+      //nếu số tiền mua > số tiền còn lại thì mua hết số tiền còn lại và dừng dca
       if (BigNumber(config.initialCapital).isLessThan(config.amountUSD)) {
         amountUSD = BigNumber(config.initialCapital).minus(config.amountUSD).toFixed()
         amountETH = BigNumber(amountUSD)
