@@ -11,7 +11,7 @@ import { deepClone } from '@/index'
 const DCA = () => {
   const [dcaConfig, setDcaConfig] = useState<DcaTokenConfig>({
     stepSize: '50',
-    slippageTolerance: 0.5,
+    slippageTolerance: 2,
     maxPrice: '3000',
     minPrice: '1500',
     initialCapital: '5000',
