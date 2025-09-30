@@ -165,6 +165,7 @@ const DCA = () => {
     })
     const arrBuy = arrClone.filter((i) => i.isBuy)
     const result = {
+      priceLasted: arrClone[arrClone.length - 1].arrToken[0].price,
       minPrice,
       maxPrice,
       total: arrClone.length,
@@ -366,6 +367,7 @@ const DCA = () => {
               </div>
               <div>Giá thấp nhất khi lấy giá: {BigNumber(result.minPrice).toFixed(4)} USDT</div>
               <div>Giá cao nhất khi lấy giá: {BigNumber(result.maxPrice).toFixed(4)} USDT</div>
+              <div>Giá cuối cùng của file: {BigNumber(result.priceLasted).toFixed(4)} USDT</div>
               <div
                 style={{
                   fontWeight: 'bold',
