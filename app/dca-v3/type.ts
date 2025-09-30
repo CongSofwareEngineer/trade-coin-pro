@@ -1,18 +1,3 @@
-export interface Result {
-  priceLasted: string
-  minPrice: string
-  maxPrice: string
-  total: string
-  amountSwapped: string
-  totalAmountUSD: string
-  totalETHBought: string
-  priceAverage: string
-  totalFee: string
-  arrSwap: number[]
-  ratioApr: string
-  ratioAprByPrice: string
-  aprByPrice: string
-}
 export interface DcaTokenConfig {
   stepSize: string // Maximum amount to invest per trade in USD
   slippageTolerance: number // Acceptable slippage percentage
@@ -24,6 +9,8 @@ export interface DcaTokenConfig {
   priceBuyHistory: string
   tokenInput: string
   amountUSD: string
+  ratioPriceUp: string
+  amountETHBought: string
 }
 
 export interface Token {
@@ -33,8 +20,7 @@ export interface Token {
 
 export interface History {
   arrToken: Token[]
-  isBuy?: boolean
+  isSwap?: boolean
   isStop?: boolean
   buyAmount?: string
-  buyAmountETH?: string
 }

@@ -9,8 +9,6 @@ export interface DcaTokenConfig {
   priceBuyHistory: string
   tokenInput: string
   amountUSD: string
-  ratioPriceUp: string
-  amountETHBought: string
 }
 
 export interface Token {
@@ -20,7 +18,8 @@ export interface Token {
 
 export interface History {
   arrToken: Token[]
-  isSwap?: boolean
+  isBuy?: boolean
   isStop?: boolean
   buyAmount?: string
+  buyAmountETH?: string
 }
