@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "testfile": "tsx index.ts",
+    "test": "tsx index.ts",
+    "testV4": "tsx indexV4.ts",
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
@@ -47,7 +48,6 @@
     "postcss": "8.5.3",
     "prettier": "^3.5.3",
     "tailwindcss": "^4",
-    "tsx": "^4.20.5",
     "typescript": "^5"
   }
 }
