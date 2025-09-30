@@ -6,7 +6,7 @@ export interface DcaTokenConfig {
   initialCapital: string // Initial capital allocated for DCA in USD
   isStop: boolean // Flag to indicate if DCA is paused
   // ratioPriceDrop: number // Percentage drop in price to trigger additional investment
-  // priceBuyHistory: string
+  priceBuyHistory: string
   tokenInput: string
   amountUSD: string
 }

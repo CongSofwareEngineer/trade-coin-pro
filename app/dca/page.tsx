@@ -13,13 +13,13 @@ const DCA = () => {
   const [dcaConfig, setDcaConfig] = useState<DcaTokenConfig>({
     stepSize: '50',
     slippageTolerance: 0.5,
-    maxPrice: '3500',
-    minPrice: '2000',
+    maxPrice: '3000',
+    minPrice: '1500',
     initialCapital: '5000',
     isStop: false,
     // ratioPriceDrop: 4, //5%
 
-    // priceBuyHistory: '3500',
+    priceBuyHistory: '0',
     tokenInput: 'ETH',
     amountUSD: '0',
   })
@@ -36,67 +36,43 @@ const DCA = () => {
     setDcaConfig((prev) => ({ ...prev, ...data }))
   }
 
-  // const checkToBuy = (item: History, config: DcaTokenConfig) => {
-  //   let itemFinal = deepClone(item as History)
-  //   let configFinal = deepClone(config as DcaTokenConfig)
-  //   let isStop = false
-  //   let amountETH = '0'
-  //   const token = item.arrToken.find((i) => i.tokenSymbol === config.tokenInput)!
-
-  //   const ratioPriceDrop = BigNumber(1).minus(BigNumber(token.price).dividedBy(configFinal.priceBuyHistory)).abs().toNumber()
-
-  //   const amountUSD = BigNumber(ratioPriceDrop).multipliedBy(configFinal.stepSize).toFixed()
-
-  //   amountETH = BigNumber(amountUSD).dividedBy(token.price).toFixed()
-
-  //   if (BigNumber(token.price).isLessThanOrEqualTo(configFinal.maxPrice)) {
-  //     console.log({ ratioPriceDrop, amountUSD, amountETH, configFinal, token })
-
-  //     if (BigNumber(token.price).isLessThan(configFinal.priceBuyHistory)) {
-  //       if (BigNumber(config.initialCapital).isLessThan(config.amountUSD)) {
-  //         isStop = true
-  //         itemFinal.isBuy = true
-  //         itemFinal.buyAmount = amountUSD
-  //         itemFinal.buyAmountETH = amountETH
-  //         configFinal.amountUSD = BigNumber(configFinal.amountUSD || 0)
-  //           .plus(amountUSD)
-  //           .toFixed()
-  //       } else {
-  //         if (ratioPriceDrop >= configFinal.ratioPriceDrop / 100) {
-  //           itemFinal.isBuy = true
-  //           itemFinal.buyAmount = amountUSD
-  //           itemFinal.buyAmountETH = amountETH
-  //           configFinal.amountUSD = BigNumber(configFinal.amountUSD || 0)
-  //             .plus(amountUSD)
-  //             .toFixed()
-  //         }
-  //       }
-  //     }
-  //     configFinal.priceBuyHistory = token.price.toString()
-  //   }
-
-  //   return { item: itemFinal, config: configFinal, isStop }
-  // }
-
   const checkToBuyByPrice = (item: History, config: DcaTokenConfig) => {
     let itemFinal = deepClone(item as History)
     let configFinal = deepClone(config as DcaTokenConfig)
     let isStop = false
     let amountETH = '0'
+
+    //lấy token cần mua
     const token = item.arrToken.find((i) => i.tokenSymbol === config.tokenInput)!
 
-    const rangePrice = BigNumber(config.maxPrice).minus(config.minPrice)
+    //set gía mua lần đầu  với lần lấy giá đầu tiên
+    if (BigNumber(config.priceBuyHistory).isEqualTo(0)) {
+      configFinal.priceBuyHistory = token.price.toString()
+    }
 
-    const ratePriceDrop = BigNumber(1).minus(BigNumber(token.price).dividedBy(rangePrice)).multipliedBy(config.stepSize).abs().toFixed()
-    let amountUSD = BigNumber(ratePriceDrop).multipliedBy(config.stepSize).dividedBy(100).toFixed()
+    //nếu giá hiện tại < giá mua lần trước và <= giá max để dca thì mua
+    if (BigNumber(token.price).isLessThan(configFinal.maxPrice) && BigNumber(token.price).isLessThanOrEqualTo(configFinal.priceBuyHistory)) {
+      //lấy khoảng giá giữa max và min để tính số tiền mua theo giá hiện tại
+      const rangePrice = BigNumber(config.maxPrice).minus(config.minPrice)
 
-    amountETH = BigNumber(amountUSD)
-      .dividedBy(token.price)
-      .multipliedBy(BigNumber(100 - config.slippageTolerance).dividedBy(100))
-      .toFixed()
+      //so sánh giá hiện tại với khoảng giá min và max để tính % giá giảm
+      let ratePriceDrop = BigNumber(1).minus(BigNumber(token.price).dividedBy(rangePrice)).multipliedBy(config.stepSize).abs().toFixed()
 
-    //nếu số tền còn lại < số tiền mua thì dừng lại
-    if (BigNumber(token.price).isLessThanOrEqualTo(configFinal.maxPrice)) {
+      //nếu giá hiện tại < minPrice thì mua với số tiền = stepSize + % giá giảm(so voi khoảng giá min)
+      if (BigNumber(token.price).isLessThan(config.minPrice)) {
+        ratePriceDrop = BigNumber(rangePrice).dividedBy(token.price).multipliedBy(config.stepSize).toFixed()
+      }
+
+      //số tiền usd mua theo % giá giảm
+      let amountUSD = BigNumber(ratePriceDrop).multipliedBy(config.stepSize).dividedBy(100).toFixed()
+
+      //quy đổi sang ETH với trượt giá
+      amountETH = BigNumber(amountUSD)
+        .dividedBy(token.price)
+        .multipliedBy(BigNumber(100 - config.slippageTolerance).dividedBy(100))
+        .toFixed()
+
+      //nếu số tiền mua > số tiền còn lại thì mua hết số tiền còn lại và dừng dca
       if (BigNumber(config.initialCapital).isLessThan(config.amountUSD)) {
         amountUSD = BigNumber(config.initialCapital).minus(config.amountUSD).toFixed()
         amountETH = BigNumber(amountUSD)
@@ -123,6 +99,8 @@ const DCA = () => {
           .plus(amountUSD)
           .toFixed()
       }
+    } else {
+      config.priceBuyHistory = token.price.toString()
     }
 
     return { item: itemFinal, config: configFinal, isStop }
