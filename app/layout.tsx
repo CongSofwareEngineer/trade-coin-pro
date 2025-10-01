@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 
 import './globals.css'
 import { META_DATA_APP } from '@/configs/app'
+import ReactQueryProvider from '@/components/ReactQueryProvider'
 
 export const metadata: Metadata = {
   metadataBase: new URL(META_DATA_APP.url),
@@ -47,7 +48,9 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body className={`antialiased !bg-black`}>
-        <main>{children}</main>
+        <main>
+          <ReactQueryProvider>{children}</ReactQueryProvider>
+        </main>
       </body>
     </html>
   )
