@@ -8,9 +8,9 @@ export interface DcaTokenConfig {
   // ratioPriceDrop: number // Percentage drop in price to trigger additional investment
   priceBuyHistory: string
   tokenInput: string
-  amountUSD: string
   ratioPriceUp: string
-  amountETHBought: string
+  amountUSDToBuy: string
+  amountETHToBuy: string
 }
 
 export interface Token {
@@ -20,7 +20,8 @@ export interface Token {
 
 export interface History {
   arrToken: Token[]
-  isSwap?: boolean
+  isBuy?: boolean
   isStop?: boolean
   buyAmount?: string
+  buyAmountETH?: string
 }

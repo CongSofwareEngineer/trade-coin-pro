@@ -3,25 +3,24 @@ import React, { useState } from 'react'
 import { read, utils } from 'xlsx'
 import { BigNumber } from 'bignumber.js'
 
-import { History, DcaTokenConfig, Token } from './type'
+import { History, DcaTokenConfig, Token, Result } from './type'
+import { checkToBuyByPrice } from './hepers'
 
 import { deepClone } from '@/index'
-const LOCAL_STORAGE_KEY = {
-  TOKEN_INPUT: 'token_input',
-}
+
 const DCA = () => {
   const [dcaConfig, setDcaConfig] = useState<DcaTokenConfig>({
     stepSize: '50',
-    slippageTolerance: 0.5,
+    slippageTolerance: 2,
     maxPrice: '3000',
     minPrice: '1500',
     initialCapital: '5000',
     isStop: false,
     // ratioPriceDrop: 4, //5%
-
+    amountETHToBuy: '0',
     priceBuyHistory: '0',
     tokenInput: 'ETH',
-    amountUSD: '0',
+    amountUSDToBuy: '0',
   })
 
   console.log({ dcaConfig })
@@ -30,83 +29,13 @@ const DCA = () => {
   const [isUploading, setIsUploading] = useState(false)
   const [listPriceTokens, setListPriceTokens] = useState<Token[]>([])
   const [fileImport, setFileImport] = useState<any>(null)
-  const [result, setResult] = useState<any>({})
+  const [result, setResult] = useState<Result>({} as Result)
 
   const updateData = (data: Partial<DcaTokenConfig>) => {
     setDcaConfig((prev) => ({ ...prev, ...data }))
   }
 
-  const checkToBuyByPrice = (item: History, config: DcaTokenConfig) => {
-    let itemFinal = deepClone(item as History)
-    let configFinal = deepClone(config as DcaTokenConfig)
-    let isStop = false
-    let amountETH = '0'
-
-    //lấy token cần mua
-    const token = item.arrToken.find((i) => i.tokenSymbol === config.tokenInput)!
-
-    //set gía mua lần đầu  với lần lấy giá đầu tiên
-    if (BigNumber(config.priceBuyHistory).isEqualTo(0)) {
-      configFinal.priceBuyHistory = token.price.toString()
-    }
-
-    //nếu giá hiện tại < giá mua lần trước và <= giá max để dca thì mua
-    if (BigNumber(token.price).isLessThan(configFinal.maxPrice) && BigNumber(token.price).isLessThanOrEqualTo(configFinal.priceBuyHistory)) {
-      //lấy khoảng giá giữa max và min để tính số tiền mua theo giá hiện tại
-      const rangePrice = BigNumber(config.maxPrice).minus(config.minPrice)
-
-      //so sánh giá hiện tại với khoảng giá min và max để tính % giá giảm
-      let ratePriceDrop = BigNumber(1).minus(BigNumber(token.price).dividedBy(rangePrice)).multipliedBy(config.stepSize).abs().toFixed()
-
-      //nếu giá hiện tại < minPrice thì mua với số tiền = stepSize + % giá giảm(so voi khoảng giá min)
-      if (BigNumber(token.price).isLessThan(config.minPrice)) {
-        ratePriceDrop = BigNumber(rangePrice).dividedBy(token.price).multipliedBy(config.stepSize).toFixed()
-      }
-
-      //số tiền usd mua theo % giá giảm
-      let amountUSD = BigNumber(ratePriceDrop).multipliedBy(config.stepSize).dividedBy(100).toFixed()
-
-      //quy đổi sang ETH với trượt giá
-      amountETH = BigNumber(amountUSD)
-        .dividedBy(token.price)
-        .multipliedBy(BigNumber(100 - config.slippageTolerance).dividedBy(100))
-        .toFixed()
-
-      //nếu số tiền mua > số tiền còn lại thì mua hết số tiền còn lại và dừng dca
-      if (BigNumber(config.initialCapital).isLessThan(config.amountUSD)) {
-        amountUSD = BigNumber(config.initialCapital).minus(config.amountUSD).toFixed()
-        amountETH = BigNumber(amountUSD)
-          .dividedBy(token.price)
-          .multipliedBy(BigNumber(100 - config.slippageTolerance).dividedBy(100))
-          .toFixed()
-
-        console.log('step 3')
-
-        isStop = true
-
-        itemFinal.isBuy = true
-        itemFinal.buyAmount = amountUSD
-        itemFinal.buyAmountETH = amountETH
-        configFinal.amountUSD = BigNumber(configFinal.amountUSD || 0)
-          .plus(amountUSD)
-          .toFixed()
-      } else {
-        itemFinal.isBuy = true
-        itemFinal.buyAmountETH = amountETH
-        itemFinal.buyAmount = amountUSD
-
-        configFinal.amountUSD = BigNumber(configFinal.amountUSD || 0)
-          .plus(amountUSD)
-          .toFixed()
-      }
-    } else {
-      config.priceBuyHistory = token.price.toString()
-    }
-
-    return { item: itemFinal, config: configFinal, isStop }
-  }
-
-  const checkData = (data: History[] = []) => {
+  const checkData = async (data: History[] = []) => {
     let arrClone = deepClone(data) as History[]
     let configClone = deepClone(dcaConfig) as DcaTokenConfig
     let isStop = false
@@ -114,10 +43,11 @@ const DCA = () => {
     let amountETHToBuy = '0'
     let minPrice = arrClone[0].arrToken[0].price.toString()
     let maxPrice = arrClone[0].arrToken[0].price.toString()
-
+    const arrSwap: Number[] = []
     let amountSwapped = 0
+    let totalFee = 0
 
-    arrClone.forEach((item, index) => {
+    arrClone.map(async (item, index) => {
       if (!isStop) {
         if (BigNumber(minPrice).gt(item.arrToken[0].price)) {
           minPrice = item.arrToken[0].price.toString()
@@ -126,11 +56,11 @@ const DCA = () => {
         if (BigNumber(maxPrice).lt(item.arrToken[0].price)) {
           maxPrice = item.arrToken[0].price.toString()
         }
-        const res = checkToBuyByPrice(item, configClone)
+        const res = checkToBuyByPrice(item, deepClone(configClone) as DcaTokenConfig)
 
         isStop = res.isStop
         arrClone[index] = res.item
-        configClone = res.config
+        configClone = deepClone(res.config)
         arrClone[index].isStop = res.isStop
         if (res.isStop) {
           indexStop = index
@@ -138,24 +68,44 @@ const DCA = () => {
         if (res.item.isBuy) {
           amountETHToBuy = BigNumber(amountETHToBuy).plus(res.item.buyAmountETH!).toFixed()
           amountSwapped++
+          arrSwap.push(index + 1)
+          totalFee += 0.15
         }
       }
     })
-    const arrBuy = arrClone.filter((i) => i.isBuy)
-    const result = {
-      priceLasted: arrClone[arrClone.length - 1].arrToken[0].price,
-      minPrice,
-      maxPrice,
-      total: arrClone.length,
-      amountSwapped,
-      totalAmountUSD: configClone.amountUSD,
-      totalETHBought: amountETHToBuy,
-      priceAverage: BigNumber(configClone.amountUSD).dividedBy(amountETHToBuy).toFixed(4),
-    }
 
-    setResult(result)
+    setTimeout(() => {
+      console.log({ configClone })
 
-    console.log({ minPrice, arrClone, arrBuy, indexStop, configClone, amountETHToBuy, result })
+      const arrBuy = arrClone.filter((i) => i.isBuy)
+      const priceAverage = BigNumber(configClone.amountUSDToBuy || '1').dividedBy(Number(amountETHToBuy) || '1')
+      const priceLasted = arrClone[arrClone.length - 1].arrToken[0].price
+      const ratioAprByPrice = BigNumber(priceLasted).dividedBy(priceAverage).minus(1).toFixed(4)
+      const usdByPriceAverage = BigNumber(BigNumber(priceAverage).multipliedBy(amountETHToBuy)).toFixed()
+      const usdETHToSell = BigNumber(priceLasted).multipliedBy(amountETHToBuy).toFixed()
+      const aprByPrice = BigNumber(BigNumber(usdETHToSell).minus(usdByPriceAverage)).dividedBy(usdByPriceAverage).multipliedBy(100).toFixed(4)
+
+      const result = {
+        initialCapital: configClone.initialCapital,
+        priceLasted: arrClone[arrClone.length - 1].arrToken[0].price,
+        minPrice,
+        maxPrice,
+        total: arrClone.length,
+        amountSwapped,
+        totalAmountUSD: configClone.amountUSDToBuy,
+        totalETHBought: amountETHToBuy,
+        priceAverage: priceAverage.toFixed(4),
+        totalFee,
+        arrSwap,
+        ratioApr: '0',
+        ratioAprByPrice,
+        aprByPrice,
+      }
+
+      setResult(result as any)
+
+      console.log({ minPrice, arrClone, arrBuy, indexStop, configClone, amountETHToBuy, result })
+    }, 1000)
   }
 
   const importData = async (file: File) => {
@@ -247,7 +197,7 @@ const DCA = () => {
                   opacity: isUploading ? 0.5 : 1,
                 }}
                 onClick={() => {
-                  setResult({})
+                  setResult({} as Result)
                   setIsUpload(false)
                   setFileImport('')
                   setListPriceTokens([])
@@ -337,6 +287,12 @@ const DCA = () => {
           <>
             <div>Kết quả:</div>
             <div className='flex flex-col gap-3'>
+              <div className='!text-green-400'>Tổng vốn: {BigNumber(result.initialCapital).toFixed(4)} </div>
+              <div className=' flex gap-3 !text-green-400'>
+                <span>Lợi nhuận:</span>
+                <span> {BigNumber(BigNumber(result.aprByPrice).dividedBy(100).multipliedBy(dcaConfig.initialCapital)).toFixed()}</span>
+                <span> ( {result.aprByPrice} %)</span>
+              </div>
               <div>Tổng số lấy giá: {result.total} </div>
               <div>Số lần đã mua: {result.amountSwapped} </div>
               <div>Tổng số tiền đã mua (USDT): {BigNumber(result.totalAmountUSD).toFixed(2)} </div>
@@ -353,6 +309,11 @@ const DCA = () => {
                 }}
               >
                 Giá trung bình: {BigNumber(result.priceAverage).decimalPlaces(4).toFixed()} USDT
+              </div>
+              <div className='font-bold mt-6 !text-red-400'>Tổng fee: {BigNumber(result.totalFee).decimalPlaces(4).toFixed()} USDT</div>
+              <div className='font-bold mt-6 !text-red-400'>
+                <div>Dòng đã swap :</div>
+                <div>{result.arrSwap?.join(', ')}</div>
               </div>
             </div>
           </>

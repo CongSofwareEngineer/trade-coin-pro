@@ -26,11 +26,11 @@ const DCA = () => {
     minPrice: '1500',
     initialCapital: '5000',
     isStop: false,
-    amountETHBought: '0',
+    amountETHToBuy: '0',
+    amountUSDToBuy: '0',
     ratioPriceUp: '3', //5%
     priceBuyHistory: '0',
     tokenInput: 'ETH',
-    amountUSD: '0',
   })
 
   console.log({ dcaConfig })
@@ -60,7 +60,6 @@ const DCA = () => {
 
     arrClone.forEach((item, index) => {
       if (!isStop) {
-        console.log(`=========${index + 1}============`)
         if (BigNumber(minPrice).gt(item.arrToken[0].price)) {
           minPrice = item.arrToken[0].price.toString()
         }
@@ -69,8 +68,6 @@ const DCA = () => {
           maxPrice = item.arrToken[0].price.toString()
         }
         const res = checkToBuyByPrice(item, configClone)
-
-        console.log({ res })
 
         isStop = res.isStop
         configClone = res.config
@@ -82,24 +79,22 @@ const DCA = () => {
           indexStop = true
         }
 
-        if (res.item.isSwap) {
+        if (res.item.isBuy) {
           amountSwapped++
           totalFee += 0.15
           arrSwap.push(index + 1)
         }
-
-        console.log(`=========${index + 1}============`)
       }
     })
 
     let aprUSD = BigNumber(configClone.initialCapital).minus(dcaConfig.initialCapital || 0)
 
-    const priceAverage = BigNumber(configClone.amountUSD || '1').dividedBy(Number(configClone.amountETHBought) || '1')
+    const priceAverage = BigNumber(configClone.amountUSDToBuy || '1').dividedBy(Number(configClone.amountETHToBuy) || '1')
     const priceLasted = arrClone[arrClone.length - 1].arrToken[0].price
     const ratioAprByPrice = BigNumber(priceLasted).dividedBy(priceAverage).minus(1).toFixed(4)
 
-    const usdByPriceAverage = BigNumber(BigNumber(priceAverage).multipliedBy(configClone.amountETHBought)).toFixed()
-    const usdETHToSell = BigNumber(priceLasted).multipliedBy(configClone.amountETHBought).toFixed()
+    const usdByPriceAverage = BigNumber(BigNumber(priceAverage).multipliedBy(configClone.amountETHToBuy)).toFixed()
+    const usdETHToSell = BigNumber(priceLasted).multipliedBy(configClone.amountETHToBuy).toFixed()
     let aprByPrice = BigNumber(BigNumber(usdETHToSell).minus(usdByPriceAverage)).dividedBy(usdByPriceAverage).multipliedBy(100).toFixed(4)
 
     aprUSD = aprUSD.plus(BigNumber(usdETHToSell).minus(usdByPriceAverage))
@@ -123,8 +118,8 @@ const DCA = () => {
       maxPrice,
       total: arrClone.length,
       amountSwapped,
-      totalAmountUSD: configClone.amountUSD,
-      totalETHBought: configClone.amountETHBought,
+      totalAmountUSD: configClone.amountUSDToBuy,
+      totalETHBought: configClone.amountETHToBuy,
       priceAverage: priceAverage.toFixed(),
       initialCapital: configClone.initialCapital,
       totalFee,

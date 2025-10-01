@@ -23,7 +23,8 @@ export interface DcaTokenConfig {
   // ratioPriceDrop: number // Percentage drop in price to trigger additional investment
   priceBuyHistory: string
   tokenInput: string
-  amountUSD: string
+  amountUSDToBuy: string
+  amountETHToBuy: string
 }
 
 export interface Token {
