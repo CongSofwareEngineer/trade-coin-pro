@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
-import fetcher from '@/configs/fetcher'
 import { QUERY_KEY } from '@/constants/reactQuery'
+import fetcher from '@/configs/fetcher'
 
 const getData = async (): Promise<{
   price: number
@@ -9,10 +9,14 @@ const getData = async (): Promise<{
 }> => {
   const id = 1027 // id ETH trên coinmarketcap
   const res = await fetcher({
-    url: `https://www.binance.com/bapi/composite/v1/public/promo/cmc/cryptocurrency/quotes/latest?id=${id}`,
+    url: `/api/token?idToken=${id}`,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
   })
 
-  return res?.data?.body?.data[id]?.quote?.USD
+  return res?.data
 }
 
 const useTokenPrice = () => {
