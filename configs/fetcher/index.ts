@@ -7,7 +7,7 @@ import { getCookie } from '@/Cookie'
 
 // import { showNotificationError } from '@/utils/Notification/index'
 
-const apiUri = process.env.NEXT_PUBLIC_APP_URL || ''
+const apiUri = 'http://localhost:3001/'
 
 export default async function fetcher<T = any>(options: IFetch): Promise<ReturnData<T> | null> {
   const {

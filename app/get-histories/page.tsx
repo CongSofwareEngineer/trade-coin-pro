@@ -18,7 +18,8 @@ const GetHistories = () => {
     try {
       setData([])
       const res = await fetcher({
-        url: `https://www.binance.com/bapi/composite/v1/public/promo/cmc/cryptocurrency/quotes/historical?id=1027&time_start=${timestampStart}&interval=4h&count=4000`,
+        method: 'POST',
+        url: `/api/token/historical?id=1027&time_start=${timestampStart}&interval=4h&count=4000`,
       })
 
       let arr: any[] = (res?.data?.body?.data?.quotes || []).map((item: any) => {
@@ -46,6 +47,16 @@ const GetHistories = () => {
     }
   }
 
+  const getData = async () => {
+    const res = await fetcher({
+      url: `/api/token/latest?id=1027`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+  }
+
   return (
     <div className='flex flex-col gap-2'>
       <div>Start TimestampStart (in seconds):</div>
@@ -64,9 +75,10 @@ const GetHistories = () => {
         value={timestampEnd}
         onChange={(e) => setTimestampEnd(Number(e.target.value))}
       />
+
       <div>
-        <button className='bg-blue-500 text-white px-4 py-2 rounded' onClick={checkData}>
-          Check Data
+        <button className='bg-blue-500 text-white px-4 py-2 rounded' onClick={getData}>
+          get data
         </button>
       </div>
       {data.map((item, index) => (

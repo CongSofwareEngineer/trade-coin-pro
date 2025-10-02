@@ -9,7 +9,7 @@ const getData = async (): Promise<{
 }> => {
   const id = 1027 // id ETH trên coinmarketcap
   const res = await fetcher({
-    url: `/api/token?idToken=${id}`,
+    url: `/api/token/latest?id=${id}`,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
