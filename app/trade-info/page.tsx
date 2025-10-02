@@ -5,6 +5,7 @@ import { UserConfig } from './type'
 
 import useUserConfig from '@/hooks/tank-query/useUserConfig'
 import { useTradeHistory } from '@/hooks/tank-query/useTradeHistory'
+import useTokenPrice from '@/hooks/tank-query/useTokenPrice'
 
 function TradeInfoPage() {
   const [userConfigCurrent, setUserConfigCurrent] = useState<UserConfig>()
@@ -18,6 +19,8 @@ function TradeInfoPage() {
     ratioPriceUp: '',
     ratioPriceDown: '',
   })
+
+  const { data: dataTokenPrice, isLoading: isLoadingTokenPrice, refetch: refetchTokenPrice } = useTokenPrice()
   const { data: dataUserConfig, isLoading: isLoadingUserConfig, refetch: refetchUserConfig } = useUserConfig()
   const {
     history,
@@ -33,11 +36,11 @@ function TradeInfoPage() {
     limit: 20,
   })
 
-  console.log({ userConfigCurrent })
-
   useEffect(() => {
     if (dataUserConfig?.users) {
-      setUserConfigCurrent(dataUserConfig.users[0])
+      const config = dataUserConfig?.users.find((i) => i.version === 1)
+
+      setUserConfigCurrent(config)
     }
   }, [dataUserConfig])
 
@@ -87,7 +90,9 @@ function TradeInfoPage() {
 
   // Calculate portfolio stats
   const calculatePortfolioStats = () => {
-    if (!userConfigCurrent) return null
+    if (!userConfigCurrent || !dataTokenPrice?.price) return null
+
+    const tokenPriceNow = dataTokenPrice?.price || 0
 
     const ethBought = parseFloat(userConfigCurrent.amountETHBought || '0')
     const usdtSpent = parseFloat(userConfigCurrent.amountUSDToBuy || '0')
@@ -103,27 +108,32 @@ function TradeInfoPage() {
     const currentETHPrice = latestTrade ? parseFloat(latestTrade.price) : 0
 
     // Calculate ETH value at current price
-    const ethCurrentValue = ethBought * currentETHPrice
 
     // Total portfolio value = current capital + ETH value
-    const totalPortfolioValue = currentCapital + ethCurrentValue
+    const totalPortfolioValue = usdtSpent
 
     // Profit/loss based on slippageTolerance (as initial capital reference)
     const profitLoss = totalPortfolioValue - initialCapital
-    const profitLossPercentage = initialCapital > 0 ? (profitLoss / initialCapital) * 100 : 0
+
+    //profit
+
+    const usdtToSell = ethBought * dataTokenPrice?.price * (1 - slippageTolerance / 100)
+
+    const total = usdtToSell + currentCapital - usdtSpent
+
+    const apr = ((total - initialCapital) / initialCapital) * 100
 
     return {
       ethBought,
       usdtSpent,
-      currentCapital,
+      currentCapital: currentCapital - initialCapital,
       initialCapital,
       slippageTolerance,
       avgPrice,
       profitLoss,
-      profitLossPercentage,
+      profitLossPercentage: apr,
       currentETHPrice,
       totalPortfolioValue,
-      ethCurrentValue,
     }
   }
 
@@ -132,6 +142,7 @@ function TradeInfoPage() {
   const refreshData = () => {
     refetchUserConfig()
     refetchTradeHistory()
+    refetchTokenPrice()
   }
 
   const goToPage = (page: number) => {
@@ -257,7 +268,7 @@ function TradeInfoPage() {
 
             {/* Version Selector */}
             <div className='flex flex-wrap gap-3'>
-              {dataUserConfig?.users.map((item) => {
+              {dataUserConfig?.users.map((item: any) => {
                 return (
                   <button
                     key={item._id}
@@ -289,36 +300,38 @@ function TradeInfoPage() {
           </div>
 
           {/* Portfolio Stats - Compact */}
-          {userConfigCurrent && portfolioStats && (
+          {userConfigCurrent && portfolioStats && !isLoadingTokenPrice && (
             <div className='bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-4 mb-6'>
               <div className='flex flex-wrap items-center justify-between gap-4'>
-                <h2 className='text-xl font-bold text-white'>Portfolio</h2>
+                <div>
+                  {' '}
+                  <h2 className='text-xl font-bold text-white'>Portfolio</h2>
+                  <div className='  text-white'>Price ETH now: {dataTokenPrice?.price.toFixed(4)} $</div>
+                </div>
+
                 <div className='flex flex-wrap gap-4 text-sm'>
                   <div className='text-center'>
                     <div className='text-gray-400 text-xs'>Initial Capital</div>
                     <div className='text-white font-bold'>${portfolioStats.initialCapital.toFixed(0)}</div>
                   </div>
                   <div className='text-center'>
-                    <div className='text-gray-400 text-xs'>ETH</div>
-                    <div className='text-white font-bold'>{portfolioStats.ethBought.toFixed(4)}</div>
-                  </div>
-                  <div className='text-center'>
-                    <div className='text-gray-400 text-xs'>ETH Value</div>
-                    <div className='text-white font-bold'>${portfolioStats.ethCurrentValue.toFixed(0)}</div>
-                  </div>
-                  <div className='text-center'>
                     <div className='text-gray-400 text-xs'>Cash</div>
                     <div className='text-white font-bold'>${portfolioStats.currentCapital.toFixed(0)}</div>
                   </div>
                   <div className='text-center'>
-                    <div className='text-gray-400 text-xs'>Total Value</div>
+                    <div className='text-gray-400 text-xs'>ETH</div>
+                    <div className='text-white font-bold'>{portfolioStats.ethBought.toFixed(4)}</div>
+                  </div>
+
+                  <div className='text-center'>
+                    <div className='text-gray-400 text-xs'>Total USD to buy</div>
                     <div className='text-white font-bold'>${portfolioStats.totalPortfolioValue.toFixed(0)}</div>
                   </div>
                   <div className='text-center'>
                     <div className='text-gray-400 text-xs'>P&L</div>
                     <div className={`font-bold ${portfolioStats.profitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {portfolioStats.profitLossPercentage >= 0 ? '+' : ''}
-                      {portfolioStats.profitLossPercentage.toFixed(1)}%
+                      {portfolioStats.profitLossPercentage.toFixed(4)}%
                     </div>
                   </div>
                   {portfolioStats.avgPrice > 0 && (
@@ -356,7 +369,7 @@ function TradeInfoPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {history.map((item, index) => {
+                    {history.map((item: any, index: number) => {
                       return (
                         <tr
                           key={item._id}
@@ -374,10 +387,10 @@ function TradeInfoPage() {
                           <td className='p-4'>
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                item.isBuy ? 'bg-green-600 text-green-100' : 'bg-red-600 text-red-100'
+                                item.isBuy ? 'bg-green-600 text-green-100' : item.isSell ? 'bg-red-600 text-red-100' : ''
                               }`}
                             >
-                              {item.isBuy ? 'BUY' : 'SELL'}
+                              {item.isBuy ? 'BUY' : item.isSell ? 'SELL' : ''}
                             </span>
                           </td>
                           <td className='p-4 font-mono text-sm text-gray-100'>
