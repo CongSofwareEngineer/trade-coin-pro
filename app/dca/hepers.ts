@@ -86,7 +86,12 @@ export const checkToBuyByPrice = (item: History, config: DcaTokenConfig) => {
     }
 
     if (BigNumber(token.price).isLessThanOrEqualTo(configFinal.priceBuyHistory)) {
-      if (ratePriceDrop >= 0.01) {
+      if (
+        ratePriceDrop >=
+        BigNumber(configFinal.ratioPriceByHistory || 3)
+          .dividedBy(100)
+          .toNumber()
+      ) {
         const { item: itemAfterBuy, config: configAfterBuy } = buyToken(itemFinal, configFinal, amountUSDToBuy, amountETHToBuy)
 
         itemFinal = itemAfterBuy
@@ -96,7 +101,13 @@ export const checkToBuyByPrice = (item: History, config: DcaTokenConfig) => {
       const priceAverage = BigNumber(configFinal.amountUSDToBuy).dividedBy(configFinal.amountETHToBuy).toString()
       const ratioPriceDrop = BigNumber(priceAverage).minus(token.price).dividedBy(priceAverage).abs().toNumber()
 
-      if (BigNumber(token.price).isLessThan(priceAverage) && ratioPriceDrop <= 0.03) {
+      if (
+        BigNumber(token.price).isLessThan(priceAverage) &&
+        ratioPriceDrop >=
+          BigNumber(configFinal.ratioPriceByHistory || 3)
+            .dividedBy(100)
+            .toNumber()
+      ) {
         const { item: itemAfterBuy, config: configAfterBuy } = buyToken(itemFinal, configFinal, amountUSDToBuy, amountETHToBuy)
 
         itemFinal = itemAfterBuy

@@ -96,8 +96,10 @@ export const checkToBuyByPrice = (item: History, config: DcaTokenConfig) => {
 
       isStop = true
 
-      itemFinal = buyToken(itemFinal, configFinal, amountUSDToBuy, amountETHToBuy).item
-      configFinal = buyToken(itemFinal, configFinal, amountUSDToBuy, amountETHToBuy).config
+      const { item: itemAfterBuy, config: configAfterBuy } = buyToken(itemFinal, configFinal, amountUSDToBuy, amountETHToBuy)
+
+      itemFinal = itemAfterBuy
+      configFinal = configAfterBuy
     } else {
       if (BigNumber(token.price).isLessThanOrEqualTo(configFinal.priceBuyHistory)) {
         if (ratePriceDrop >= 0.01) {

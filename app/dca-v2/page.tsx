@@ -40,7 +40,6 @@ const DCA = () => {
     let configClone = deepClone(dcaConfig) as DcaTokenConfig
     let isStop = false
     let indexStop = -1
-    let amountETHToBuy = '0'
     let minPrice = arrClone[0].arrToken[0].price.toString()
     let maxPrice = arrClone[0].arrToken[0].price.toString()
     const arrSwap: Number[] = []
@@ -66,7 +65,6 @@ const DCA = () => {
           indexStop = index
         }
         if (res.item.isBuy) {
-          amountETHToBuy = BigNumber(amountETHToBuy).plus(res.item.buyAmountETH!).toFixed()
           amountSwapped++
           arrSwap.push(index + 1)
           totalFee += 0.15
@@ -78,11 +76,11 @@ const DCA = () => {
       console.log({ configClone })
 
       const arrBuy = arrClone.filter((i) => i.isBuy)
-      const priceAverage = BigNumber(configClone.amountUSDToBuy || '1').dividedBy(Number(amountETHToBuy) || '1')
+      const priceAverage = BigNumber(configClone.amountUSDToBuy || '1').dividedBy(Number(configClone.amountETHToBuy) || '1')
       const priceLasted = arrClone[arrClone.length - 1].arrToken[0].price
       const ratioAprByPrice = BigNumber(priceLasted).dividedBy(priceAverage).minus(1).toFixed(4)
-      const usdByPriceAverage = BigNumber(BigNumber(priceAverage).multipliedBy(amountETHToBuy)).toFixed()
-      const usdETHToSell = BigNumber(priceLasted).multipliedBy(amountETHToBuy).toFixed()
+      const usdByPriceAverage = BigNumber(BigNumber(priceAverage).multipliedBy(configClone.amountETHToBuy)).toFixed()
+      const usdETHToSell = BigNumber(priceLasted).multipliedBy(configClone.amountETHToBuy).toFixed()
       const aprByPrice = BigNumber(BigNumber(usdETHToSell).minus(usdByPriceAverage)).dividedBy(usdByPriceAverage).multipliedBy(100).toFixed(4)
 
       const result = {
@@ -93,7 +91,7 @@ const DCA = () => {
         total: arrClone.length,
         amountSwapped,
         totalAmountUSD: configClone.amountUSDToBuy,
-        totalETHBought: amountETHToBuy,
+        totalETHBought: configClone.amountETHToBuy,
         priceAverage: priceAverage.toFixed(4),
         totalFee,
         arrSwap,
@@ -104,7 +102,7 @@ const DCA = () => {
 
       setResult(result as any)
 
-      console.log({ minPrice, arrClone, arrBuy, indexStop, configClone, amountETHToBuy, result })
+      console.log({ minPrice, arrClone, arrBuy, indexStop, configClone, amountETHToBuy: configClone.amountETHToBuy, result })
     }, 1000)
   }
 

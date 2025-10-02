@@ -6,7 +6,7 @@ import fetcher from '@/configs/fetcher'
 const GetHistories = () => {
   const [data, setData] = useState<any[]>([])
   const [timestampStart, setTimestampStart] = useState<number>(0)
-  const [timestampEnd, setTimestampEnd] = useState<number>(0)
+  const [timestampEnd, setTimestampEnd] = useState<number>(Date.now())
 
   useEffect(() => {
     const getData = async () => {}
@@ -18,7 +18,7 @@ const GetHistories = () => {
     try {
       setData([])
       const res = await fetcher({
-        url: `https://www.binance.com/bapi/composite/v1/public/promo/cmc/cryptocurrency/quotes/historical?id=1027&time_start=${timestampStart}&interval=2h&count=4000`,
+        url: `https://www.binance.com/bapi/composite/v1/public/promo/cmc/cryptocurrency/quotes/historical?id=1027&time_start=${timestampStart}&interval=4h&count=4000`,
       })
 
       let arr: any[] = (res?.data?.body?.data?.quotes || []).map((item: any) => {
@@ -29,7 +29,7 @@ const GetHistories = () => {
       })
 
       arr = arr.filter((item: any) => {
-        const timeCurrent = new Date(item.time).getTime() / 1000
+        const timeCurrent = new Date(item.time || Date.now()).getTime() / 1000
 
         console.log({ timeCurrent, item })
 
