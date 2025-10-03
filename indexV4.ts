@@ -112,6 +112,8 @@ const updatePerETHOriginal = (
 ) => {
   let currentAmountMoreThanRest = 0
   let preAmountMoreThanRest = 0
+  let isChangeETHAndBTC = false
+
   const resetPoint = BigNumber(1000).plus(BigNumber(1000).multipliedBy(volatilityPercentage).dividedBy(100).multipliedBy(10)).toFixed() //2000 + 30% = 2600
 
   arrTokenPre.forEach((token) => {
@@ -129,13 +131,20 @@ const updatePerETHOriginal = (
   if (currentAmountMoreThanRest >= 2 && preAmountMoreThanRest <= 1) {
     arrToken.forEach((token) => {
       if (token.symbol === 'ETH' || token.symbol === 'BTC') {
-        if (token.symbol === 'BTC' && tokenInput.symbol !== token.symbol) {
-          perETHOriginal[token.symbol!] = token.perETH!
+        if (tokenInput.symbol !== token.symbol) {
+          isChangeETHAndBTC = true
         }
       } else {
         if (tokenInput.symbol !== token.symbol) {
           perETHOriginal[token.symbol!] = token.perETH!
         }
+      }
+    })
+  }
+  if (isChangeETHAndBTC) {
+    arrToken.forEach((token) => {
+      if (token.symbol === 'ETH' || token.symbol === 'BTC') {
+        perETHOriginal[token.symbol!] = token.perETH!
       }
     })
   }

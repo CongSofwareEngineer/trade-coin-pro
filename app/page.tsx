@@ -242,7 +242,6 @@ export default function Home() {
     const perETHOriginal = getDataLocal(KEY_STORAGE.perETHOriginal) as ETHLastSwapTemp
     let currentAmountMoreThanRest = 0
     let preAmountMoreThanRest = 0
-    let isUpdate = false
     let isChangeETHAndBTC = false
     const resetPoint = BigNumber(1000).plus(BigNumber(1000).multipliedBy(volatilityPercentage).dividedBy(100).multipliedBy(10)).toFixed() //2000 + 30% = 2600
 
@@ -263,17 +262,10 @@ export default function Home() {
         if (token.symbol === 'ETH' || token.symbol === 'BTC') {
           if (tokenInput.symbol !== token.symbol) {
             isChangeETHAndBTC = true
-            isUpdate = true
           }
-
-          // if (token.symbol === 'BTC' && tokenInput.symbol !== token.symbol) {
-          //   perETHOriginal[token.symbol!] = token.perETH!
-          //   isUpdate = true
-          // }
         } else {
           if (tokenInput.symbol !== token.symbol) {
             perETHOriginal[token.symbol!] = token.perETH!
-            isUpdate = true
           }
         }
       })
@@ -284,11 +276,6 @@ export default function Home() {
           perETHOriginal[token.symbol!] = token.perETH!
         }
       })
-    }
-    if (isUpdate) {
-      console.warn({ perETHOriginal: deepClone(perETHOriginal), indexCurrent: indexCurrentRef.current })
-
-      saveDataLocal(KEY_STORAGE.indexCurrentUpdatePerETHOriginal, indexCurrentRef.current)
     }
 
     return perETHOriginal
