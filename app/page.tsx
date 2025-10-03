@@ -112,14 +112,14 @@ export default function Home() {
 
       if (outputSwap !== tokenOutput.symbol && tokenInput.symbol !== tokenOutput.symbol) {
         // ;(SwapInputTokenAmount * SwapInputTokenPrice) / ETHPrice
-        const amountOutCheck = BigNumber(amountInput!).multipliedBy(tokenInput?.price!).dividedBy(tokenETH?.price!).decimalPlaces(DECIMAL).toFixed()
+        const amountOutCheck = BigNumber(amountInput!).multipliedBy(tokenInput?.price!).dividedBy(tokenETH?.price!).toFixed()
 
         //(SwapInputTokenAmount * (1 - AFFILIATE_FEE_PERENT))* SwapInputTokenPrice) / ETHPrice của giờ đó
         const amountAfterSwap = BigNumber(amountInput!)
           .multipliedBy(BigNumber(1).minus(BigNumber(affiliate).dividedBy(100)))
           .multipliedBy(tokenInput?.price!)
           .dividedBy(tokenOutput!.price!)
-          .decimalPlaces(DECIMAL)
+
           .toFixed()
 
         console.log('step 2')
@@ -199,7 +199,7 @@ export default function Home() {
     arrToken.forEach((token, index) => {
       const tokenPre = arrTokenPre[index]
 
-      token.pointBeforeCheck = BigNumber(tokenPre.pointAfterCheck!).plus(token.changeByPoint!).decimalPlaces(DECIMAL).toFixed()
+      token.pointBeforeCheck = BigNumber(tokenPre.pointAfterCheck!).plus(token.changeByPoint!).toFixed()
       arrToken[index] = token
     })
 
@@ -210,7 +210,7 @@ export default function Home() {
     arrToken.forEach((token, index) => {
       const tokenPre = arrTokenPre[index]
 
-      token.pointAfterCheck = BigNumber(tokenPre.pointAfterCheck!).plus(token.changeByPoint!).decimalPlaces(DECIMAL).toFixed()
+      token.pointAfterCheck = BigNumber(tokenPre.pointAfterCheck!).plus(token.changeByPoint!).toFixed()
 
       arrToken[index] = token
     })
@@ -335,14 +335,14 @@ export default function Home() {
       console.log({ outputSwap, tokenOutput, tokenInput, amountInput, ETHOriginalAmount })
       if (outputSwap !== tokenOutput.symbol && tokenInput.symbol !== tokenOutput.symbol) {
         // ;(SwapInputTokenAmount * SwapInputTokenPrice) / ETHPrice
-        const amountOutCheck = BigNumber(amountInput!).multipliedBy(tokenInput?.price!).dividedBy(tokenETH?.price!).decimalPlaces(DECIMAL).toFixed()
+        const amountOutCheck = BigNumber(amountInput!).multipliedBy(tokenInput?.price!).dividedBy(tokenETH?.price!).toFixed()
 
         //(SwapInputTokenAmount * (1 - AFFILIATE_FEE_PERENT))* SwapInputTokenPrice) / ETHPrice của giờ đó
         const amountAfterSwap = BigNumber(amountInput!)
           .multipliedBy(BigNumber(1).minus(BigNumber(affiliate).dividedBy(100)))
           .multipliedBy(tokenInput?.price!)
           .dividedBy(tokenOutput!.price!)
-          .decimalPlaces(DECIMAL)
+
           .toFixed()
 
         console.log('step 2')
@@ -468,11 +468,7 @@ export default function Home() {
         poolTrade.isSwap = res.isSwap
 
         if (isV4) {
-          saveDataLocal(KEY_STORAGE.perETHOriginal, res.perETHOriginal)
-          const indexUpdatePerETHOriginal = getDataLocal(KEY_STORAGE.indexCurrentUpdatePerETHOriginal) || 0
-
           poolTrade.arrToken = res.arrToken
-          poolTrade.indexUpdatePerETHOriginal = indexUpdatePerETHOriginal
         }
       }
 
@@ -509,14 +505,14 @@ export default function Home() {
             token.perETH = '1'
             token.perETHChangePercentage = BigNumber(BigNumber(token!.price!).minus(tokenPre?.price!))
               .dividedBy(tokenPre!.price!)
-              .decimalPlaces(DECIMAL)
+
               .toFixed()
           } else {
-            token.perETH = BigNumber(token!.price!).dividedBy(tokenETH!.price!).decimalPlaces(DECIMAL).toFixed()
+            token.perETH = BigNumber(token!.price!).dividedBy(tokenETH!.price!).toFixed()
 
             token.perETHChangePercentage = BigNumber(BigNumber(token.perETH!).minus(tokenPre.perETH!))
               .dividedBy(tokenPre.perETH!)
-              .decimalPlaces(DECIMAL)
+
               .toFixed()
           }
 
@@ -526,7 +522,7 @@ export default function Home() {
             // ・ETHChangeByPoint: bằng (ETHPrice giờ đó / ETHPrice1Point) -  (ETHPrice giờ trước đó / ETHPrice1Point)
             token.changeByPoint = BigNumber(BigNumber(token!.price!).dividedBy(price1Point[token.symbol!]))
               .minus(BigNumber(tokenPre!.price!).dividedBy(price1Point[token.symbol!]))
-              .decimalPlaces(DECIMAL)
+
               .toFixed()
           }
 
@@ -538,7 +534,7 @@ export default function Home() {
             token.perETHChangePercentage = '0'
             token.perETH = '1'
           } else {
-            token.perETH = BigNumber(token!.price!).dividedBy(tokenETH!.price!).decimalPlaces(DECIMAL).toFixed()
+            token.perETH = BigNumber(token!.price!).dividedBy(tokenETH!.price!).toFixed()
             token.perETHChangePercentage = '0'
           }
 
@@ -555,7 +551,7 @@ export default function Home() {
             if (isETH) {
               saveDataLocal(KEY_STORAGE.ETHOriginalAmount, amountStart + '')
             } else {
-              const amount = BigNumber(amountStart).multipliedBy(token!.price!).dividedBy(tokenETH!.price!).decimalPlaces(DECIMAL).toFixed()
+              const amount = BigNumber(amountStart).multipliedBy(token!.price!).dividedBy(tokenETH!.price!).toFixed()
 
               saveDataLocal(KEY_STORAGE.ETHOriginalAmount, amount)
             }
@@ -573,7 +569,7 @@ export default function Home() {
 
             const price1Point = getDataLocal(KEY_STORAGE.price1Point) || ({} as ETHLastSwapTemp)
 
-            price1Point[token.symbol!] = BigNumber(token.price!).dividedBy(1000).decimalPlaces(DECIMAL).toNumber()
+            price1Point[token.symbol!] = BigNumber(token.price!).dividedBy(1000).toNumber()
 
             saveDataLocal(KEY_STORAGE.price1Point, price1Point)
           }
@@ -870,7 +866,6 @@ export default function Home() {
               <div>
                 Item {index + 1} - Time {item.time}.
               </div>
-              {typeof item?.indexUpdatePerETHOriginal !== 'undefined' && <div>Index update perETHOriginal: {item?.indexUpdatePerETHOriginal}</div>}
               {Object.entries(item).map(([key, value]) => {
                 if (key?.startsWith('est_')) {
                   return (
@@ -878,7 +873,7 @@ export default function Home() {
                       <div>
                         {key}: {value?.toString()}
                       </div>
-                      <div>{key?.replace('est_', 'Output Token: ')}.</div>
+                      <div>{key?.replace('est_', 'Output Token: ')}</div>
                     </div>
                   )
                 }
@@ -892,13 +887,20 @@ export default function Home() {
                   return (
                     <div key={index} className='w-full pl-4 flex flex-col '>
                       {Object.entries(token).map(([key, value]) => {
+                        let valueFormat = BigNumber(value).decimalPlaces(8, BigNumber.ROUND_DOWN).toString()
+
+                        console.log({ valueFormat })
+
+                        if (isNaN(valueFormat as any) || valueFormat === 'NaN') {
+                          valueFormat = value
+                        }
                         if (key === 'outPutSwap' || key === 'address') {
                           return null
                         }
 
                         return (
                           <div key={key}>
-                            {key}: {value}
+                            {key}: {valueFormat}
                           </div>
                         )
                       })}
