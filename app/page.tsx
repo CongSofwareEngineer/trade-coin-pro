@@ -868,10 +868,18 @@ export default function Home() {
               </div>
               {Object.entries(item).map(([key, value]) => {
                 if (key?.startsWith('est_')) {
+                  let valueFormat: any = BigNumber(value as any)
+                    .decimalPlaces(8, BigNumber.ROUND_DOWN)
+                    .toString()
+
+                  if (isNaN(valueFormat as any) || valueFormat === 'NaN') {
+                    valueFormat = value
+                  }
+
                   return (
                     <div key={key}>
                       <div>
-                        {key}: {value?.toString()}
+                        {key}: {valueFormat}
                       </div>
                       <div>{key?.replace('est_', 'Output Token: ')}</div>
                     </div>
