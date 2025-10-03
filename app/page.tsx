@@ -724,26 +724,6 @@ export default function Home() {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white'>
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            .custom-scrollbar::-webkit-scrollbar {
-              width: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-              background: rgba(55, 65, 81, 0.3);
-              border-radius: 3px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-              background: rgba(59, 130, 246, 0.5);
-              border-radius: 3px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-              background: rgba(59, 130, 246, 0.7);
-            }
-          `,
-        }}
-      />
       <div className='container mx-auto px-6 py-8'>
         <div className='grid lg:grid-cols-2 gap-8'>
           {/* Configuration Panel */}
