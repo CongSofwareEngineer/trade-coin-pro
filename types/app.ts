@@ -17,6 +17,7 @@ export type PoolToken = {
   inputSwap?: string
   outputSwap?: string
   estETH?: string
+  indexUpdatePerETHOriginal?: number
   [key: string]: unknown
 }
 

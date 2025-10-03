@@ -19,6 +19,7 @@ const KEY_STORAGE = {
   outputSwap: 'outputSwap',
   //v4
   price1Point: 'price1Point',
+  indexCurrentUpdatePerETHOriginal: 'indexCurrentUpdatePerETHOriginal',
 }
 
 export const saveDataLocal = (key: string, value: any) => {
@@ -32,12 +33,13 @@ export const getDataLocal = (key: string) => {
 }
 
 export default function Home() {
+  const indexCurrentUpdatePerETHOriginalRef = useRef(0)
   const arrCloneRef = useRef<PoolToken[]>([])
   const arrCloneDefaultRef = useRef<PoolToken[]>([])
   const indexCurrentRef = useRef(0)
   const [arrData, setArrData] = useState<PoolToken[]>([])
   const [amountStart, setAmountStart] = useState<number>(1)
-  const [outputStart, setOutputStart] = useState<string>('BTC')
+  const [outputStart, setOutputStart] = useState<string>('ETH')
   const [volatilityPercentage, setVolatilityPercentage] = useState<number>(0.3)
   const [affiliate, setAffiliate] = useState<number>(0.15)
   const [isUpload, setIsUpload] = useState(false)
@@ -240,6 +242,8 @@ export default function Home() {
     const perETHOriginal = getDataLocal(KEY_STORAGE.perETHOriginal) as ETHLastSwapTemp
     let currentAmountMoreThanRest = 0
     let preAmountMoreThanRest = 0
+    let isUpdate = false
+    let isChangeETHAndBTC = false
     const resetPoint = BigNumber(1000).plus(BigNumber(1000).multipliedBy(volatilityPercentage).dividedBy(100).multipliedBy(10)).toFixed() //2000 + 30% = 2600
 
     arrTokenPre.forEach((token) => {
@@ -257,15 +261,34 @@ export default function Home() {
     if (currentAmountMoreThanRest >= 2 && preAmountMoreThanRest <= 1) {
       arrToken.forEach((token) => {
         if (token.symbol === 'ETH' || token.symbol === 'BTC') {
-          if (token.symbol === 'BTC' && tokenInput.symbol !== token.symbol) {
-            perETHOriginal[token.symbol!] = token.perETH!
+          if (tokenInput.symbol !== token.symbol) {
+            isChangeETHAndBTC = true
+            isUpdate = true
           }
+
+          // if (token.symbol === 'BTC' && tokenInput.symbol !== token.symbol) {
+          //   perETHOriginal[token.symbol!] = token.perETH!
+          //   isUpdate = true
+          // }
         } else {
           if (tokenInput.symbol !== token.symbol) {
             perETHOriginal[token.symbol!] = token.perETH!
+            isUpdate = true
           }
         }
       })
+    }
+    if (isChangeETHAndBTC) {
+      arrToken.forEach((token) => {
+        if (token.symbol === 'ETH' || token.symbol === 'BTC') {
+          perETHOriginal[token.symbol!] = token.perETH!
+        }
+      })
+    }
+    if (isUpdate) {
+      console.warn({ perETHOriginal: deepClone(perETHOriginal), indexCurrent: indexCurrentRef.current })
+
+      saveDataLocal(KEY_STORAGE.indexCurrentUpdatePerETHOriginal, indexCurrentRef.current)
     }
 
     return perETHOriginal
@@ -428,6 +451,7 @@ export default function Home() {
     try {
       const poolTrade = arrCloneRef.current[indexCurrentRef.current]
 
+      indexCurrentUpdatePerETHOriginalRef.current = 0
       if (indexCurrentRef.current > 0) {
         const tokenMinChangePercentage = getTokenMinChangePercentage(poolTrade)
 
@@ -458,7 +482,10 @@ export default function Home() {
 
         if (isV4) {
           saveDataLocal(KEY_STORAGE.perETHOriginal, res.perETHOriginal)
+          const indexUpdatePerETHOriginal = getDataLocal(KEY_STORAGE.indexCurrentUpdatePerETHOriginal) || 0
+
           poolTrade.arrToken = res.arrToken
+          poolTrade.indexUpdatePerETHOriginal = indexUpdatePerETHOriginal
         }
       }
 
@@ -856,6 +883,7 @@ export default function Home() {
               <div>
                 Item {index + 1} - Time {item.time}.
               </div>
+              {typeof item?.indexUpdatePerETHOriginal !== 'undefined' && <div>Index update perETHOriginal: {item?.indexUpdatePerETHOriginal}</div>}
               {Object.entries(item).map(([key, value]) => {
                 if (key?.startsWith('est_')) {
                   return (
