@@ -7,8 +7,6 @@ import { getCookie } from '@/Cookie'
 
 // import { showNotificationError } from '@/utils/Notification/index'
 
-const apiUri = 'http://localhost:3001/'
-
 export default async function fetcher<T = any>(options: IFetch): Promise<ReturnData<T> | null> {
   const {
     url,
@@ -20,11 +18,11 @@ export default async function fetcher<T = any>(options: IFetch): Promise<ReturnD
     throwError = false,
     showError = false,
     fromBacoor = false,
-    baseUrl = apiUri,
+    baseUrl = '',
     headers = {},
     ...config
   } = options
-  const callUrl: URL = url?.includes('http') ? new URL(url) : new URL(url, baseUrl)
+  const callUrl: URL = url?.includes('http') ? new URL(url) : new URL(url, baseUrl || window.origin)
 
   if (query) {
     Object.keys(query).forEach((key) => {
