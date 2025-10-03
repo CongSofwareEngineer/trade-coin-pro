@@ -714,212 +714,338 @@ export default function Home() {
     }
   }
 
+  const formatNumberToShow = (value: any) => {
+    if (BigNumber(value).isNaN()) {
+      return '-'
+    }
+
+    return BigNumber(value).decimalPlaces(8, BigNumber.ROUND_DOWN).toFormat()
+  }
+
   return (
-    <section className='w-full !text-white overflow-hidden grid md:grid-cols-2 grid-cols-1 gap-10 p-5'>
-      <div className='flex flex-col gap-5 w-full overflow-hidden'>
-        <div>
-          <div>Upload file:</div>
-          <div
-            className='flex px-2 cursor-pointer border-[1px] !border-gray-500 rounded-[4px] items-center p-0'
-            style={{
-              opacity: isUploading ? 0.5 : 1,
-            }}
-          >
-            <input
-              accept='.xlsx,.xls'
-              className='w-full cursor-pointer  p-2'
-              disabled={isUploading || isUpload}
-              type='file'
-              value={fileImport}
-              onChange={(e) => {
-                const file = e.target.files?.[0]
+    <div className='min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white'>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+              background: rgba(55, 65, 81, 0.3);
+              border-radius: 3px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: rgba(59, 130, 246, 0.5);
+              border-radius: 3px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: rgba(59, 130, 246, 0.7);
+            }
+          `,
+        }}
+      />
+      <div className='container mx-auto px-6 py-8'>
+        <div className='grid lg:grid-cols-2 gap-8'>
+          {/* Configuration Panel */}
+          <div className='bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-2xl'>
+            <h2 className='text-xl font-semibold mb-6 flex items-center gap-2'>
+              <div className='w-2 h-2 bg-blue-500 rounded-full' />
+              Configuration
+            </h2>
 
-                setFileImport(e.target.value)
-                if (file) {
-                  importData(file)
-                }
-              }}
-            />
-            {/* Version selector */}
-            <div className='flex items-center gap-2 pl-2 pr-1 mr-1'>
-              <label className='text-xs text-gray-300' htmlFor='version-select'>
-                Version
-              </label>
-              <select
-                className='bg-transparent cursor-pointer border border-gray-500 rounded px-2 py-1 text-sm'
-                id='version-select'
-                value={version}
-                onChange={(e) => {
-                  const v = e.target.value as 'v1' | 'v4'
+            {/* File Upload Section */}
+            <div className='mb-6'>
+              <div className='block text-sm font-medium text-gray-300 mb-3'>Upload Data File</div>
+              <div className='relative'>
+                <div
+                  className='flex items-center border-2 border-dashed border-gray-600 rounded-xl p-4 hover:border-blue-500 transition-colors duration-200'
+                  style={{ opacity: isUploading ? 0.5 : 1 }}
+                >
+                  <input
+                    accept='.xlsx,.xls'
+                    className='flex-1 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer cursor-pointer'
+                    disabled={isUploading || isUpload}
+                    type='file'
+                    value={fileImport}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
 
-                  setVersion(v)
-                }}
-              >
-                <option value='v1'>v1</option>
-                <option value='v4'>v4</option>
-              </select>
-            </div>
-            {isUploading && (
-              <div className='animate-spin'>
-                <svg className='w-6 h-6' fill='none' stroke='currentColor' strokeWidth={1.5} viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
-                  <path
-                    d='M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
+                      setFileImport(e.target.value)
+                      if (file) {
+                        importData(file)
+                      }
+                    }}
                   />
-                </svg>
+
+                  {/* Version selector */}
+                  <div className='flex items-center gap-3 ml-4 pl-4 border-l border-gray-600'>
+                    <label className='text-xs font-medium text-gray-400' htmlFor='version-select'>
+                      Version
+                    </label>
+                    <select
+                      className='bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white cursor-pointer hover:bg-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none'
+                      id='version-select'
+                      value={version}
+                      onChange={(e) => {
+                        const v = e.target.value as 'v1' | 'v4'
+
+                        setVersion(v)
+                      }}
+                    >
+                      <option value='v1'>v1</option>
+                      <option value='v4'>v4</option>
+                    </select>
+                  </div>
+
+                  {isUploading && (
+                    <div className='ml-4 animate-spin'>
+                      <svg className='w-5 h-5 text-blue-500' fill='none' stroke='currentColor' strokeWidth={2} viewBox='0 0 24 24'>
+                        <path
+                          d='M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99'
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                        />
+                      </svg>
+                    </div>
+                  )}
+
+                  {isUpload && (
+                    <button
+                      className='ml-4 px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors duration-200'
+                      onClick={() => {
+                        setFileImport('')
+                        setIsUpload(false)
+                        arrCloneRef.current = []
+                        arrCloneDefaultRef.current = []
+                        setArrData([])
+                      }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
-            )}
-            {isUpload && (
-              <div
-                style={{
-                  opacity: isUploading ? 0.5 : 1,
-                }}
-                onClick={() => {
-                  setFileImport('')
-                  setIsUpload(false)
-                  arrCloneRef.current = []
-                  arrCloneDefaultRef.current = []
-                  setArrData([])
-                }}
+            </div>
+
+            {/* Input Fields */}
+            <div className='space-y-4'>
+              <div>
+                <div className='block text-sm font-medium text-gray-300 mb-2'>Initial Token Amount</div>
+                <input
+                  className='w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
+                  placeholder='Enter amount...'
+                  value={amountStart}
+                  onChange={(e) => setAmountStart(e.target.value as any)}
+                />
+                <p className='text-xs text-gray-500 mt-1'>Amount of tokens user inputs initially</p>
+              </div>
+
+              <div>
+                <div className='block text-sm font-medium text-gray-300 mb-2'>Output Token</div>
+                <input
+                  className='w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
+                  placeholder='e.g., ETH, BTC, BNB...'
+                  value={outputStart}
+                  onChange={(e) => setOutputStart(e.target.value as any)}
+                />
+                <p className='text-xs text-gray-500 mt-1'>Starting output token symbol</p>
+              </div>
+
+              <div>
+                <div className='block text-sm font-medium text-gray-300 mb-2'>Volatility Percentage</div>
+                <input
+                  className='w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
+                  placeholder='0.3'
+                  step='0.01'
+                  type='number'
+                  value={volatilityPercentage}
+                  onChange={(e) => setVolatilityPercentage(e.target.value as any)}
+                />
+                <p className='text-xs text-gray-500 mt-1'>Expected ETH price decline percentage</p>
+              </div>
+
+              <div>
+                <div className='block text-sm font-medium text-gray-300 mb-2'>Transaction Fee (%)</div>
+                <input
+                  className='w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
+                  placeholder='0.15'
+                  step='0.01'
+                  type='number'
+                  value={affiliate}
+                  onChange={(e) => setAffiliate(e.target.value as any)}
+                />
+                <p className='text-xs text-gray-500 mt-1'>Affiliate fee percentage</p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className='flex gap-4 mt-8'>
+              <button
+                className='flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl'
+                onClick={() => setStartData(!startData)}
               >
-                Clear
+                🚀 Analyze Swaps
+              </button>
+              <button
+                className='flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl'
+                onClick={() => setShowIsSwap(!showIsSwap)}
+              >
+                {showIsSwap ? `📊 Show All (${arrData.length})` : `✨ Show Swaps (${arrSwapFilter.length})`}
+              </button>
+            </div>
+
+            {/* Swap Indicators */}
+            {arrSwapFilter.length > 0 && (
+              <div className='mt-6 p-4 bg-green-900/30 border border-green-700/50 rounded-lg'>
+                <h3 className='text-sm font-medium text-green-400 mb-2'>Successful Swaps Found</h3>
+                <div className='gap-2'>
+                  {arrData.map((e, index) => {
+                    if (!e?.isSwap) return null
+
+                    return (
+                      <div key={index} className='px-2 py-1 bg-green-700/50 text-green-300 rounded text-xs font-medium'>
+                        {index + 1}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>
-        </div>
-        <div>
-          <div>ETHOriginalAmount (số Token đầu vào mà user bỏ vào):</div>
-          <input
-            className='w-full border-[1px] !border-gray-500 rounded-[4px] p-2'
-            value={amountStart}
-            onChange={(e) => setAmountStart(e.target.value as any)}
-          />
-        </div>
-        <div>
-          <div>Out token ban đầu</div>
-          <input
-            className='w-full border-[1px] !border-gray-500 rounded-[4px] p-2'
-            value={outputStart}
-            onChange={(e) => setOutputStart(e.target.value as any)}
-          />
-        </div>
-        <div>
-          <div>VolatilityPercentage (Con số % trung bình giá ETH sẽ giảm mà user dự đoán):</div>
-          <input
-            className='w-full border-[1px] !border-gray-500 rounded-[4px] p-2'
-            value={volatilityPercentage}
-            onChange={(e) => setVolatilityPercentage(e.target.value as any)}
-          />
-        </div>
-        <div>
-          <div>Fee transaction (affiliate) :</div>
-          <input
-            className='w-full border-[1px] !border-gray-500 rounded-[4px] p-2'
-            value={affiliate}
-            onChange={(e) => setAffiliate(e.target.value as any)}
-          />
-        </div>
-        <div className='flex justify-between gap-5'>
-          <button
-            className='cursor-pointer hover:bg-gray-800 rounded-[4px] p-2'
-            onClick={() => {
-              setStartData(!startData)
-            }}
-          >
-            <div>Get to check swap</div>
-          </button>
-          <button
-            className='cursor-pointer hover:bg-gray-800 rounded-[4px] p-2'
-            onClick={() => {
-              setShowIsSwap(!showIsSwap)
-            }}
-          >
-            <div>{showIsSwap ? `Show full (${arrData.length})` : `Show is swap (${arrSwapFilter.length})`} </div>
-          </button>
-        </div>
-        {/* <ShowCode /> */}
-        <div className=' gap-3 flex-wrap'>
-          {arrData.map((e, index) => {
-            if (!e?.isSwap) {
-              return null
-            }
 
-            return (
-              <div key={index} className=' px-2 rounded-[4px]'>
-                {index + 1}
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      <div className='flex flex-col gap-4 w-full max-h-full overflow-auto'>
-        <div>Danh sách kết quả</div>
-        {arrData.map((item, index) => {
-          if (!item.isSwap && showIsSwap) {
-            return null
-          }
-
-          return (
-            <div key={index} className='w-full flex flex-col gap-2 mb-3'>
-              <div>
-                Item {index + 1} - Time {item.time}.
-              </div>
-              {Object.entries(item).map(([key, value]) => {
-                if (key?.startsWith('est_')) {
-                  let valueFormat: any = BigNumber(value as any)
-                    .decimalPlaces(8, BigNumber.ROUND_DOWN)
-                    .toString()
-
-                  if (isNaN(valueFormat as any) || valueFormat === 'NaN') {
-                    valueFormat = value
-                  }
-
-                  return (
-                    <div key={key}>
-                      <div>
-                        {key}: {valueFormat}
-                      </div>
-                      <div>{key?.replace('est_', 'Output Token: ')}</div>
-                    </div>
-                  )
-                }
-
-                return null
-              })}
-
-              <div>List token</div>
-              <div className='flex flex-col gap-3'>
-                {item.arrToken?.map((token, index) => {
-                  return (
-                    <div key={index} className='w-full pl-4 flex flex-col '>
-                      {Object.entries(token).map(([key, value]) => {
-                        let valueFormat = BigNumber(value).decimalPlaces(8, BigNumber.ROUND_DOWN).toString()
-
-                        console.log({ valueFormat })
-
-                        if (isNaN(valueFormat as any) || valueFormat === 'NaN') {
-                          valueFormat = value
-                        }
-                        if (key === 'outPutSwap' || key === 'address') {
-                          return null
-                        }
-
-                        return (
-                          <div key={key}>
-                            {key}: {valueFormat}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )
-                })}
+          {/* Results Panel */}
+          <div className='bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-2xl'>
+            <div className='flex items-center justify-between mb-6'>
+              <h2 className='text-xl font-semibold flex items-center gap-2'>
+                <div className='w-2 h-2 bg-green-500 rounded-full' />
+                Results Analysis
+              </h2>
+              <div className='px-3 py-1 bg-blue-900/50 border border-blue-700/50 rounded-full text-xs font-medium text-blue-300'>
+                Version {version.toUpperCase()}
               </div>
             </div>
-          )
-        })}
+
+            <div className='max-h-[85vh] overflow-y-auto space-y-4 custom-scrollbar'>
+              {arrData.length === 0 ? (
+                <div className='text-center py-12'>
+                  <div className='w-16 h-16 mx-auto mb-4 bg-gray-700 rounded-full flex items-center justify-center'>
+                    <svg className='w-8 h-8 text-gray-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path
+                        d='M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                      />
+                    </svg>
+                  </div>
+                  <p className='text-gray-400'>No data loaded yet</p>
+                  <p className='text-gray-500 text-sm mt-1'>Upload a file to start analyzing</p>
+                </div>
+              ) : (
+                arrData.map((item, index) => {
+                  if (!item.isSwap && showIsSwap) return null
+
+                  return (
+                    <div
+                      key={index}
+                      className='bg-gray-700/30 border border-gray-600/50 rounded-xl p-5 hover:bg-gray-700/50 transition-all duration-200'
+                    >
+                      {/* Item Header */}
+                      <div className='flex items-center justify-between mb-4'>
+                        <div className='flex items-center gap-3'>
+                          <div className={`w-3 h-3 rounded-full ${item.isSwap ? 'bg-green-500' : 'bg-gray-500'}`} />
+                          <h3 className='font-semibold text-lg'>Item #{index + 1}</h3>
+                          {item.isSwap && (
+                            <span className='px-2 py-1 bg-green-900/50 border border-green-700/50 text-green-300 rounded-md text-xs font-medium'>
+                              SWAP
+                            </span>
+                          )}
+                        </div>
+                        <div className='text-sm text-gray-400'>{item.time ? new Date(item.time).toLocaleString() : 'N/A'}</div>
+                      </div>
+
+                      {/* Swap Results */}
+                      {Object.entries(item).map(([key, value]) => {
+                        if (key?.startsWith('est_')) {
+                          let valueFormat: any = BigNumber(value as any)
+                            .decimalPlaces(8, BigNumber.ROUND_DOWN)
+                            .toString()
+
+                          if (isNaN(valueFormat as any) || valueFormat === 'NaN') {
+                            valueFormat = value
+                          }
+
+                          const tokenSymbol = key.replace('est_', '')
+
+                          return (
+                            <div key={key} className='mb-4 p-3 bg-blue-900/30 border border-blue-700/50 rounded-lg'>
+                              <div className='grid grid-cols-2 gap-4'>
+                                <div>
+                                  <span className='text-sm text-gray-400'>Estimated Amount</span>
+                                  <div className='text-lg font-mono text-blue-300'>{valueFormat}</div>
+                                </div>
+                                <div>
+                                  <span className='text-sm text-gray-400'>Output Token</span>
+                                  <div className='text-lg font-semibold text-blue-400'>{tokenSymbol}</div>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        return null
+                      })}
+
+                      {/* Token Details */}
+                      <div className='border-t border-gray-600/50 pt-4'>
+                        <h4 className='text-sm font-medium text-gray-300 mb-3'>Token Details</h4>
+                        <div className='grid gap-3'>
+                          {item.arrToken?.map((token, tokenIndex) => (
+                            <div key={tokenIndex} className='bg-gray-800/50 rounded-lg p-3'>
+                              <div className='flex items-center justify-between mb-2'>
+                                <span className='font-semibold text-white'>{token.symbol}</span>
+                                <span className='text-sm text-gray-400'>Price: ${token.price?.toLocaleString()}</span>
+                              </div>
+
+                              <div className='grid grid-cols-2 gap-4 text-xs'>
+                                <div>
+                                  <span className='text-gray-400'>Per ETH:</span>
+                                  <span className='ml-2 font-mono text-yellow-400'>{formatNumberToShow(token.perETH)}</span>
+                                </div>
+                                <div>
+                                  <span className='text-gray-400'>Change %:</span>
+                                  <span className={`ml-2 font-mono ${Number(token.perETHChangePercentage) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {Number(token.perETHChangePercentage) >= 0 ? '+' : ''}
+                                    {formatNumberToShow(token.perETHChangePercentage)}%
+                                  </span>
+                                </div>
+
+                                {/* V4 specific fields */}
+                                {version === 'v4' && token.changeByPoint && (
+                                  <>
+                                    <div>
+                                      <span className='text-gray-400'>Point Change:</span>
+                                      <span className='ml-2 font-mono text-purple-400'>{formatNumberToShow(token.changeByPoint)}</span>
+                                    </div>
+                                    <div>
+                                      <span className='text-gray-400'>Point After:</span>
+                                      <span className='ml-2 font-mono text-cyan-400'>{formatNumberToShow(token.pointAfterCheck)}</span>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </section>
+    </div>
   )
 }
