@@ -133,7 +133,7 @@ function TradeInfoPage() {
 
     //profit
 
-    const usdtToSell = ethBought * dataTokenPrice?.price * (1 - slippageTolerance / 100)
+    const usdtToSell = ethBought * tokenPriceNow * (1 - slippageTolerance / 100)
 
     const total = usdtToSell + currentCapital - usdtSpent
 
@@ -366,7 +366,7 @@ function TradeInfoPage() {
           )}
 
           {/* Table */}
-          {isLoadingTradeHistory ? (
+          {isLoadingTradeHistory || !userConfigCurrent ? (
             <TableSkeleton />
           ) : history && history.length > 0 ? (
             <div className='bg-gray-800 rounded-lg shadow-lg border border-gray-700 overflow-hidden'>

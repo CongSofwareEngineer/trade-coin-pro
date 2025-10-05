@@ -20,7 +20,7 @@ const getData = async (): Promise<{
 }
 
 const useTokenPrice = () => {
-  const { data, isLoading, refetch, isFetching } = useQuery<{
+  const { data, isLoading, refetch } = useQuery<{
     price: number
     [key: string]: unknown
   } | null>({
@@ -29,7 +29,7 @@ const useTokenPrice = () => {
   })
 
   return {
-    isLoading: isLoading || isFetching,
+    isLoading,
     data,
     refetch,
   }
