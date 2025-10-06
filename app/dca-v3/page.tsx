@@ -69,15 +69,9 @@ const DCA = () => {
         }
         const res = checkToBuyByPrice(item, configClone)
 
-        isStop = res.isStop
         configClone = res.config
 
         arrClone[index] = res.item
-        arrClone[index].isStop = res.isStop
-
-        if (res.isStop) {
-          indexStop = true
-        }
 
         if (res.item.isBuy) {
           amountSwapped++
@@ -86,50 +80,56 @@ const DCA = () => {
         }
       }
     })
+    setTimeout(() => {
+      const arrSell = arrClone.filter((i) => i.isSell)
+      const arrBuy = arrClone.filter((i) => i.isBuy)
+      let aprUSD = BigNumber(configClone.initialCapital).minus(dcaConfig.initialCapital || 0)
 
-    let aprUSD = BigNumber(configClone.initialCapital).minus(dcaConfig.initialCapital || 0)
+      const priceAverage = BigNumber(configClone.amountUSDToBuy || '1').dividedBy(Number(configClone.amountETHToBuy) || '1')
+      const priceLasted = arrClone[arrClone.length - 1].arrToken[0].price
+      const ratioAprByPrice = BigNumber(priceLasted).dividedBy(priceAverage).minus(1).toFixed(4)
 
-    const priceAverage = BigNumber(configClone.amountUSDToBuy || '1').dividedBy(Number(configClone.amountETHToBuy) || '1')
-    const priceLasted = arrClone[arrClone.length - 1].arrToken[0].price
-    const ratioAprByPrice = BigNumber(priceLasted).dividedBy(priceAverage).minus(1).toFixed(4)
+      const usdByPriceAverage = BigNumber(BigNumber(priceAverage).multipliedBy(configClone.amountETHToBuy)).toFixed()
+      const usdETHToSell = BigNumber(priceLasted).multipliedBy(configClone.amountETHToBuy).toFixed()
+      let aprByPrice = BigNumber(BigNumber(usdETHToSell).minus(usdByPriceAverage)).dividedBy(usdByPriceAverage).multipliedBy(100).toFixed(4)
 
-    const usdByPriceAverage = BigNumber(BigNumber(priceAverage).multipliedBy(configClone.amountETHToBuy)).toFixed()
-    const usdETHToSell = BigNumber(priceLasted).multipliedBy(configClone.amountETHToBuy).toFixed()
-    let aprByPrice = BigNumber(BigNumber(usdETHToSell).minus(usdByPriceAverage)).dividedBy(usdByPriceAverage).multipliedBy(100).toFixed(4)
+      aprUSD = aprUSD.plus(BigNumber(usdETHToSell).minus(usdByPriceAverage))
+      aprByPrice = BigNumber(aprUSD).dividedBy(dcaConfig.initialCapital).multipliedBy(100).toFixed(4)
+      console.log('====================================')
+      console.log({
+        configClone,
+        priceLasted: priceLasted.toString(),
+        priceAverage: priceAverage.toString(),
+        usdETHToSell,
+        usdByPriceAverage,
+        ratioAprByPrice,
+        aprByPrice,
+        aprUSD: aprUSD.toFixed(),
+        arrBuy,
+        arrSell,
+      })
+      console.log('====================================')
 
-    aprUSD = aprUSD.plus(BigNumber(usdETHToSell).minus(usdByPriceAverage))
-    aprByPrice = BigNumber(aprUSD).dividedBy(dcaConfig.initialCapital).multipliedBy(100).toFixed(4)
-    console.log('====================================')
-    console.log({
-      priceLasted: priceLasted.toString(),
-      priceAverage: priceAverage.toString(),
-      usdETHToSell,
-      usdByPriceAverage,
-      ratioAprByPrice,
-      aprByPrice,
-      aprUSD: aprUSD.toFixed(),
-    })
-    console.log('====================================')
+      const result = {
+        arrSwap,
+        priceLasted,
+        minPrice,
+        maxPrice,
+        total: arrClone.length,
+        amountSwapped,
+        totalAmountUSD: configClone.amountUSDToBuy,
+        totalETHBought: configClone.amountETHToBuy,
+        priceAverage: priceAverage.toFixed(),
+        initialCapital: configClone.initialCapital,
+        totalFee,
+        ratioAprByPrice,
+        aprByPrice,
+      }
 
-    const result = {
-      arrSwap,
-      priceLasted,
-      minPrice,
-      maxPrice,
-      total: arrClone.length,
-      amountSwapped,
-      totalAmountUSD: configClone.amountUSDToBuy,
-      totalETHBought: configClone.amountETHToBuy,
-      priceAverage: priceAverage.toFixed(),
-      initialCapital: configClone.initialCapital,
-      totalFee,
-      ratioAprByPrice,
-      aprByPrice,
-    }
+      setResult(result)
 
-    setResult(result)
-
-    console.log({ minPrice, arrClone, indexStop, configClone, amountETHToBuy, result })
+      console.log({ minPrice, arrClone, indexStop, configClone, amountETHToBuy, result })
+    }, 1000)
   }
 
   const importData = async (file: File) => {

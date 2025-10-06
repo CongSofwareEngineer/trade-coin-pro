@@ -22,6 +22,7 @@ export interface History {
   arrToken: Token[]
   isBuy?: boolean
   isStop?: boolean
+  isSell?: boolean
   buyAmount?: string
   buyAmountETH?: string
 }
