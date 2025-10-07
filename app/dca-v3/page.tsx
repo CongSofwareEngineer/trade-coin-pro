@@ -1,5 +1,5 @@
 'use client'
-import React, { useLayoutEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { read, utils } from 'xlsx'
 import { BigNumber } from 'bignumber.js'
 
@@ -7,18 +7,8 @@ import { History, DcaTokenConfig, Token } from './type'
 import { checkToBuyByPrice } from './hepers'
 
 import { deepClone } from '@/index'
-import { getDataLocal } from '@/services/Storage'
-import { LOCAL_STORE_KEY } from '@/constants/storage'
 
 const DCA = () => {
-  useLayoutEffect(() => {
-    const enableDCA = getDataLocal(LOCAL_STORE_KEY.ENABLE_DCA_V3)
-
-    if (!enableDCA) {
-      window.location.href = '/'
-    }
-  }, [])
-
   const [dcaConfig, setDcaConfig] = useState<DcaTokenConfig>({
     stepSize: '50',
     slippageTolerance: 2,
