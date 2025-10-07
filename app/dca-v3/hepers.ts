@@ -25,19 +25,24 @@ const buyToken = (item: History, config: DcaTokenConfig, amountUSD: string, amou
   return { item: itemFinal, config: configFinal }
 }
 
-const sellToken = (item: History, config: DcaTokenConfig, amountUSD: string) => {
-  let itemFinal = deepClone(item as History)
-  let configFinal = deepClone(config as DcaTokenConfig)
+const sellToken = (item: History, config: DcaTokenConfig, amountUSDToSell: string, amountETHToSell: string) => {
+  const itemFinal = deepClone(item as History)
+  const configFinal = deepClone(config as DcaTokenConfig)
+
+  configFinal.initialCapital = BigNumber(configFinal.initialCapital || 0)
+    .plus(amountUSDToSell)
+    .toFixed()
+
+  configFinal.amountETHToBuy = BigNumber(configFinal.amountETHToBuy || 0)
+    .minus(amountETHToSell)
+    .toFixed()
+  configFinal.amountUSDToBuy = BigNumber(configFinal.amountUSDToBuy || 0)
+    .minus(amountUSDToSell)
+    .toFixed()
 
   itemFinal.isSell = true
-
-  configFinal.amountETHToBuy = '0'
-  configFinal.amountUSDToBuy = '0'
-
-  //hoàn vốn ban đầu
-  configFinal.initialCapital = BigNumber(configFinal.initialCapital || 0)
-    .plus(amountUSD)
-    .toFixed()
+  itemFinal.buyAmount = amountUSDToSell
+  itemFinal.buyAmountETH = amountETHToSell
 
   return { item: itemFinal, config: configFinal }
 }
@@ -137,34 +142,20 @@ export const checkToBuyByPrice = (item: History, config: DcaTokenConfig) => {
           //quy đổi sang ETH với trượt giá
           let amountETHToSell = BigNumber(amountUSDToSell).dividedBy(token.price).toFixed()
 
+          //nếu số tiền bán > số tiền đang có thì bán hết số tiền đang có
+          if (BigNumber(configFinal.amountETHToBuy).isLessThanOrEqualTo(BigNumber(amountETHToSell).plus(configFinal.amountUSDToBuy || 0))) {
+            amountETHToSell = configFinal.amountETHToBuy
+          }
+
           amountUSDToSell = BigNumber(amountETHToSell)
             .multipliedBy(token.price)
             .multipliedBy(BigNumber(100 - configFinal.slippageTolerance).dividedBy(100))
             .toFixed()
 
-          //nếu số tiền bán > số tiền đang có thì bán hết số tiền đang có
-          if (BigNumber(configFinal.amountETHToBuy).isLessThanOrEqualTo(BigNumber(amountETHToSell).plus(configFinal.amountUSDToBuy || 0))) {
-            amountETHToSell = configFinal.amountETHToBuy
+          const { config, item } = sellToken(itemFinal, configFinal, amountUSDToSell, amountETHToSell)
 
-            amountUSDToSell = BigNumber(amountETHToSell)
-              .multipliedBy(token.price)
-              .multipliedBy(BigNumber(100 - configFinal.slippageTolerance).dividedBy(100))
-              .toFixed()
-          }
-          configFinal.initialCapital = BigNumber(configFinal.initialCapital || 0)
-            .plus(amountUSDToSell)
-            .toFixed()
-
-          configFinal.amountETHToBuy = BigNumber(configFinal.amountETHToBuy || 0)
-            .minus(amountETHToSell)
-            .toFixed()
-          configFinal.amountUSDToBuy = BigNumber(configFinal.amountUSDToBuy || 0)
-            .minus(amountUSDToSell)
-            .toFixed()
-
-          itemFinal.isSell = true
-          itemFinal.buyAmount = amountUSDToSell
-          itemFinal.buyAmountETH = amountETHToSell
+          itemFinal = item
+          configFinal = config
         }
       }
     }

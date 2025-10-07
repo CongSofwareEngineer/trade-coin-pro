@@ -71,8 +71,8 @@ const DCA = () => {
       }
     })
     setTimeout(() => {
-      const arrSell = arrClone.filter((i) => i.isSell)
-      const arrBuy = arrClone.filter((i) => i.isBuy)
+      const arrSell = arrClone.map((e, index) => ({ ...e, index })).filter((i) => i.isSell)
+      const arrBuy = arrClone.map((e, index) => ({ ...e, index })).filter((i) => i.isBuy)
       let aprUSD = BigNumber(configClone.initialCapital).minus(dcaConfig.initialCapital || 0)
 
       const priceAverage = BigNumber(configClone.amountUSDToBuy || '1').dividedBy(Number(configClone.amountETHToBuy) || '1')
