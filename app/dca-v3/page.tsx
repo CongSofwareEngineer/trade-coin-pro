@@ -4,9 +4,9 @@ import { read, utils } from 'xlsx'
 import { BigNumber } from 'bignumber.js'
 
 import { History, DcaTokenConfig, Token } from './type'
-import { checkToBuyByPrice } from './hepers'
 
 import { deepClone } from '@/index'
+import DcaUtil from '@/utils/dca'
 
 const DCA = () => {
   const [dcaConfig, setDcaConfig] = useState<DcaTokenConfig>({
@@ -18,7 +18,7 @@ const DCA = () => {
     isStop: false,
     amountETHToBuy: '0',
     amountUSDToBuy: '0',
-    ratioPriceUp: '3', //5%
+    ratioPriceChange: '3', //5%
     priceBuyHistory: '0',
     tokenInput: 'ETH',
   })
@@ -57,7 +57,7 @@ const DCA = () => {
         if (BigNumber(maxPrice).lt(item.arrToken[0].price)) {
           maxPrice = item.arrToken[0].price.toString()
         }
-        const res = checkToBuyByPrice(item, configClone)
+        const res = DcaUtil.calculateTradingV2(item, configClone)
 
         configClone = res.config
 
@@ -251,8 +251,8 @@ const DCA = () => {
           <div>% giá tăng </div>
           <input
             className='w-full border-[1px] !border-gray-500 rounded-[4px] p-2'
-            value={dcaConfig.ratioPriceUp}
-            onChange={(e) => updateData({ ratioPriceUp: e.target.value as any })}
+            value={dcaConfig.ratioPriceChange}
+            onChange={(e) => updateData({ ratioPriceChange: e.target.value as any })}
           />
         </div>
 

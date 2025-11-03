@@ -38,4 +38,5 @@ export interface History {
   isStop?: boolean
   buyAmount?: string
   buyAmountETH?: string
+  price: string
 }
