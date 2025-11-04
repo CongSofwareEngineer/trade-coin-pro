@@ -1,4 +1,4 @@
-// 'use client'
+'use client'
 // import React, { useTransition } from 'react'
 // import { Address, createPublicClient, formatUnits, getAddress, getContract, http, parseUnits } from 'viem'
 // import { base } from 'viem/chains'
@@ -270,9 +270,42 @@
 // export default UniScreen
 
 import React from 'react'
+import { parseUnits, zeroAddress } from 'viem'
+import { CurrencyAmount } from '@uniswap/sdk-core'
+
+import PoolV4Web3 from './utils'
 
 function UniScreen() {
-  return <div>UniScreen</div>
+  const onClick = async () => {
+    try {
+      const poolKey = await PoolV4Web3.createPoolKey(zeroAddress, '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913')
+
+      console.log({ poolKey })
+
+      const poolId = PoolV4Web3.calculatePoolId(poolKey)
+      const poolState = await PoolV4Web3.getPoolState(poolKey)
+      const pool = await PoolV4Web3.createPoolInstance(poolKey, poolState)
+      const quotedAmountOut = await PoolV4Web3.quotedAmountOut(poolKey, parseUnits('1', 6))
+      const amountIn = CurrencyAmount.fromRawAmount(poolKey.currency1, parseUnits('1', 6).toString())
+      const token1Price = pool.token1Price.toFixed()
+      const token0Price = pool.token0Price.toFixed()
+
+      console.log({ poolState, token1Price, token0Price, amountIn, poolId, quotedAmountOut })
+    } catch (error) {
+      console.log('====================================')
+      console.log({ error })
+      console.log('====================================')
+    }
+  }
+
+  return (
+    <div>
+      UniScreen
+      <button className='p-10 bg-gray-600' onClick={onClick}>
+        Uni Screen Button
+      </button>
+    </div>
+  )
 }
 
 export default UniScreen
