@@ -36,8 +36,10 @@ function TradeInfoPage() {
     limit: 20,
   })
 
+  console.log({ dataUserConfig, history })
+
   useEffect(() => {
-    if (dataUserConfig?.users) {
+    if (Array.isArray(dataUserConfig?.users)) {
       const config = dataUserConfig?.users.find((i) => i.version === 1)
 
       setUserConfigCurrent(config)
@@ -284,7 +286,7 @@ function TradeInfoPage() {
 
             {/* Version Selector */}
             <div className='flex flex-wrap gap-3'>
-              {dataUserConfig?.users.map((item: any) => {
+              {dataUserConfig?.users?.map((item: any) => {
                 return (
                   <button
                     key={item._id}

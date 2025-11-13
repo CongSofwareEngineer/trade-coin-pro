@@ -6,10 +6,12 @@ import { UserConfig } from '@/app/trade-info/type'
 
 const getData = async (): Promise<any> => {
   const res = await fetcher({
-    url: 'https://bot-dca-token.onrender.com/api/user/list?page=1&limit=10',
+    url: 'https://exuberant-jade-diencong-6e4aa722.koyeb.app/user-dca/all?page=1&limit=10',
   })
 
-  return res?.data || []
+  return {
+    users: res?.data?.data || res?.data || [],
+  }
 }
 
 const useUserConfig = () => {

@@ -44,10 +44,23 @@ const getData = async ({ queryKey }: { queryKey: any }): Promise<TradeHistoryRes
   if (!idUser) return null
 
   const res = await fetcher({
-    url: `https://bot-dca-token.onrender.com/api/dca/dca-history/${idUser}?page=${page}&limit=${limit}`,
+    url: `https://exuberant-jade-diencong-6e4aa722.koyeb.app/dca/all?idUser=${idUser}&page=${page}&limit=${limit}`,
   })
 
-  return res?.data || null
+  const hasNextPage = res?.data?.pagination?.page < res?.data?.pagination?.totalPages
+  const hasPrevPage = res?.data?.pagination?.page > 1
+
+  return {
+    history: res?.data?.data || null,
+
+    pagination: {
+      currentPage: res?.data?.pagination?.page || 1,
+      totalPages: res?.data?.pagination?.totalPages || 1,
+      totalTrades: res?.data?.pagination?.total || 0,
+      hasNextPage: hasNextPage || false,
+      hasPrevPage: hasPrevPage || false,
+    },
+  }
 }
 
 export const useTradeHistory = ({ idUser, page = 1, limit = 20 }: UseTradeHistoryParams) => {

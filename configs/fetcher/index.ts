@@ -86,7 +86,7 @@ export default async function fetcher<T = any>(options: IFetch): Promise<ReturnD
   if (!isEmpty(resJson)) {
     return {
       statusCode: 200,
-      data: resJson?.data?.data || resJson?.data || resJson,
+      data: resJson?.data || resJson,
       message: 'success',
     }
   }
