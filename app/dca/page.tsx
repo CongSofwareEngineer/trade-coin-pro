@@ -107,7 +107,7 @@ const DCA = () => {
 
   const importData = async (file: File) => {
     try {
-      const formatData = (data: any[] = []): History[] => {
+      const formatData = (data: any[] = []): Partial<History>[] => {
         return data.map((item) => {
           return {
             arrToken: [

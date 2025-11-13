@@ -6,8 +6,8 @@ import { NoTickDataProvider } from '@uniswap/v3-sdk'
 
 import { POOL_MANAGER_ABI, QUOTER_V4_ABI, UNI_V4 } from './constants'
 type PoolV4Key = {
-  currency0: Currency
-  currency1: Currency
+  currency0: Currency & { address: `0x${string}` }
+  currency1: Currency & { address: `0x${string}` }
   fee: number
   tickSpacing: number
   hooks: string
@@ -113,8 +113,8 @@ class PoolV4Web3 {
     const [currency0, currency1] = this.sortsBefore(tokenAInfo, tokenBInfo) ? [tokenAInfo, tokenBInfo] : [tokenBInfo, tokenAInfo]
 
     return {
-      currency0,
-      currency1,
+      currency0: currency0 as Currency & { address: `0x${string}` },
+      currency1: currency1 as Currency & { address: `0x${string}` },
       fee: this.FEE_TIER_05,
       tickSpacing: this.TICK_SPACING_05,
       hooks: zeroAddress,
