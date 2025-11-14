@@ -1,5 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
+import { BigNumber } from 'bignumber.js'
 
 import { UserConfig } from './type'
 
@@ -75,8 +76,8 @@ function TradeInfoPage() {
         slippageTolerance: userConfigCurrent.slippageTolerance?.toString() || '',
         maxPrice: userConfigCurrent.maxPrice || '',
         minPrice: userConfigCurrent.minPrice || '',
-        ratioPriceUp: userConfigCurrent.ratioPriceUp || '',
-        ratioPriceDown: userConfigCurrent.ratioPriceDown || '',
+        ratioPriceUp: userConfigCurrent.ratioPriceChange || '',
+        ratioPriceDown: userConfigCurrent.ratioPriceChange || '',
       })
     }
   }, [userConfigCurrent])
@@ -112,8 +113,8 @@ function TradeInfoPage() {
 
     const tokenPriceNow = dataTokenPrice?.price || 0
 
-    const ethBought = parseFloat(userConfigCurrent.amountETHBought || '0')
-    const usdtSpent = parseFloat(userConfigCurrent.amountUSDToBuy || '0')
+    const ethBought = parseFloat(userConfigCurrent.amountETHBuy || '0')
+    const usdtSpent = parseFloat(userConfigCurrent.amountUSDBuy || '0')
     const currentCapital = parseFloat(userConfigCurrent.capital || '0')
     const initialCapital = parseFloat(userConfigCurrent.initialCapital || '0')
     const slippageTolerance = parseFloat(userConfigCurrent.slippageTolerance?.toString() || '0')
@@ -139,12 +140,12 @@ function TradeInfoPage() {
 
     const total = usdtToSell + currentCapital - usdtSpent
 
-    const apr = ((total - initialCapital) / initialCapital) * 100
+    const apr = BigNumber(BigNumber(tokenPriceNow).minus(avgPrice)).dividedBy(tokenPriceNow).multipliedBy(100).toNumber()
 
     return {
-      ethBought,
-      usdtSpent,
-      currentCapital: currentCapital - initialCapital,
+      ethBought: userConfigCurrent.amountETHBuy,
+      usdtSpent: userConfigCurrent.amountUSDBuy,
+      currentCapital: userConfigCurrent.capital,
       initialCapital,
       slippageTolerance,
       avgPrice,
@@ -156,6 +157,8 @@ function TradeInfoPage() {
   }
 
   const portfolioStats = calculatePortfolioStats()
+
+  console.log({ userConfigCurrent, portfolioStats })
 
   const refreshData = () => {
     refetchUserConfig()
@@ -324,26 +327,28 @@ function TradeInfoPage() {
                 <div>
                   {' '}
                   <h2 className='text-xl font-bold text-white'>Portfolio</h2>
-                  <div className='  text-white'>Price ETH now: {dataTokenPrice?.price.toFixed(4)} $</div>
+                  <div className='  text-white'>
+                    Price ETH now:{' '}
+                    {BigNumber(dataTokenPrice?.price || '0')
+                      .decimalPlaces(4)
+                      .toFormat()}{' '}
+                  </div>
                 </div>
 
                 <div className='flex flex-wrap gap-4 text-sm'>
                   <div className='text-center'>
                     <div className='text-gray-400 text-xs'>Initial Capital</div>
-                    <div className='text-white font-bold'>${portfolioStats.initialCapital.toFixed(0)}</div>
+                    <div className='text-white font-bold'>${BigNumber(portfolioStats.initialCapital).decimalPlaces(0).toFormat()}</div>
                   </div>
-                  <div className='text-center'>
-                    <div className='text-gray-400 text-xs'>Cash</div>
-                    <div className='text-white font-bold'>${portfolioStats.currentCapital.toFixed(0)}</div>
-                  </div>
+
                   <div className='text-center'>
                     <div className='text-gray-400 text-xs'>ETH</div>
-                    <div className='text-white font-bold'>{portfolioStats.ethBought.toFixed(4)}</div>
+                    <div className='text-white font-bold'>{BigNumber(portfolioStats.ethBought).decimalPlaces(4).toFormat()}</div>
                   </div>
 
                   <div className='text-center'>
                     <div className='text-gray-400 text-xs'>Total USD to buy</div>
-                    <div className='text-white font-bold'>${portfolioStats.totalPortfolioValue.toFixed(0)}</div>
+                    <div className='text-white font-bold'>${BigNumber(portfolioStats.totalPortfolioValue).decimalPlaces(0).toFormat()}</div>
                   </div>
                   <div className='text-center'>
                     <div className='text-gray-400 text-xs'>P&L</div>
@@ -355,7 +360,7 @@ function TradeInfoPage() {
                   {portfolioStats.avgPrice > 0 && (
                     <div className='text-center'>
                       <div className='text-gray-400 text-xs'>Avg Price</div>
-                      <div className='text-white font-bold'>${portfolioStats.avgPrice.toFixed(0)}</div>
+                      <div className='text-white font-bold'>${BigNumber(portfolioStats.avgPrice).decimalPlaces(0).toFormat()}</div>
                     </div>
                   )}
                   <div className='text-center'>
