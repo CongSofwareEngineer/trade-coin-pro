@@ -41,7 +41,7 @@ function TradeInfoPage() {
 
   useEffect(() => {
     if (Array.isArray(dataUserConfig?.users)) {
-      const config = dataUserConfig?.users.find((i) => i.version === 1)
+      const config = dataUserConfig?.users.find((i) => Number(i.version) === 1)
 
       setUserConfigCurrent(config)
     }
