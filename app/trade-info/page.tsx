@@ -37,11 +37,9 @@ function TradeInfoPage() {
     limit: 20,
   })
 
-  console.log({ dataUserConfig, history })
-
   useEffect(() => {
     if (Array.isArray(dataUserConfig?.users)) {
-      const config = dataUserConfig?.users.find((i) => i.version === 1)
+      const config = dataUserConfig?.users.find((i) => Number(i.version) === 3)
 
       setUserConfigCurrent(config)
     }
@@ -138,9 +136,9 @@ function TradeInfoPage() {
 
     const usdtToSell = ethBought * tokenPriceNow * (1 - slippageTolerance / 100)
 
-    const total = usdtToSell + currentCapital - usdtSpent
+    const usdtAllAfterSell = BigNumber(usdtToSell).plus(currentCapital).toString()
 
-    const apr = BigNumber(BigNumber(tokenPriceNow).minus(avgPrice)).dividedBy(tokenPriceNow).multipliedBy(100).toNumber()
+    const apr = BigNumber(BigNumber(usdtAllAfterSell).minus(initialCapital)).dividedBy(initialCapital).multipliedBy(100).toNumber()
 
     return {
       ethBought: userConfigCurrent.amountETHBuy,
@@ -338,17 +336,12 @@ function TradeInfoPage() {
                 <div className='flex flex-wrap gap-4 text-sm'>
                   <div className='text-center'>
                     <div className='text-gray-400 text-xs'>Initial Capital</div>
-                    <div className='text-white font-bold'>${BigNumber(portfolioStats.initialCapital).decimalPlaces(0).toFormat()}</div>
+                    <div className='text-white font-bold'>${BigNumber(portfolioStats.initialCapital).decimalPlaces(4).toFormat()}</div>
                   </div>
 
                   <div className='text-center'>
-                    <div className='text-gray-400 text-xs'>ETH</div>
-                    <div className='text-white font-bold'>{BigNumber(portfolioStats.ethBought).decimalPlaces(4).toFormat()}</div>
-                  </div>
-
-                  <div className='text-center'>
-                    <div className='text-gray-400 text-xs'>Total USD to buy</div>
-                    <div className='text-white font-bold'>${BigNumber(portfolioStats.totalPortfolioValue).decimalPlaces(0).toFormat()}</div>
+                    <div className='text-gray-400 text-xs'>USD Buy</div>
+                    <div className='text-white font-bold'>${BigNumber(portfolioStats.totalPortfolioValue).decimalPlaces(4).toFormat()}</div>
                   </div>
                   <div className='text-center'>
                     <div className='text-gray-400 text-xs'>P&L</div>
@@ -360,7 +353,7 @@ function TradeInfoPage() {
                   {portfolioStats.avgPrice > 0 && (
                     <div className='text-center'>
                       <div className='text-gray-400 text-xs'>Avg Price</div>
-                      <div className='text-white font-bold'>${BigNumber(portfolioStats.avgPrice).decimalPlaces(0).toFormat()}</div>
+                      <div className='text-white font-bold'>${BigNumber(portfolioStats.avgPrice).decimalPlaces(4).toFormat()}</div>
                     </div>
                   )}
                   <div className='text-center'>
