@@ -37,6 +37,8 @@ function TradeInfoPage() {
     limit: 20,
   })
 
+  console.log({ history })
+
   useEffect(() => {
     if (Array.isArray(dataUserConfig?.users)) {
       const config = dataUserConfig?.users.find((i) => Number(i.version) === 3)
@@ -381,7 +383,7 @@ function TradeInfoPage() {
                       <th className='text-left p-4 font-semibold'>To</th>
                       <th className='text-left p-4 font-semibold'>Amount In</th>
                       <th className='text-left p-4 font-semibold'>Amount Out</th>
-                      <th className='text-left p-4 font-semibold'>Total USD</th>
+                      {/* <th className='text-left p-4 font-semibold'>Total USD</th> */}
                     </tr>
                   </thead>
                   <tbody>
@@ -418,29 +420,21 @@ function TradeInfoPage() {
                           </td>
                           <td className='p-4 font-medium text-sm text-gray-300'>{item.infoSwap?.from || '-'}</td>
                           <td className='p-4 font-medium text-sm text-gray-300'>{item.infoSwap?.to || '-'}</td>
-                          <td className='p-4 font-mono text-sm text-gray-100'>
-                            {item.infoSwap?.amountIn
-                              ? parseFloat(item.infoSwap.amountIn.toString()).toLocaleString('en-US', {
-                                  minimumFractionDigits: 4,
-                                  maximumFractionDigits: 6,
-                                })
-                              : '-'}
+                          <td className={`p-4 font-mono text-sm ${item?.isBuy ? 'text-green-400' : 'text-red-400'}`}>
+                            {item?.isBuy ? '$' : ''}
+                            {item.infoSwap?.amountIn ? BigNumber(item.infoSwap.amountIn).decimalPlaces(6).toFormat() : '-'}
                           </td>
-                          <td className='p-4 font-mono text-sm text-gray-100'>
-                            {item.infoSwap?.amountOut
-                              ? parseFloat(item.infoSwap.amountOut.toString()).toLocaleString('en-US', {
-                                  minimumFractionDigits: 6,
-                                  maximumFractionDigits: 8,
-                                })
-                              : '-'}
+                          <td className={`p-4 font-mono text-sm ${item?.isSell ? 'text-green-400' : 'text-red-400'}`}>
+                            {item?.isSell ? '$' : ''}
+                            {item.infoSwap?.amountOut ? BigNumber(item.infoSwap.amountOut).decimalPlaces(6).toFormat() : '-'}
                           </td>
-                          <td className='p-4 font-mono text-sm font-semibold text-yellow-400'>
+                          {/* <td className='p-4 font-mono text-sm font-semibold text-yellow-400'>
                             $
                             {parseFloat(item.buyAmountUSD || '0').toLocaleString('en-US', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             })}
-                          </td>
+                          </td> */}
                         </tr>
                       )
                     })}
