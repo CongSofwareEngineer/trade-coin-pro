@@ -19,13 +19,19 @@ export interface DcaTokenConfig {
   slippageTolerance: number // Acceptable slippage percentage
   maxPrice: string // Upper price limit for token purchase
   minPrice: string // Lower price limit for token purchase
-  initialCapital: string // Initial capital allocated for DCA in USD
-  isStop: boolean // Flag to indicate if DCA is paused
+  isStop?: boolean // Flag to indicate if DCA is paused
+  isBuy?: boolean // Flag to indicate if DCA is paused
   // ratioPriceDrop: number // Percentage drop in price to trigger additional investment
   priceBuyHistory: string
   tokenInput: string
   amountUSDToBuy: string
   amountETHToBuy: string
+  capital: string
+  minTokenRemain: string
+  minUSDToSwap: string
+  ratioPriceChange: string
+  th?: string
+  [key: string]: unknown
 }
 
 export interface Token {
@@ -40,4 +46,6 @@ export interface History {
   buyAmount?: string
   buyAmountETH?: string
   isSell?: boolean
+  price?: string
+  [key: string]: unknown
 }
