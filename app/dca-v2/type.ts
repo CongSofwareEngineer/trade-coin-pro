@@ -5,11 +5,12 @@ export interface Result {
   maxPrice: string
   total: string
   amountSwapped: string
+  amountSold: string
   totalAmountUSD: string
   totalETHBought: string
   priceAverage: string
   totalFee: string
-  arrSwap: number[]
+  arrSwap: { index: number; isBuy: boolean }[]
   ratioApr: string
   ratioAprByPrice: string
   aprByPrice: string
