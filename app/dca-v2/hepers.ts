@@ -11,11 +11,13 @@ class DcaHelper {
     return BigNumber(BigNumber(100).minus(rate)).abs().toString()
   }
 
-  static calculatePriceRatio(price: string, minPrice: string, maxPrice: string): string {
+  static calculatePriceRatio(price: string, minPrice: string, maxPrice: string, isSell: boolean = false): string {
     if (BigNumber(price).gte(minPrice)) {
       let ratio = BigNumber(BigNumber(price).minus(minPrice)).dividedBy(BigNumber(maxPrice).minus(minPrice))
 
-      ratio = BigNumber(1).minus(ratio)
+      if (!isSell) {
+        ratio = BigNumber(1).minus(ratio)
+      }
       if (ratio.lte(0.35)) {
         ratio = ratio.multipliedBy(ratio).div(0.35)
       }
@@ -44,7 +46,7 @@ class DcaHelper {
 
     const rateSlippage = BigNumber(BigNumber(100).minus(config.slippageTolerance)).div(100)
     // let sellIntensity = BigNumber(BigNumber(priceToken).minus(avgPrice)).div(BigNumber(config.maxPrice).minus(avgPrice))
-    let sellIntensity = BigNumber(this.calculatePriceRatio(priceToken, configClone.minPrice, configClone.maxPrice))
+    let sellIntensity = BigNumber(this.calculatePriceRatio(priceToken, configClone.minPrice, configClone.maxPrice, true))
 
     // 2. TỐI ƯU NHẤT: Chiến thuật "Thăm dò & Quyết liệt"
     // if (sellIntensity.lt(0.3)) {
