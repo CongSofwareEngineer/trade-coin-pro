@@ -17,9 +17,11 @@ export async function POST(req: NextRequest) {
       url: urlFinal,
     })
 
+    console.log({ data: res?.data?.body })
+
     return new Response(
       JSON.stringify({
-        data: res?.data?.body?.data[idToken]?.quote?.USD,
+        data: res?.data?.body,
       }),
       {
         status: 200,

@@ -19,10 +19,11 @@ const GetHistories = () => {
       setData([])
       const res = await fetcher({
         method: 'POST',
-        url: `/api/token/historical?id=1027&time_start=${timestampStart}&interval=4h&count=4000`,
+        url: `/api/token/historical?id=1&time_start=1726458979&interval=1d&count=2000`,
       })
 
-      let arr: any[] = (res?.data?.body?.data?.quotes || []).map((item: any) => {
+      console.log({ checkData: res })
+      let arr: any[] = (res?.data?.data?.quotes || []).map((item: any) => {
         return {
           price: item.quote.USD.price,
           time: item.quote.USD.timestamp,
@@ -49,7 +50,7 @@ const GetHistories = () => {
 
   const getData = async () => {
     const res = await fetcher({
-      url: `/api/token/latest?id=1027`,
+      url: `/api/token/latest?id=1`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -77,7 +78,7 @@ const GetHistories = () => {
       />
 
       <div>
-        <button className='bg-blue-500 text-white px-4 py-2 rounded' onClick={getData}>
+        <button className='bg-blue-500 text-white px-4 py-2 rounded' onClick={checkData}>
           get data
         </button>
       </div>

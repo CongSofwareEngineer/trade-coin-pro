@@ -66,6 +66,11 @@ class DcaHelper {
     if (BigNumber(sellIntensity).gte(0.5)) {
       sellIntensity = BigNumber(0.5) //max 50% of stepSize
     }
+    if (BigNumber(priceToken).lte(configClone.minPrice)) {
+      if (BigNumber(sellIntensity).gte(0.3)) {
+        sellIntensity = BigNumber(0.3) //max 30% of stepSize
+      }
+    }
 
     let amountEthToSell = BigNumber(BigNumber(configClone.stepSize).dividedBy(priceToken))
       .multipliedBy(sellIntensity)
