@@ -47,6 +47,7 @@ class DcaHelper {
     const rateSlippage = BigNumber(BigNumber(100).minus(config.slippageTolerance)).div(100)
     // let sellIntensity = BigNumber(BigNumber(priceToken).minus(avgPrice)).div(BigNumber(config.maxPrice).minus(avgPrice))
     let sellIntensity = BigNumber(this.calculatePriceRatio(priceToken, configClone.minPrice, configClone.maxPrice, true))
+    const priceRationByAvg = BigNumber(this.getRatioPrice(avgPrice, priceToken))
 
     // 2. TỐI ƯU NHẤT: Chiến thuật "Thăm dò & Quyết liệt"
     // if (sellIntensity.lt(0.3)) {
@@ -64,8 +65,14 @@ class DcaHelper {
     //   }
     // }
     if (BigNumber(sellIntensity).gte(0.5)) {
-      sellIntensity = BigNumber(0.5) //max 50% of stepSize
+      // upper price less than avg price 5%
+      if (BigNumber(priceRationByAvg).lte(5)) {
+        sellIntensity = BigNumber(0.3) //max 30% of stepSize
+      } else {
+        sellIntensity = BigNumber(0.5) //max 50% of stepSize
+      }
     }
+
     if (BigNumber(priceToken).lte(configClone.minPrice)) {
       if (BigNumber(sellIntensity).gte(0.3)) {
         sellIntensity = BigNumber(0.3) //max 30% of stepSize
