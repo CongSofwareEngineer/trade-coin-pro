@@ -39,6 +39,7 @@ const DCA = () => {
   const checkData = async (data: History[] = []) => {
     let arrClone = deepClone(data) as History[]
     let configClone = deepClone(dcaConfig) as DcaTokenConfig
+    let configInit = deepClone(dcaConfig) as DcaTokenConfig
     let isStop = false
     let indexStop = -1
     let minPrice = arrClone[0].arrToken[0].price.toString()
@@ -94,10 +95,12 @@ const DCA = () => {
       const ratioAprByPrice = BigNumber(priceLasted).dividedBy(priceAverage).minus(1).toFixed(4)
       const usdByPriceAverage = BigNumber(BigNumber(priceAverage).multipliedBy(configClone.amountETHToBuy)).toFixed()
       const usdETHToSell = BigNumber(priceLasted).multipliedBy(configClone.amountETHToBuy).toFixed()
-      const aprByPrice = BigNumber(BigNumber(usdETHToSell).minus(usdByPriceAverage)).dividedBy(usdByPriceAverage).multipliedBy(100).toFixed(4)
+      const capitalAfterSell = BigNumber(configClone.capital).plus(usdETHToSell)
+      const apr = BigNumber(BigNumber(capitalAfterSell).minus(configInit.capital)).dividedBy(configInit.capital).multipliedBy(100).toFixed(4)
+      const aprByPrice = apr
 
       const result = {
-        initialCapital: configClone.capital,
+        initialCapital: configInit.capital,
         priceLasted,
         minPrice,
         maxPrice,
@@ -116,7 +119,15 @@ const DCA = () => {
 
       setResult(result as any)
 
-      console.log({ minPrice, arrClone, arrBuy, indexStop, configClone, amountETHToBuy: configClone.amountETHToBuy, result })
+      console.log({
+        minPrice,
+        arrClone,
+        arrBuy,
+        indexStop,
+        configClone,
+        amountETHToBuy: configClone.amountETHToBuy,
+        result,
+      })
     }, 1000)
   }
 

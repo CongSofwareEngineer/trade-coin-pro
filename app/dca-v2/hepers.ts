@@ -63,8 +63,8 @@ class DcaHelper {
     //     }
     //   }
     // }
-    if (BigNumber(sellIntensity).gte(0.3)) {
-      sellIntensity = BigNumber(0.3)
+    if (BigNumber(sellIntensity).gte(0.5)) {
+      sellIntensity = BigNumber(0.5) //max 50% of stepSize
     }
 
     let amountEthToSell = BigNumber(BigNumber(configClone.stepSize).dividedBy(priceToken))
@@ -199,7 +199,7 @@ class DcaHelper {
                 let priceRatio = this.calculatePriceRatio(priceToken, configClone.minPrice, configClone.maxPrice)
 
                 if (BigNumber(priceRatio).gte(0.5)) {
-                  priceRatio = '0.7' //max 70%
+                  priceRatio = '0.5' //max 50%
                 }
 
                 let buyAmountUSD = this.calculateUSDToBuy(priceRatio, configClone.stepSize)
