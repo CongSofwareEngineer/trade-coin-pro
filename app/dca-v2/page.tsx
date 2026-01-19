@@ -1,10 +1,10 @@
 'use client'
-import React, { useState } from 'react'
-import { read, utils } from 'xlsx'
 import { BigNumber } from 'bignumber.js'
+import { useState } from 'react'
+import { read, utils } from 'xlsx'
 
-import { History, DcaTokenConfig, Token, Result } from './type'
 import DcaHelper from './hepers'
+import { DcaTokenConfig, History, Result, Token } from './type'
 
 import { deepClone } from '@/index'
 
