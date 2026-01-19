@@ -16,7 +16,7 @@ const getData = async (): Promise<{
     },
   })
 
-  return res?.data
+  return res?.data?.data?.['1027']?.quote?.USD
 }
 
 const useTokenPrice = () => {
