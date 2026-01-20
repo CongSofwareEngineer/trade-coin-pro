@@ -211,10 +211,11 @@ class DcaHelper {
     //   }
     // }
 
-    if (BigNumber(priceRationByAvg).lte(0.05)) {
+    if (BigNumber(priceRationByAvg).lte(0.051)) {
       return null
     }
-    priceRationByAvg = priceRationByAvg.multipliedBy(1.5)
+
+    priceRationByAvg = priceRationByAvg.multipliedBy(2)
 
     if (BigNumber(priceRationByAvg).gte(0.5)) {
       priceRationByAvg = BigNumber(0.5)
