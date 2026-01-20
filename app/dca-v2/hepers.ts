@@ -181,51 +181,21 @@ class DcaHelper {
     const configClone = deepClone(config) as DcaTokenConfig
 
     const rateSlippage = BigNumber(BigNumber(100).minus(config.slippageTolerance)).div(100)
-    // let sellIntensity = BigNumber(BigNumber(priceToken).minus(avgPrice)).div(BigNumber(config.maxPrice).minus(avgPrice))
-    let sellIntensity = BigNumber(this.calculatePriceRatio(priceToken, configClone.minPrice, configClone.maxPrice, true))
     let priceRationByAvg = BigNumber(this.getRatioPrice(avgPrice, priceToken))
 
     priceRationByAvg = BigNumber(priceRationByAvg).dividedBy(100)
-
-    // 2. TỐI ƯU NHẤT: Chiến thuật "Thăm dò & Quyết liệt"
-    // if (sellIntensity.lt(0.3)) {
-    //   // Vùng thăm dò: Bán rất ít  để giữ hàng
-    //   sellIntensity = sellIntensity.multipliedBy(sellIntensity).div(0.3)
-    //   if (sellIntensity.gte(0.2)) {
-    //     sellIntensity = BigNumber(0.2)
-    //   }
-    // } else {
-    //   if (sellIntensity.lte(0.7)) {
-    //     sellIntensity = sellIntensity.multipliedBy(0.6)
-    //     if (sellIntensity.lte(0.2)) {
-    //       sellIntensity = BigNumber(0.2)
-    //     }
-    //   }
-    // }
-    // if (BigNumber(sellIntensity).gte(0.5)) {
-    //   // upper price less than avg price 5%
-    //   if (BigNumber(priceRationByAvg).lte(0.05)) {
-    //     sellIntensity = BigNumber(0.3) //max 30% of stepSize
-    //   } else {
-    //     sellIntensity = BigNumber(0.5) //max 50% of stepSize
-    //   }
-    // }
 
     if (BigNumber(priceRationByAvg).lte(0.051)) {
       return null
     }
 
-    priceRationByAvg = priceRationByAvg.multipliedBy(2)
+    if (priceRationByAvg.lte(0.11)) {
+      priceRationByAvg = BigNumber(0.11)
+    }
 
     if (BigNumber(priceRationByAvg).gte(0.5)) {
       priceRationByAvg = BigNumber(0.5)
     }
-
-    // if (BigNumber(priceToken).lte(configClone.minPrice)) {
-    //   if (BigNumber(sellIntensity).gte(0.3)) {
-    //     sellIntensity = BigNumber(0.3) //max 30% of stepSize
-    //   }
-    // }
 
     let amountEthToSell = BigNumber(BigNumber(configClone.stepSize).dividedBy(priceToken))
       .multipliedBy(priceRationByAvg)
@@ -234,15 +204,9 @@ class DcaHelper {
     if (BigNumber(amountEthToSell).gt(configClone.amountETHToBuy)) {
       amountEthToSell = BigNumber(configClone.amountETHToBuy)
     }
-    const usdReceived = BigNumber(amountEthToSell).multipliedBy(priceToken).decimalPlaces(6, BigNumber.ROUND_DOWN)
-
-    if (usdReceived.lt(configClone.minUSDToSwap)) {
-      return null
-    }
 
     const actualUSDReceived = BigNumber(amountEthToSell).multipliedBy(priceToken).multipliedBy(rateSlippage).decimalPlaces(6, BigNumber.ROUND_DOWN)
 
-    // Gốc USD được rút ra khỏi tổng vốn dựa trên AvgPrice
     const costBasisRemoved = BigNumber(amountEthToSell).multipliedBy(avgPrice).decimalPlaces(6, BigNumber.ROUND_DOWN)
 
     configClone.capital = BigNumber(configClone.capital).plus(actualUSDReceived).decimalPlaces(6, BigNumber.ROUND_DOWN).toString()
