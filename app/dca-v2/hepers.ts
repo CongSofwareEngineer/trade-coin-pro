@@ -193,8 +193,8 @@ class DcaHelper {
       priceRationByAvg = BigNumber(0.11)
     }
 
-    if (BigNumber(priceRationByAvg).gte(0.5)) {
-      priceRationByAvg = BigNumber(0.5)
+    if (BigNumber(priceRationByAvg).gte(0.3)) {
+      priceRationByAvg = BigNumber(0.3)
     }
 
     let amountEthToSell = BigNumber(BigNumber(configClone.stepSize).dividedBy(priceToken))
