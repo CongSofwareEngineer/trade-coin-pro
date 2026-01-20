@@ -5,6 +5,142 @@ import { DcaTokenConfig, History } from './type'
 import { deepClone } from '@/index'
 
 class DcaHelper {
+  static execute(config: DcaTokenConfig, priceToken: string) {
+    priceToken = BigNumber(priceToken).decimalPlaces(6, BigNumber.ROUND_DOWN).toString()
+    let configClone = deepClone(config) as DcaTokenConfig
+    let DCARecord = {} as History
+
+    DCARecord.price = priceToken
+
+    try {
+      const isFirstTrade = BigNumber(configClone?.priceBuyHistory || '0').eq(0)
+
+      if (BigNumber(priceToken).gte(configClone.maxPrice) || BigNumber(configClone.priceBuyHistory).isNaN()) {
+        return null
+      }
+
+      // TH1. Logic MUA   chưa có lệnh -> mua
+      if (isFirstTrade) {
+        return this.buyToken(configClone, priceToken, 'TH1')
+      } else {
+        const priceHistory = BigNumber(configClone?.priceBuyHistory || '0').toString()
+        const hasEth = BigNumber(configClone.amountETHToBuy || '0').gt(0)
+        const avgPrice = hasEth ? BigNumber(configClone.amountUSDToBuy).dividedBy(configClone.amountETHToBuy).toString() : '0'
+        const ratioPriceByHistory = this.getRatioPrice(priceHistory, priceToken)
+
+        const isValidRatioPriceByHistory = BigNumber(ratioPriceByHistory).gt(configClone.ratioPriceChange)
+        const isValidCapital = BigNumber(configClone.capital).gt(configClone.minUSDToSwap)
+        const isValidEthToSell = BigNumber(configClone.amountETHToBuy || '0').gte(configClone.minTokenRemain)
+
+        if (isValidRatioPriceByHistory) {
+          // TH2. Khi giá < giá trung bình  => mua
+          if (BigNumber(priceToken).lt(avgPrice) && isValidCapital) {
+            return this.buyToken(configClone, priceToken, 'TH2')
+          } else {
+            //TH3: Khi giá < giá lịch sử và  giá >= giá trung bình  => mua
+            if (BigNumber(priceToken).lt(priceHistory) && isValidCapital) {
+              return this.buyToken(configClone, priceToken, 'TH3', true)
+            } else {
+              // TH4. Khi giá > giá trung bình và giá > giá lịch sử  => bán
+              if (BigNumber(priceToken).gt(avgPrice) && isValidEthToSell) {
+                return this.sellToken(configClone, priceToken, 'TH4')
+              }
+            }
+          }
+        }
+      }
+
+      return {
+        item: DCARecord,
+        config: configClone,
+      }
+    } catch (error) {
+      console.log({ error })
+
+      return {
+        item: DCARecord,
+        config: configClone,
+      }
+    }
+  }
+
+  static buyToken(config: DcaTokenConfig, priceToken: string, th: 'TH1' | 'TH2' | 'TH3' | 'TH4', isBuyPriceUpperAvg: boolean = false) {
+    priceToken = BigNumber(priceToken).decimalPlaces(6, BigNumber.ROUND_DOWN).toString()
+    let configClone = deepClone(config) as DcaTokenConfig
+    let DCARecord = {} as History
+
+    DCARecord.price = priceToken
+    DCARecord.th = th
+
+    let priceRatio = this.calculatePriceRatio(priceToken, configClone.minPrice, configClone.maxPrice)
+
+    if (BigNumber(priceRatio).gte(0.5) && isBuyPriceUpperAvg) {
+      priceRatio = '0.5' //max 50%
+    }
+
+    let buyAmountUSD = this.calculateUSDToBuy(priceRatio, configClone.stepSize)
+
+    if (BigNumber(buyAmountUSD).gt(configClone.capital)) {
+      buyAmountUSD = configClone.capital
+    }
+
+    if (BigNumber(buyAmountUSD).lt(configClone.minUSDToSwap)) {
+      return {
+        item: DCARecord,
+        config: configClone,
+      }
+    }
+
+    const buyAmountETH = this.calculateEthAfterBuy(buyAmountUSD, priceToken, configClone.slippageTolerance.toString())
+
+    const { DCARecord: DCARecordFinal, config: configCloneFinal } = this.updateDataToBuy(configClone, buyAmountUSD, buyAmountETH)
+
+    configClone = configCloneFinal
+    DCARecord = { ...DCARecord, ...DCARecordFinal }
+    DCARecord.isBuy = true
+    configClone.priceBuyHistory = priceToken
+
+    return {
+      item: DCARecord,
+      config: configClone,
+    }
+  }
+
+  static sellToken(config: DcaTokenConfig, priceToken: string, th: 'TH1' | 'TH2' | 'TH3' | 'TH4') {
+    priceToken = BigNumber(priceToken).decimalPlaces(6, BigNumber.ROUND_DOWN).toString()
+    let configClone = deepClone(config) as DcaTokenConfig
+    let DCARecord = {} as History
+
+    DCARecord.price = priceToken
+    DCARecord.th = th
+
+    const hasEth = BigNumber(configClone.amountETHToBuy || '0').gt(0)
+    const avgPrice = hasEth ? BigNumber(configClone.amountUSDToBuy).dividedBy(configClone.amountETHToBuy).toString() : '0'
+
+    const sellResult = this.updateDataToSell(configClone, priceToken, avgPrice)
+
+    if (!sellResult) {
+      return {
+        item: DCARecord,
+        config: configClone,
+      }
+    }
+
+    const { DCARecord: DCARecordFinal, config: configCloneFinal } = sellResult
+
+    configClone = configCloneFinal
+    DCARecord = { ...DCARecord, ...DCARecordFinal }
+    DCARecord.avgPrice = avgPrice
+    DCARecord.ethRemain = configClone.amountETHToBuy
+    DCARecord.isSell = true
+    configClone.priceBuyHistory = priceToken
+
+    return {
+      item: DCARecord,
+      config: configClone,
+    }
+  }
+
   static getRatioPrice(priceHistory: string, priceToken: string) {
     const rate = BigNumber(priceToken).dividedBy(priceHistory).multipliedBy(100)
 
@@ -47,7 +183,9 @@ class DcaHelper {
     const rateSlippage = BigNumber(BigNumber(100).minus(config.slippageTolerance)).div(100)
     // let sellIntensity = BigNumber(BigNumber(priceToken).minus(avgPrice)).div(BigNumber(config.maxPrice).minus(avgPrice))
     let sellIntensity = BigNumber(this.calculatePriceRatio(priceToken, configClone.minPrice, configClone.maxPrice, true))
-    const priceRationByAvg = BigNumber(this.getRatioPrice(avgPrice, priceToken))
+    let priceRationByAvg = BigNumber(this.getRatioPrice(avgPrice, priceToken))
+
+    priceRationByAvg = BigNumber(priceRationByAvg).dividedBy(100)
 
     // 2. TỐI ƯU NHẤT: Chiến thuật "Thăm dò & Quyết liệt"
     // if (sellIntensity.lt(0.3)) {
@@ -64,23 +202,32 @@ class DcaHelper {
     //     }
     //   }
     // }
-    if (BigNumber(sellIntensity).gte(0.5)) {
-      // upper price less than avg price 5%
-      if (BigNumber(priceRationByAvg).lte(5)) {
-        sellIntensity = BigNumber(0.3) //max 30% of stepSize
-      } else {
-        sellIntensity = BigNumber(0.5) //max 50% of stepSize
-      }
+    // if (BigNumber(sellIntensity).gte(0.5)) {
+    //   // upper price less than avg price 5%
+    //   if (BigNumber(priceRationByAvg).lte(0.05)) {
+    //     sellIntensity = BigNumber(0.3) //max 30% of stepSize
+    //   } else {
+    //     sellIntensity = BigNumber(0.5) //max 50% of stepSize
+    //   }
+    // }
+
+    if (BigNumber(priceRationByAvg).lte(0.05)) {
+      return null
+    }
+    priceRationByAvg = priceRationByAvg.multipliedBy(1.5)
+
+    if (BigNumber(priceRationByAvg).gte(0.5)) {
+      priceRationByAvg = BigNumber(0.5)
     }
 
-    if (BigNumber(priceToken).lte(configClone.minPrice)) {
-      if (BigNumber(sellIntensity).gte(0.3)) {
-        sellIntensity = BigNumber(0.3) //max 30% of stepSize
-      }
-    }
+    // if (BigNumber(priceToken).lte(configClone.minPrice)) {
+    //   if (BigNumber(sellIntensity).gte(0.3)) {
+    //     sellIntensity = BigNumber(0.3) //max 30% of stepSize
+    //   }
+    // }
 
     let amountEthToSell = BigNumber(BigNumber(configClone.stepSize).dividedBy(priceToken))
-      .multipliedBy(sellIntensity)
+      .multipliedBy(priceRationByAvg)
       .decimalPlaces(18, BigNumber.ROUND_DOWN)
 
     if (BigNumber(amountEthToSell).gt(configClone.amountETHToBuy)) {
@@ -109,7 +256,6 @@ class DcaHelper {
 
     const DCARecord: Partial<History> = {
       price: priceToken,
-      isSell: true,
       buyAmount: BigNumber(amountEthToSell).decimalPlaces(6, BigNumber.ROUND_DOWN).toString(),
       buyAmountETH: BigNumber(actualUSDReceived).decimalPlaces(6, BigNumber.ROUND_DOWN).toString(),
     }
@@ -131,150 +277,11 @@ class DcaHelper {
       .toString()
 
     const DCARecord: Partial<History> = {
-      isBuy: true,
       buyAmount: BigNumber(buyAmountUSD).decimalPlaces(6, BigNumber.ROUND_DOWN).toString(),
       buyAmountETH: BigNumber(buyAmountETH).decimalPlaces(6, BigNumber.ROUND_DOWN).toString(),
     }
 
     return { config: configClone, DCARecord }
-  }
-
-  static execute(config: DcaTokenConfig, priceToken: string) {
-    try {
-      priceToken = BigNumber(priceToken).decimalPlaces(6, BigNumber.ROUND_DOWN).toString()
-      let configClone = deepClone(config) as DcaTokenConfig
-      let DCARecord = {} as History
-      let isSwap = false
-      const isFirstTrade = BigNumber(configClone?.priceBuyHistory || '0').eq(0)
-
-      if (BigNumber(priceToken).gte(configClone.maxPrice) || BigNumber(configClone.priceBuyHistory).isNaN()) {
-        return null
-      }
-
-      // TH1. Logic MUA   chưa có lệnh -> mua
-      if (isFirstTrade) {
-        // console.log('start TH1')
-
-        const priceRatio = this.calculatePriceRatio(priceToken, configClone.minPrice, configClone.maxPrice)
-        const buyAmountUSD = this.calculateUSDToBuy(priceRatio, configClone.stepSize)
-
-        const buyAmountETH = this.calculateEthAfterBuy(buyAmountUSD, priceToken, configClone.slippageTolerance.toString())
-
-        const { DCARecord: DCARecordFinal, config: configCloneFinal } = this.updateDataToBuy(configClone, buyAmountUSD, buyAmountETH)
-
-        configClone = configCloneFinal
-        DCARecord = { ...DCARecord, ...DCARecordFinal }
-        DCARecord.th = '1'
-        isSwap = true
-      } else {
-        const priceHistory = BigNumber(configClone?.priceBuyHistory || '0').toString()
-        const hasEth = BigNumber(configClone.amountETHToBuy || '0').gt(0)
-        const avgPrice = hasEth ? BigNumber(configClone.amountUSDToBuy).dividedBy(configClone.amountETHToBuy).toString() : '0'
-        const ratioPriceByHistory = this.getRatioPrice(priceHistory, priceToken)
-        const ratioPriceByAvg = this.getRatioPrice(avgPrice, priceToken)
-
-        const isValidRatioPriceByHistory = BigNumber(ratioPriceByHistory).gt(configClone.ratioPriceChange)
-        const isValidRatioPriceByAvg = BigNumber(ratioPriceByAvg).gt(configClone.ratioPriceChange)
-        const isValidSell = BigNumber(configClone.amountETHToBuy || '0').gt(0)
-        const isValidCapital = BigNumber(configClone.capital).gt(0)
-        const isValidEthToSell = BigNumber(configClone.amountETHToBuy || '0').gte(configClone.minTokenRemain)
-
-        if (isValidRatioPriceByHistory) {
-          // TH2. Khi giá < giá trung bình  => mua
-          if (BigNumber(priceToken).lt(avgPrice) && isValidCapital) {
-            if (BigNumber(configClone.capital).gt(0)) {
-              const priceRatio = this.calculatePriceRatio(priceToken, configClone.minPrice, configClone.maxPrice)
-              let buyAmountUSD = this.calculateUSDToBuy(priceRatio, configClone.stepSize)
-
-              if (BigNumber(buyAmountUSD).gt(configClone.capital)) {
-                buyAmountUSD = configClone.capital
-              }
-
-              if (BigNumber(buyAmountUSD).lt(configClone.minUSDToSwap)) {
-                return null
-              }
-
-              const buyAmountETH = this.calculateEthAfterBuy(buyAmountUSD, priceToken, configClone.slippageTolerance.toString())
-
-              const { DCARecord: DCARecordFinal, config: configCloneFinal } = this.updateDataToBuy(configClone, buyAmountUSD, buyAmountETH)
-
-              configClone = configCloneFinal
-              DCARecord = { ...DCARecord, ...DCARecordFinal }
-              DCARecord.th = '2'
-
-              isSwap = true
-            }
-          } else {
-            //TH3: Khi giá < giá lịch sử và còn USD để mua  => mua
-            if (BigNumber(priceToken).lt(priceHistory) && isValidCapital) {
-              if (BigNumber(configClone.capital).gt(0)) {
-                let priceRatio = this.calculatePriceRatio(priceToken, configClone.minPrice, configClone.maxPrice)
-
-                if (BigNumber(priceRatio).gte(0.5)) {
-                  priceRatio = '0.5' //max 50%
-                }
-
-                let buyAmountUSD = this.calculateUSDToBuy(priceRatio, configClone.stepSize)
-
-                if (BigNumber(buyAmountUSD).gt(configClone.capital)) {
-                  buyAmountUSD = configClone.capital
-                }
-
-                if (BigNumber(buyAmountUSD).lt(configClone.minUSDToSwap)) {
-                  return null
-                }
-
-                const buyAmountETH = this.calculateEthAfterBuy(buyAmountUSD, priceToken, configClone.slippageTolerance.toString())
-
-                const { DCARecord: DCARecordFinal, config: configCloneFinal } = this.updateDataToBuy(configClone, buyAmountUSD, buyAmountETH)
-
-                configClone = configCloneFinal
-                DCARecord = { ...DCARecord, ...DCARecordFinal }
-                DCARecord.th = '3'
-
-                isSwap = true
-              }
-            } else {
-              // TH4. Khi giá > giá trung bình và còn ETH để bán  => bán
-              if (BigNumber(priceToken).gt(avgPrice) && isValidEthToSell && isValidSell && isValidRatioPriceByAvg) {
-                if (BigNumber(configClone.amountETHToBuy).gt(0)) {
-                  const sellResult = this.updateDataToSell(configClone, priceToken, avgPrice)
-
-                  if (!sellResult) {
-                    return null
-                  }
-
-                  const { DCARecord: DCARecordFinal, config: configCloneFinal } = sellResult
-
-                  configClone = configCloneFinal
-                  DCARecord = { ...DCARecord, ...DCARecordFinal }
-                  DCARecord.th = '4'
-                  DCARecord.avgPrice = avgPrice
-                  DCARecord.ethRemain = config.amountETHToBuy
-                  isSwap = true
-                }
-              }
-            }
-          }
-        }
-      }
-
-      if (isSwap) {
-        configClone.priceBuyHistory = priceToken
-        DCARecord.price = priceToken
-
-        return {
-          item: DCARecord,
-          config: configClone,
-        }
-      }
-
-      return null
-    } catch (error) {
-      console.log({ error })
-
-      return null
-    }
   }
 }
 

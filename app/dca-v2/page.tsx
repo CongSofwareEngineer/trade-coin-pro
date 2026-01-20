@@ -60,10 +60,10 @@ const DCA = () => {
         }
         const res = DcaHelper.execute(deepClone(configClone) as DcaTokenConfig, item.arrToken[0].price.toString())
 
-        if (res) {
+        if (res && (res?.item?.isBuy || res?.item?.isSell)) {
           const { config, item } = res
 
-          console.log({ item, type: item.isBuy ? 'buy' : 'sell' })
+          console.log({ config, item, type: item.isBuy ? 'buy' : 'sell' })
 
           isStop = config.isStop || false
           arrClone[index] = item
