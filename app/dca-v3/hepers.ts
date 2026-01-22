@@ -122,10 +122,14 @@ class DcaHelper {
     const hasEth = BigNumber(configClone.amountETHToBuy || '0').gt(0)
     const avgPrice = hasEth ? BigNumber(configClone.amountUSDToBuy).dividedBy(configClone.amountETHToBuy).toString() : '0'
     let priceRatio = this.getRatioPrice(priceToken, avgPrice)
+    let priceRatioByMax = this.getRatioPriceHistory(priceToken, configClone.maxPrice)
+
+    priceRatioByMax = BigNumber(priceRatioByMax).dividedBy(100).toString()
 
     if (BigNumber(priceRatio).gte(0.5) && isBuyPriceUpperAvg) {
       priceRatio = '0.5' //max 50%
     }
+    priceRatio = BigNumber(priceRatio).plus(priceRatioByMax).toString()
 
     let buyAmountUSD = this.calculateUSDToBuy(priceRatio, configClone.stepSize)
 
