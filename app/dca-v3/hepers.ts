@@ -125,11 +125,11 @@ class DcaHelper {
     let priceRatioByMax = this.getRatioPriceHistory(priceToken, configClone.maxPrice)
 
     priceRatioByMax = BigNumber(priceRatioByMax).dividedBy(100).toString()
+    priceRatio = BigNumber(priceRatio).plus(priceRatioByMax).toString()
 
     if (BigNumber(priceRatio).gte(0.5) && isBuyPriceUpperAvg) {
       priceRatio = '0.5' //max 50%
     }
-    priceRatio = BigNumber(priceRatio).plus(priceRatioByMax).toString()
 
     let buyAmountUSD = this.calculateUSDToBuy(priceRatio, configClone.stepSize)
 
