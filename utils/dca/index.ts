@@ -91,7 +91,9 @@ class DcaUtil {
 
                   const sellAmountUSDAfter = this.calculateSellAfterAmountUSD(sellAmountUSDBefore, config.slippageTolerance)
 
-                  configClone.initialCapital = BigNumber(configClone.initialCapital).plus(sellAmountUSDAfter).toString()
+                  configClone.initialCapital = BigNumber(configClone.initialCapital as string)
+                    .plus(sellAmountUSDAfter)
+                    .toString()
                   configClone.amountETHToBuy = BigNumber(configClone.amountETHToBuy || '0')
                     .minus(sellAmountETH)
                     .toString()
@@ -131,7 +133,9 @@ class DcaUtil {
   static updateDataToBuy(priceToken: string, config: DcaTokenConfig, buyAmountUSD: string, buyAmountETH: string) {
     const configClone = cloneData(config) as DcaTokenConfig
 
-    configClone.initialCapital = BigNumber(configClone.initialCapital).minus(buyAmountUSD).toString()
+    configClone.initialCapital = BigNumber(configClone.initialCapital as string)
+      .minus(buyAmountUSD)
+      .toString()
     configClone.amountETHToBuy = BigNumber(configClone.amountETHToBuy || '0')
       .plus(buyAmountETH)
       .toString()
@@ -162,7 +166,9 @@ class DcaUtil {
   static updateDataToSell(priceToken: string, config: DcaTokenConfig, buyAmountUSD: string, buyAmountETH: string) {
     const configClone = cloneData(config) as DcaTokenConfig
 
-    configClone.initialCapital = BigNumber(configClone.initialCapital).minus(buyAmountUSD).toString()
+    configClone.initialCapital = BigNumber(configClone.initialCapital as string)
+      .minus(buyAmountUSD)
+      .toString()
     configClone.amountETHToBuy = BigNumber(configClone.amountETHToBuy || '0')
       .plus(buyAmountETH)
       .toString()
