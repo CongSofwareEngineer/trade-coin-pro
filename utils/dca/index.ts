@@ -23,7 +23,7 @@ class DcaUtil {
         const buyAmountETH = this.calculateBuyAmountETH(buyAmountUSD, priceToken, configClone.slippageTolerance)
         const priceHistoryRatio = this.calculatePriceHistoryRatio(priceToken, configClone.priceBuyHistory)
 
-        if (BigNumber(buyAmountUSD).gt(config.initialCapital)) {
+        if (BigNumber(buyAmountUSD).gt((config.initialCapital as string) || '0')) {
           return {
             item: DCARecord,
             config: configClone,
