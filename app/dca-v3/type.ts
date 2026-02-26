@@ -16,22 +16,22 @@ export interface Result {
   aprByPrice: string
 }
 export interface DcaTokenConfig {
-  stepSize: string // Maximum amount to invest per trade in USD
-  slippageTolerance: number // Acceptable slippage percentage
-  maxPrice: string // Upper price limit for token purchase
-  minPrice: string // Lower price limit for token purchase
-  isStop?: boolean // Flag to indicate if DCA is paused
-  isBuy?: boolean // Flag to indicate if DCA is paused
-  // ratioPriceDrop: number // Percentage drop in price to trigger additional investment
-  priceBuyHistory: string
-  tokenInput: string
-  amountUSDToBuy: string
-  amountETHToBuy: string
+  stepSize: string
+  slippageTolerance: string
+  maxPrice: string
+  minPrice: string
+  initialCapital: string
   capital: string
-  minTokenRemain: string
-  minUSDToSwap: string
+  tokenInput: string
+  amountStable: string
+  amountToken: string
   ratioPriceChange: string
-  th?: string
+  minUsdToSwap: string
+  createdAt: string
+  isPause: boolean
+  poolVersion: string
+  lastHistoryPrice: string
+  inventoryThreshold: string
   [key: string]: unknown
 }
 

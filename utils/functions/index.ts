@@ -3,3 +3,7 @@ export const lowercase = (value?: string) => {
 
   return value.toLowerCase()
 }
+
+export function cloneData<T>(data: T): T {
+  return JSON.parse(JSON.stringify(data))
+}
