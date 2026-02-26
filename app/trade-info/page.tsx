@@ -37,7 +37,7 @@ function TradeInfoPage() {
     limit: 20,
   })
 
-  console.log({ history })
+  console.log({ history, dataTokenPrice })
 
   useEffect(() => {
     if (Array.isArray(dataUserConfig?.users)) {
@@ -49,22 +49,6 @@ function TradeInfoPage() {
   useEffect(() => {
     setCurrentPage(1)
   }, [userConfigCurrent?._id])
-
-  useEffect(() => {
-    const getData = async () => {
-      const res = await fetch('/api/token?idToken=1027', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const data = await res.json()
-
-      console.log({ data })
-    }
-
-    getData()
-  }, [])
 
   // Update settings form when userConfigCurrent changes
   useEffect(() => {
