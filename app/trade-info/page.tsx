@@ -298,7 +298,7 @@ function TradeInfoPage() {
                     }`}
                     onClick={() => setUserConfigCurrent(item)}
                   >
-                    Version {item.version}
+                    TOKEN {item.tokenInput}
                   </button>
                 )
               })}
