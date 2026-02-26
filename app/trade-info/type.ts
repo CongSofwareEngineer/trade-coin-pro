@@ -6,11 +6,14 @@ export type UserConfig = {
   minPrice: string
   initialCapital: string
   capital: string
-  priceBuyHistory: string
   tokenInput: string
-  amountUSDBuy: string
-  amountETHBuy: string
-  version: string
+  amountStable: string
+  amountToken: string
   ratioPriceChange: string
+  minUsdToSwap: string
   createdAt: string
+  isPause: boolean
+  poolVersion: string
+  lastHistoryPrice: string
+  inventoryThreshold: string
 }

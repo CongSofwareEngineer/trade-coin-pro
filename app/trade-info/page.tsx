@@ -41,9 +41,7 @@ function TradeInfoPage() {
 
   useEffect(() => {
     if (Array.isArray(dataUserConfig?.users)) {
-      const config = dataUserConfig?.users.find((i) => Number(i.version) === 3)
-
-      setUserConfigCurrent(config)
+      setUserConfigCurrent(dataUserConfig?.users[0])
     }
   }, [dataUserConfig])
 
@@ -113,8 +111,8 @@ function TradeInfoPage() {
 
     const tokenPriceNow = dataTokenPrice?.price || 0
 
-    const ethBought = parseFloat(userConfigCurrent.amountETHBuy || '0')
-    const usdtSpent = parseFloat(userConfigCurrent.amountUSDBuy || '0')
+    const ethBought = parseFloat(userConfigCurrent.amountToken || '0')
+    const usdtSpent = parseFloat(userConfigCurrent.amountStable || '0')
     const currentCapital = parseFloat(userConfigCurrent.capital || '0')
     const initialCapital = parseFloat(userConfigCurrent.initialCapital || '0')
     const slippageTolerance = parseFloat(userConfigCurrent.slippageTolerance?.toString() || '0')
@@ -143,8 +141,8 @@ function TradeInfoPage() {
     const apr = BigNumber(BigNumber(usdtAllAfterSell).minus(initialCapital)).dividedBy(initialCapital).multipliedBy(100).toNumber()
 
     return {
-      ethBought: userConfigCurrent.amountETHBuy,
-      usdtSpent: userConfigCurrent.amountUSDBuy,
+      ethBought: userConfigCurrent.amountToken,
+      usdtSpent: userConfigCurrent.amountStable,
       currentCapital: userConfigCurrent.capital,
       initialCapital,
       slippageTolerance,
