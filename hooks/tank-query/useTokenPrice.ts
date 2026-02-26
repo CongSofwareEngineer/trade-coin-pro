@@ -3,29 +3,27 @@ import { useQuery } from '@tanstack/react-query'
 import { QUERY_KEY } from '@/constants/reactQuery'
 import fetcher from '@/configs/fetcher'
 
-const getData = async (): Promise<{
+const getData = async (
+  tokenInput: string
+): Promise<{
   price: number
   [key: string]: unknown
 }> => {
-  const id = 1027 // id ETH trên coinmarketcap
   const res = await fetcher({
-    url: `/api/token/latest?id=${id}`,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    url: `/dca/price?version=v3&tokenInput=${tokenInput}`,
   })
 
-  return res?.data?.data?.['1027']?.quote?.USD
+  return res?.data?.data
 }
 
-const useTokenPrice = () => {
+const useTokenPrice = (tokenInput?: string) => {
   const { data, isLoading, refetch } = useQuery<{
     price: number
     [key: string]: unknown
   } | null>({
-    queryKey: [QUERY_KEY.TokenPrice],
-    queryFn: getData,
+    queryKey: [QUERY_KEY.TokenPrice, tokenInput],
+    queryFn: () => getData(tokenInput || 'ETH'),
+    enabled: !!tokenInput,
   })
 
   return {
