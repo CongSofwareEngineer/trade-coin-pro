@@ -10,7 +10,7 @@ const getData = async (
   [key: string]: unknown
 }> => {
   const res = await fetcher({
-    url: `/dca/price?version=v3&tokenInput=${tokenInput}`,
+    url: `https://exuberant-jade-diencong-6e4aa722.koyeb.app/dca/price?version=v3&tokenInput=${tokenInput}`,
   })
 
   return res?.data?.data
