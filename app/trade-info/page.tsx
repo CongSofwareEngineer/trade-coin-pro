@@ -21,7 +21,7 @@ function TradeInfoPage() {
     ratioPriceDown: '',
   })
 
-  const { data: dataTokenPrice, isLoading: isLoadingTokenPrice, refetch: refetchTokenPrice } = useTokenPrice()
+  const { data: dataTokenPrice, isLoading: isLoadingTokenPrice, refetch: refetchTokenPrice } = useTokenPrice(userConfigCurrent?.tokenInput)
   const { data: dataUserConfig, isLoading: isLoadingUserConfig, refetch: refetchUserConfig } = useUserConfig()
   const {
     history,
