@@ -12,16 +12,17 @@ const DCA = () => {
   const [dcaConfig, setDcaConfig] = useState<Partial<DcaTokenConfig>>({
     stepSize: '100',
     slippageTolerance: '0.5',
-    maxPrice: '4500',
-    minPrice: '3000',
+    maxPrice: '3500',
+    minPrice: '2000',
     amountStable: '0',
     amountToken: '0',
     lastHistoryPrice: '0',
     tokenInput: 'ETH',
-    ratioPriceChange: '1',
+    ratioPriceChange: '7',
     capital: '5000',
     minUSDToSwap: '10',
-    inventoryThreshold: '30',
+    inventoryThreshold: '20',
+    initialCapital: '5000',
   })
 
   console.log({ dcaConfig })
@@ -108,8 +109,8 @@ const DCA = () => {
         total: arrClone.length,
         amountSwapped,
         amountSold,
-        totalAmountUSD: configClone.amountUSDToBuy,
-        totalETHBought: configClone.amountETHToBuy,
+        totalAmountUSD: configClone.amountStable,
+        totalETHBought: configClone.amountToken,
         priceAverage: priceAverage.toFixed(4),
         totalFee,
         arrSwap,
@@ -126,7 +127,7 @@ const DCA = () => {
         arrBuy,
         indexStop,
         configClone,
-        amountETHToBuy: configClone.amountETHToBuy,
+        amountETHToBuy: configClone.amountToken,
         result,
       })
     }, 1000)

@@ -3,25 +3,26 @@ import { BigNumber } from 'bignumber.js'
 import { useState } from 'react'
 import { read, utils } from 'xlsx'
 
-import DcaHelper from './hepers'
+import DcaHelper from './helpers'
 import { DcaTokenConfig, History, Result, Token } from './type'
 
 import { deepClone } from '@/index'
 
 const DCA = () => {
-  const [dcaConfig, setDcaConfig] = useState<DcaTokenConfig>({
+  const [dcaConfig, setDcaConfig] = useState<Partial<DcaTokenConfig>>({
     stepSize: '100',
-    slippageTolerance: 0.5,
-    maxPrice: '4500',
-    minPrice: '3000',
-    amountETHToBuy: '0',
-    priceBuyHistory: '0',
+    slippageTolerance: '0.5',
+    maxPrice: '3500',
+    minPrice: '2000',
+    amountStable: '0',
+    amountToken: '0',
+    lastHistoryPrice: '0',
     tokenInput: 'ETH',
-    amountUSDToBuy: '0',
-    minTokenRemain: '0.001',
-    ratioPriceChange: '1',
+    ratioPriceChange: '7',
     capital: '5000',
     minUSDToSwap: '10',
+    inventoryThreshold: '20',
+    initialCapital: '5000',
   })
 
   console.log({ dcaConfig })
@@ -58,29 +59,30 @@ const DCA = () => {
         if (BigNumber(maxPrice).lt(item.arrToken[0].price)) {
           maxPrice = item.arrToken[0].price.toString()
         }
-        const res = DcaHelper.execute(deepClone(configClone) as DcaTokenConfig, item.arrToken[0].price.toString())
+        const res = DcaHelper.executeTrading(deepClone(configClone) as DcaTokenConfig, item.arrToken[0].price.toString())
 
-        if (res && (res?.item?.isBuy || res?.item?.isSell)) {
+        if (res && res?.config && (res?.item?.isBuy || res?.item?.isSell)) {
           const { config, item } = res
 
-          console.log({ config, item, type: item.isBuy ? 'buy' : 'sell' })
+          if (config) {
+            console.log({ config, item, type: item.isBuy ? 'buy' : 'sell' })
 
-          isStop = config.isStop || false
-          arrClone[index] = item
-          configClone = deepClone(config)
-          arrClone[index].isStop = config.isStop
-          if (config.isStop) {
-            indexStop = index
-          }
-          if (item.isBuy) {
-            amountSwapped++
-            arrSwap.push({ index: index + 1, isBuy: true })
-            totalFee += 0.15
-          }
-          if (item.isSell) {
-            amountSold++
-            arrSwap.push({ index: index + 1, isBuy: false })
-            totalFee += 0.15
+            isStop = config.isPause || false
+            arrClone[index] = item
+            configClone = deepClone(config)
+            arrClone[index].isPause = config.isPause
+            if (config.isPause) {
+              indexStop = index
+            }
+            if (item.isBuy) {
+              amountSwapped++
+              arrSwap.push({ index: index + 1, isBuy: true })
+              totalFee += 0.15
+            }
+            if (item.isSell) {
+              amountSold++
+              totalFee += 0.15
+            }
           }
         }
       }
@@ -90,11 +92,11 @@ const DCA = () => {
       console.log({ configClone, arrClone })
 
       const arrBuy = arrClone.filter((i) => i.isBuy)
-      const priceAverage = BigNumber(configClone.amountUSDToBuy || '1').dividedBy(Number(configClone.amountETHToBuy) || '1')
+      const priceAverage = BigNumber(configClone.amountStable || '1').dividedBy(Number(configClone.amountToken) || '1')
       const priceLasted = arrClone[arrClone.length - 1]?.arrToken?.[0]?.price || '0'
       const ratioAprByPrice = BigNumber(priceLasted).dividedBy(priceAverage).minus(1).toFixed(4)
-      const usdByPriceAverage = BigNumber(BigNumber(priceAverage).multipliedBy(configClone.amountETHToBuy)).toFixed()
-      const usdETHToSell = BigNumber(priceLasted).multipliedBy(configClone.amountETHToBuy).toFixed()
+      const usdByPriceAverage = BigNumber(BigNumber(priceAverage).multipliedBy(configClone.amountToken)).toFixed()
+      const usdETHToSell = BigNumber(priceLasted).multipliedBy(configClone.amountToken).toFixed()
       const capitalAfterSell = BigNumber(configClone.capital).plus(usdETHToSell)
       const apr = BigNumber(BigNumber(capitalAfterSell).minus(configInit.capital)).dividedBy(configInit.capital).multipliedBy(100).toFixed(4)
       const aprByPrice = apr
@@ -107,8 +109,8 @@ const DCA = () => {
         total: arrClone.length,
         amountSwapped,
         amountSold,
-        totalAmountUSD: configClone.amountUSDToBuy,
-        totalETHBought: configClone.amountETHToBuy,
+        totalAmountUSD: configClone.amountStable,
+        totalETHBought: configClone.amountToken,
         priceAverage: priceAverage.toFixed(4),
         totalFee,
         arrSwap,
@@ -125,7 +127,7 @@ const DCA = () => {
         arrBuy,
         indexStop,
         configClone,
-        amountETHToBuy: configClone.amountETHToBuy,
+        amountETHToBuy: configClone.amountToken,
         result,
       })
     }, 1000)
@@ -138,8 +140,8 @@ const DCA = () => {
           return {
             arrToken: [
               {
-                price: item[dcaConfig.tokenInput],
-                tokenSymbol: dcaConfig.tokenInput,
+                price: item[dcaConfig.tokenInput!],
+                tokenSymbol: dcaConfig.tokenInput!,
               },
             ],
           }
@@ -331,7 +333,7 @@ const DCA = () => {
                     className='w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
                     placeholder='10'
                     type='number'
-                    value={dcaConfig.minUSDToSwap}
+                    value={Number(dcaConfig.minUSDToSwap)}
                     onChange={(e) => updateData({ minUSDToSwap: e.target.value as any })}
                   />
                 </div>
@@ -343,7 +345,7 @@ const DCA = () => {
                   className='w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
                   placeholder='0.001'
                   type='number'
-                  value={dcaConfig.minTokenRemain}
+                  value={Number(dcaConfig.minTokenRemain)}
                   onChange={(e) => updateData({ minTokenRemain: e.target.value as any })}
                 />
               </div>
@@ -373,7 +375,7 @@ const DCA = () => {
                         <span className='text-gray-300'>Lợi nhuận:</span>
                         <div className='text-right'>
                           <div className='text-green-400 font-mono font-semibold'>
-                            {BigNumber(BigNumber(result.aprByPrice).dividedBy(100).multipliedBy(dcaConfig.capital)).toFixed()} USDT
+                            {BigNumber(BigNumber(result.aprByPrice).dividedBy(100).multipliedBy(dcaConfig.capital!)).toFixed()} USDT
                           </div>
                           <div className='text-sm text-green-300'>({result.aprByPrice}%)</div>
                         </div>
