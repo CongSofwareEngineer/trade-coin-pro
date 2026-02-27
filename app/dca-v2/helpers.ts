@@ -150,7 +150,7 @@ class DcaHelper {
       }
     }
 
-    const buyAmountToken = this.getAmountTokenAfterBuy(buyAmountUSD, config)
+    const buyAmountToken = this.getAmountTokenAfterBuy(buyAmountUSD, config, priceToken)
 
     const { DCARecord: DCARecordFinal, config: configCloneFinal } = this.updateDataToBuy(configClone, buyAmountUSD, buyAmountToken)
 
@@ -229,8 +229,8 @@ class DcaHelper {
     return BigNumber(priceRatio).multipliedBy(baseAmount).decimalPlaces(6, BigNumber.ROUND_DOWN).toString()
   }
 
-  static getAmountTokenAfterBuy(amountUSD: string, config: DcaTokenConfig): string {
-    const amountETH = BigNumber(amountUSD).dividedBy('2300').toString()
+  static getAmountTokenAfterBuy(amountUSD: string, config: DcaTokenConfig, price: string): string {
+    const amountETH = BigNumber(amountUSD).dividedBy(price).toString()
     const rate = BigNumber(1).minus(BigNumber(config.slippageTolerance).dividedBy(100)).toString()
 
     return BigNumber(amountETH).multipliedBy(rate).decimalPlaces(18, BigNumber.ROUND_DOWN).toString()
