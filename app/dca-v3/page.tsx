@@ -340,13 +340,13 @@ const DCA = () => {
               </div>
 
               <div>
-                <div className='block text-sm font-medium text-gray-300 mb-2'>Token tối thiểu còn lại</div>
+                <div className='block text-sm font-medium text-gray-300 mb-2'>Vốn tối thiểu còn lại</div>
                 <input
                   className='w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
                   placeholder='0.001'
                   type='number'
-                  value={Number(dcaConfig.minTokenRemain)}
-                  onChange={(e) => updateData({ minTokenRemain: e.target.value as any })}
+                  value={Number(dcaConfig.inventoryThreshold)}
+                  onChange={(e) => updateData({ inventoryThreshold: e.target.value as any })}
                 />
               </div>
             </div>

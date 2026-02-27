@@ -121,7 +121,7 @@ class DcaHelper {
     return null
   }
 
-  static buyToken(config: DcaTokenConfig, priceToken: string, th: string, isBuyPriceUpperAvg: boolean = false) {
+  private static buyToken(config: DcaTokenConfig, priceToken: string, th: string, isBuyPriceUpperAvg: boolean = false) {
     let configClone = cloneData(config) as DcaTokenConfig
     let DCARecord = {} as History
 
@@ -165,7 +165,7 @@ class DcaHelper {
     }
   }
 
-  static sellToken(config: DcaTokenConfig, priceToken: string, th: string) {
+  private static sellToken(config: DcaTokenConfig, priceToken: string, th: string) {
     let configClone = cloneData(config) as DcaTokenConfig
     let DCARecord = {} as History
 
@@ -199,13 +199,13 @@ class DcaHelper {
     }
   }
 
-  static getRatioPrice(priceHistory: string, priceToken: string) {
+  private static getRatioPrice(priceHistory: string, priceToken: string) {
     const rate = BigNumber(priceToken).dividedBy(priceHistory).multipliedBy(100)
 
     return BigNumber(BigNumber(100).minus(rate)).abs().toString()
   }
 
-  static getRatioPriceBuy(price: string, minPrice: string, maxPrice: string, isSell: boolean = false): string {
+  private static getRatioPriceBuy(price: string, minPrice: string, maxPrice: string, isSell: boolean = false): string {
     if (BigNumber(price).gte(minPrice)) {
       let ratio = BigNumber(BigNumber(price).minus(minPrice)).dividedBy(BigNumber(maxPrice).minus(minPrice))
 
@@ -224,18 +224,18 @@ class DcaHelper {
     }
   }
 
-  static calculateUSDToBuy(priceRatio: string, baseAmount: string = '100'): string {
+  private static calculateUSDToBuy(priceRatio: string, baseAmount: string = '100'): string {
     return BigNumber(priceRatio).multipliedBy(baseAmount).decimalPlaces(6, BigNumber.ROUND_DOWN).toString()
   }
 
-  static getAmountTokenAfterBuy(amountUSD: string, config: DcaTokenConfig, price: string): string {
+  private static getAmountTokenAfterBuy(amountUSD: string, config: DcaTokenConfig, price: string): string {
     const amountETH = BigNumber(amountUSD).dividedBy(price).toString()
     const rate = BigNumber(1).minus(BigNumber(config.slippageTolerance).dividedBy(100)).toString()
 
     return BigNumber(amountETH).multipliedBy(rate).decimalPlaces(18, BigNumber.ROUND_DOWN).toString()
   }
 
-  static updateDataToBuy(config: DcaTokenConfig, buyAmountUSD: string, buyAmountToken: string) {
+  private static updateDataToBuy(config: DcaTokenConfig, buyAmountUSD: string, buyAmountToken: string) {
     const configClone = cloneData(config) as DcaTokenConfig
 
     configClone.capital = BigNumber(configClone.capital).minus(buyAmountUSD).decimalPlaces(6, BigNumber.ROUND_DOWN).toString()
@@ -261,7 +261,7 @@ class DcaHelper {
     return { config: configClone, DCARecord }
   }
 
-  static updateDataToSell(config: DcaTokenConfig, priceToken: string, avgPrice: string) {
+  private static updateDataToSell(config: DcaTokenConfig, priceToken: string, avgPrice: string) {
     const configClone = cloneData(config) as DcaTokenConfig
     const ratioPriceChangeConfig = BigNumber(configClone.ratioPriceChange).dividedBy(100).toString()
 
