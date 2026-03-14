@@ -350,7 +350,7 @@ function TradeInfoPage() {
           )}
 
           {/* Table */}
-          {isLoadingTradeHistory || !userConfigCurrent ? (
+          {isLoadingTradeHistory || !userConfigCurrent || isLoadingTokenPrice ? (
             <TableSkeleton />
           ) : history && history.length > 0 ? (
             <div className='bg-gray-800 rounded-lg shadow-lg border border-gray-700 overflow-hidden'>
