@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { BigNumber } from 'bignumber.js'
 
 import { UserConfig } from './type'
@@ -36,6 +36,64 @@ function TradeInfoPage() {
     page: currentPage,
     limit: 20,
   })
+
+  const portfolioStats = useMemo(() => {
+    if (!userConfigCurrent || !dataTokenPrice?.price) return null
+
+    const tokenPriceNow = dataTokenPrice?.price || 0
+
+    const ethBought = parseFloat(userConfigCurrent.amountToken || '0')
+    const usdtSpent = parseFloat(userConfigCurrent.amountStable || '0')
+    const currentCapital = parseFloat(userConfigCurrent.capital || '0')
+    const initialCapital = parseFloat(userConfigCurrent.initialCapital || '0')
+    const slippageTolerance = parseFloat(userConfigCurrent.slippageTolerance?.toString() || '0')
+    let ratioPriceChange = 0
+
+    // Calculate average price (only if ETH was bought)
+    const avgPrice = ethBought > 0 ? usdtSpent / ethBought : 0
+
+    // Get current ETH price from latest trade
+    const latestTrade = history?.[0]
+    const currentETHPrice = latestTrade ? parseFloat(latestTrade.price) : 0
+
+    // Calculate ETH value at current price
+
+    // Total portfolio value = current capital + ETH value
+    const totalPortfolioValue = usdtSpent
+
+    // Profit/loss based on slippageTolerance (as initial capital reference)
+    const profitLoss = totalPortfolioValue - initialCapital
+
+    //profit
+
+    const usdtToSell = ethBought * tokenPriceNow * (1 - slippageTolerance / 100)
+
+    const usdtAllAfterSell = BigNumber(usdtToSell).plus(currentCapital).toString()
+
+    const apr = BigNumber(BigNumber(usdtAllAfterSell).minus(initialCapital)).dividedBy(initialCapital).multipliedBy(100).toNumber()
+
+    if (latestTrade) {
+      ratioPriceChange = BigNumber(BigNumber(tokenPriceNow).minus(latestTrade.price))
+        .dividedBy(latestTrade.price)
+        .multipliedBy(100)
+        .decimalPlaces(4)
+        .toNumber()
+    }
+
+    return {
+      ethBought: userConfigCurrent.amountToken,
+      usdtSpent: userConfigCurrent.amountStable,
+      currentCapital: userConfigCurrent.capital,
+      initialCapital,
+      slippageTolerance,
+      avgPrice,
+      profitLoss,
+      profitLossPercentage: apr,
+      currentETHPrice,
+      totalPortfolioValue,
+      ratioPriceChange,
+    }
+  }, [dataTokenPrice?.price, userConfigCurrent, history])
 
   console.log({ history, dataTokenPrice })
 
@@ -88,57 +146,6 @@ function TradeInfoPage() {
     // Refresh data after saving
     refetchUserConfig()
   }
-
-  // Calculate portfolio stats
-  const calculatePortfolioStats = () => {
-    if (!userConfigCurrent || !dataTokenPrice?.price) return null
-
-    const tokenPriceNow = dataTokenPrice?.price || 0
-
-    const ethBought = parseFloat(userConfigCurrent.amountToken || '0')
-    const usdtSpent = parseFloat(userConfigCurrent.amountStable || '0')
-    const currentCapital = parseFloat(userConfigCurrent.capital || '0')
-    const initialCapital = parseFloat(userConfigCurrent.initialCapital || '0')
-    const slippageTolerance = parseFloat(userConfigCurrent.slippageTolerance?.toString() || '0')
-
-    // Calculate average price (only if ETH was bought)
-    const avgPrice = ethBought > 0 ? usdtSpent / ethBought : 0
-
-    // Get current ETH price from latest trade
-    const latestTrade = history?.[0]
-    const currentETHPrice = latestTrade ? parseFloat(latestTrade.price) : 0
-
-    // Calculate ETH value at current price
-
-    // Total portfolio value = current capital + ETH value
-    const totalPortfolioValue = usdtSpent
-
-    // Profit/loss based on slippageTolerance (as initial capital reference)
-    const profitLoss = totalPortfolioValue - initialCapital
-
-    //profit
-
-    const usdtToSell = ethBought * tokenPriceNow * (1 - slippageTolerance / 100)
-
-    const usdtAllAfterSell = BigNumber(usdtToSell).plus(currentCapital).toString()
-
-    const apr = BigNumber(BigNumber(usdtAllAfterSell).minus(initialCapital)).dividedBy(initialCapital).multipliedBy(100).toNumber()
-
-    return {
-      ethBought: userConfigCurrent.amountToken,
-      usdtSpent: userConfigCurrent.amountStable,
-      currentCapital: userConfigCurrent.capital,
-      initialCapital,
-      slippageTolerance,
-      avgPrice,
-      profitLoss,
-      profitLossPercentage: apr,
-      currentETHPrice,
-      totalPortfolioValue,
-    }
-  }
-
-  const portfolioStats = calculatePortfolioStats()
 
   console.log({ userConfigCurrent, portfolioStats })
 
@@ -309,12 +316,15 @@ function TradeInfoPage() {
                 <div>
                   {' '}
                   <h2 className='text-xl font-bold text-white'>Portfolio</h2>
-                  <div className='  text-white'>
-                    Price ETH now:{' '}
+                  <span className='  text-white'>
+                    Price {userConfigCurrent.tokenInput} now:{' '}
                     {BigNumber(dataTokenPrice?.price || '0')
                       .decimalPlaces(4)
                       .toFormat()}{' '}
-                  </div>
+                    <span className={`${portfolioStats.ratioPriceChange > 0 ? 'text-green-500' : 'text-red-600'} text-sm`}>
+                      {portfolioStats.ratioPriceChange}%
+                    </span>
+                  </span>
                 </div>
 
                 <div className='flex flex-wrap gap-4 text-sm'>
