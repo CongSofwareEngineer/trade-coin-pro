@@ -159,6 +159,7 @@ class DcaHelper {
     DCARecord.isBuy = true
     DCARecord.TH = th
     configClone.lastHistoryPrice = priceToken
+    configClone.lastAmountStableToBuy = buyAmountUSD
 
     return {
       item: DCARecord,
@@ -284,9 +285,23 @@ class DcaHelper {
       priceRationByAvg = BigNumber(0.5)
     }
 
-    let amountTokenToSell = BigNumber(BigNumber(configClone.stepSize).dividedBy(priceToken))
-      .multipliedBy(priceRationByAvg)
-      .decimalPlaces(18, BigNumber.ROUND_DOWN)
+    const maxUsdReceivedForSell = BigNumber(configClone.stepSize).multipliedBy(0.5)
+    let usdReceivedForSell = BigNumber(configClone.stepSize).multipliedBy(priceRationByAvg)
+
+    console.log({
+      lastAmountStableToBuy: BigNumber(configClone.lastAmountStableToBuy || '0').toString(),
+      maxUsdReceivedForSell: maxUsdReceivedForSell.toString(),
+    })
+
+    if (BigNumber(configClone.lastAmountStableToBuy || '0').gt(usdReceivedForSell)) {
+      usdReceivedForSell = BigNumber(configClone.lastAmountStableToBuy || '0')
+    }
+
+    if (BigNumber(usdReceivedForSell).gt(maxUsdReceivedForSell)) {
+      usdReceivedForSell = maxUsdReceivedForSell
+    }
+
+    let amountTokenToSell = BigNumber(usdReceivedForSell).dividedBy(priceToken).decimalPlaces(18, BigNumber.ROUND_DOWN)
 
     if (BigNumber(amountTokenToSell).gt(config.amountToken)) {
       amountTokenToSell = BigNumber(config.amountToken)
@@ -313,6 +328,8 @@ class DcaHelper {
       .minus(costBasisRemoved)
       .decimalPlaces(6, BigNumber.ROUND_DOWN)
       .toString()
+
+    configClone.lastAmountStableToBuy = '0'
 
     const DCARecord = {
       isSell: true,

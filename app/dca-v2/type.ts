@@ -32,6 +32,7 @@ export interface DcaTokenConfig {
   poolVersion: string
   lastHistoryPrice: string
   inventoryThreshold: string
+  lastAmountStableToBuy?: string
   [key: string]: unknown
 }
 
