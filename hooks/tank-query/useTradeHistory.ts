@@ -68,7 +68,6 @@ export const useTradeHistory = ({ idUser, page = 1, limit = 20 }: UseTradeHistor
     queryKey: [QUERY_KEY.ListTradeHistory, idUser, page, limit],
     queryFn: getData,
     enabled: !!idUser,
-    placeholderData: (previousData) => previousData, // Giữ dữ liệu cũ khi chuyển trang
   })
 
   return {
