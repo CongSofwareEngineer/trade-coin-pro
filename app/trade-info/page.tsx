@@ -416,7 +416,7 @@ function TradeInfoPage() {
                             {item?.isBuy ? '$' : ''}
                             {item.infoSwap?.amountIn ? BigNumber(item.infoSwap.amountIn).decimalPlaces(6).toFormat() : '-'}
                           </td>
-                          <td className={`p-4 font-mono text-sm ${item?.isSell ? 'text-green-400' : 'text-red-400'}`}>
+                          <td className={`p-4 font-mono text-sm ${item?.isBuy ? 'text-green-400' : 'text-red-400'}`}>
                             {item?.isSell ? '$' : ''}
                             {item.infoSwap?.amountOut ? BigNumber(item.infoSwap.amountOut).decimalPlaces(6).toFormat() : '-'}
                           </td>
