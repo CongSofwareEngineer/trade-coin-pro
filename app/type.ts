@@ -35,6 +35,8 @@ export interface RebalanceSummary {
   symbolEnd: string
   startAmount: string
   endAmount: string
+  priceStartUsd: string
+  priceEndUsd: string
   startValueUsd: string
   endValueUsd: string
   profitUsd: string

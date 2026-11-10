@@ -44,6 +44,8 @@ export const getRebalanceSummary = (res: RebalanceResult, config: RebalanceConfi
     symbolEnd,
     startAmount,
     endAmount,
+    priceStartUsd: String(priceStart),
+    priceEndUsd: String(priceEnd),
     startValueUsd,
     endValueUsd,
     profitUsd,

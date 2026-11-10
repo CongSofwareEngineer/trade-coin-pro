@@ -13,4 +13,4 @@
 + `isV4` flag: `version === 'v4'` → `version !== 'v1'` nên v5 dùng chung initData/calculateData của v4 (page.tsx)
 + Fix: select version bị lặp 2 `option v4` → `v4` + `v5` (page.tsx)
 + Thêm `getRebalanceSummary(res, config)`: start amount / end amount + giá trị USD 2 đầu (giá item đầu cho token in, item cuối cho token out) → P/L USD + % (helpers.ts, page.tsx)
-+ Results Analysis hiện block Summary: Start/End amount kèm $, Profit/Loss USD xanh khi lời đỏ khi lỗ (page.tsx)
++ Results Analysis hiện block Summary: Start/End amount kèm $, giá 1 token ($/symbol) 2 đầu, Profit/Loss USD xanh khi lời đỏ khi lỗ (page.tsx, helpers.ts)

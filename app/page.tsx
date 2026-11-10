@@ -347,6 +347,9 @@ export default function Home() {
                       {formatNumberToShow(summary.startAmount)} <span className='text-sm text-gray-400'>{summary.symbolStart}</span>
                     </div>
                     <div className='text-sm font-mono text-gray-400'>${formatNumberToShow(summary.startValueUsd)}</div>
+                    <div className='text-xs font-mono text-gray-500'>
+                      Giá: ${formatNumberToShow(summary.priceStartUsd)} / {summary.symbolStart}
+                    </div>
                   </div>
                   <div>
                     <span className='text-xs text-gray-400'>End Amount</span>
@@ -354,6 +357,9 @@ export default function Home() {
                       {formatNumberToShow(summary.endAmount)} <span className='text-sm text-gray-400'>{summary.symbolEnd}</span>
                     </div>
                     <div className='text-sm font-mono text-gray-400'>${formatNumberToShow(summary.endValueUsd)}</div>
+                    <div className='text-xs font-mono text-gray-500'>
+                      Giá: ${formatNumberToShow(summary.priceEndUsd)} / {summary.symbolEnd}
+                    </div>
                   </div>
                 </div>
 
