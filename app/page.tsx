@@ -7,7 +7,7 @@ import { RebalanceSummary, Version } from './type'
 import { getRebalanceHelper, getRebalanceSummary } from './helpers'
 
 import { PoolToken } from '@/types/app'
-import { cloneData } from '@/utils/functions'
+import { cloneData, formatTime } from '@/utils/functions'
 
 const DECIMAL = 8
 
@@ -426,7 +426,7 @@ export default function Home() {
                             </span>
                           )}
                         </div>
-                        <div className='text-sm text-gray-400'>{item.time || 'N/A'}</div>
+                        <div className='text-sm text-gray-400'>{formatTime(item.time) || 'N/A'}</div>
                       </div>
 
                       {/* Swap Results */}
