@@ -154,7 +154,7 @@ export default function Home() {
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white'>
       <div className='container mx-auto px-6 py-8'>
-        <div className='grid lg:grid-cols-2 gap-8'>
+        <div className='grid lg:grid-cols-2 gap-8 [&>*]:min-w-0'>
           {/* Configuration Panel */}
           <div className='bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-2xl'>
             <h2 className='text-xl font-semibold mb-6 flex items-center gap-2'>
@@ -302,7 +302,7 @@ export default function Home() {
             {arrSwapFilter.length > 0 && (
               <div className='mt-6 p-4 bg-green-900/30 border border-green-700/50 rounded-lg'>
                 <h3 className='text-sm font-medium text-green-400 mb-2'>Successful Swaps Found ({arrSwapFilter.length})</h3>
-                <div className='gap-2'>
+                <div className='flex flex-wrap gap-2 max-h-[120px] overflow-y-auto custom-scrollbar'>
                   {arrData.map((e, index) => {
                     if (!e?.isSwap) return null
 
