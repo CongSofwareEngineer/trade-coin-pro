@@ -3,40 +3,16 @@ import { useEffect, useRef, useState } from 'react'
 import { read, utils } from 'xlsx'
 import { BigNumber } from 'bignumber.js'
 
-import { deepClone } from '..'
+import { RebalanceSummary, Version } from './type'
+import { getRebalanceHelper, getRebalanceSummary } from './helpers'
 
-import { ETHLastSwapTemp, PoolToken, Token } from '@/types/app'
+import { PoolToken } from '@/types/app'
+import { cloneData } from '@/utils/functions'
 
 const DECIMAL = 8
 
-const KEY_STORAGE = {
-  perETHOriginal: 'perETHOriginal',
-  ETHOriginalAmount: 'ETHOriginalAmount',
-  ETHLastSwapTemp: 'ETHLastSwapTemp',
-  ETHLastSwap: 'ETHLastSwap',
-  amountInput: 'amountInput',
-  outputSwapTemp: 'outputSwapTemp',
-  outputSwap: 'outputSwap',
-  //v4
-  price1Point: 'price1Point',
-  indexCurrentUpdatePerETHOriginal: 'indexCurrentUpdatePerETHOriginal',
-}
-
-export const saveDataLocal = (key: string, value: any) => {
-  localStorage.setItem(key, JSON.stringify(value))
-}
-
-export const getDataLocal = (key: string) => {
-  const data = localStorage.getItem(key)
-
-  return data ? JSON.parse(data) : null
-}
-
 export default function Home() {
-  const indexCurrentUpdatePerETHOriginalRef = useRef(0)
-  const arrCloneRef = useRef<PoolToken[]>([])
   const arrCloneDefaultRef = useRef<PoolToken[]>([])
-  const indexCurrentRef = useRef(0)
   const [arrData, setArrData] = useState<PoolToken[]>([])
   const [amountStart, setAmountStart] = useState<number>(1)
   const [outputStart, setOutputStart] = useState<string>('ETH')
@@ -48,578 +24,31 @@ export default function Home() {
   const [startData, setStartData] = useState(false)
   const [arrSwapFilter, setArrSwapFilter] = useState<PoolToken[]>([])
   const [showIsSwap, setShowIsSwap] = useState(false)
-  const [version, setVersion] = useState<'v1' | 'v4'>('v1')
+  const [version, setVersion] = useState<Version>('v1')
+  const [summary, setSummary] = useState<RebalanceSummary | null>(null)
 
-  const getTokenMinChangePercentage = (poolToken: PoolToken): Token => {
-    const minChangePercentage = poolToken.arrToken!.reduce((min, token) => {
-      return BigNumber(min).lt(token.perETHChangePercentage!) ? min : token.perETHChangePercentage!
-    }, poolToken.arrToken![0].perETHChangePercentage!)
-
-    const token = poolToken.arrToken!.find((token) => {
-      return BigNumber(minChangePercentage).isEqualTo(token.perETHChangePercentage!)
-    })!
-
-    return token
+  const getHelper = () => {
+    return getRebalanceHelper(version, { amountStart, outputStart, volatilityPercentage, affiliate })
   }
 
-  const checkToSwap = async (tokenOutput: Token) => {
-    let isSwap = false
-    let isStopAll = false
-
-    let amountInput = getDataLocal(KEY_STORAGE.amountInput) as string
-    let ETHLastSwap = getDataLocal(KEY_STORAGE.ETHLastSwap) as ETHLastSwapTemp
-    let ETHLastSwapTemp = getDataLocal(KEY_STORAGE.ETHLastSwapTemp) as ETHLastSwapTemp
-    let perETHOriginal = getDataLocal(KEY_STORAGE.perETHOriginal) as ETHLastSwapTemp
-    let outputSwap = getDataLocal(KEY_STORAGE.outputSwap) as string
-    let outputSwapTemp = getDataLocal(KEY_STORAGE.outputSwapTemp) as string
-    const ETHOriginalAmount = getDataLocal(KEY_STORAGE.ETHOriginalAmount) as string
-
-    const poolToken = arrCloneRef.current[indexCurrentRef.current]
-
-    const tokenETH = poolToken.arrToken!.find((e) => {
-      return e.symbol === 'ETH'
-    })
-    const tokenBTC = poolToken.arrToken!.find((e) => {
-      return e.symbol === 'BTC'
-    })
-
-    const tokenInput: Token = poolToken.arrToken!.find((e) => {
-      if (e.symbol === outputSwap) {
-        return e
-      }
-    })!
-
-    if (
-      // outputSwapTemp !== tokenInput.symbol &&
-      outputSwapTemp !== tokenOutput.symbol &&
-      Number(tokenOutput.perETHChangePercentage!) < BigNumber(BigNumber(volatilityPercentage).dividedBy(100)).multipliedBy(-1).toNumber()
-    ) {
-      console.log(`=================== Item ${indexCurrentRef.current + 1} ==================`)
-
-      console.log('step 1')
-      if (tokenOutput!.symbol === 'ETH') {
-        console.log(`update ETHLastSwapTemp BTC = ${tokenBTC!.perETH}`)
-        ETHLastSwapTemp[tokenBTC!.symbol!] = tokenBTC!.perETH!
-      } else {
-        console.log(`update ETHLastSwapTemp ${tokenOutput.symbol} = ${tokenOutput.perETH}`)
-        ETHLastSwapTemp[tokenOutput.symbol!] = tokenOutput.perETH!
-      }
-
-      console.log(`update outputSwapTemp = ${tokenOutput.symbol}`)
-
-      outputSwapTemp = tokenOutput.symbol!
-      console.log({ outputSwap, tokenOutput, tokenInput, amountInput, ETHOriginalAmount })
-
-      if (outputSwap !== tokenOutput.symbol && tokenInput.symbol !== tokenOutput.symbol) {
-        // ;(SwapInputTokenAmount * SwapInputTokenPrice) / ETHPrice
-        const amountOutCheck = BigNumber(amountInput!).multipliedBy(tokenInput?.price!).dividedBy(tokenETH?.price!).toFixed()
-
-        //(SwapInputTokenAmount * (1 - AFFILIATE_FEE_PERENT))* SwapInputTokenPrice) / ETHPrice của giờ đó
-        const amountAfterSwap = BigNumber(amountInput!)
-          .multipliedBy(BigNumber(1).minus(BigNumber(affiliate).dividedBy(100)))
-          .multipliedBy(tokenInput?.price!)
-          .dividedBy(tokenOutput!.price!)
-
-          .toFixed()
-
-        console.log('step 2')
-        console.log({ amountOutCheck, amountAfterSwap })
-
-        if (tokenOutput?.symbol === 'ETH' || tokenOutput?.symbol === 'BTC') {
-          console.log('step 3 so sánh perETH BTC vs ETHLastSwap BTC ')
-          console.log({ ETHLastSwap: deepClone(ETHLastSwap), tokenBTC })
-
-          if (BigNumber(tokenBTC?.perETH!).gt(ETHLastSwap[tokenBTC!.symbol!])) {
-            console.log('step 4')
-            console.log({ ETHLastSwapTemp: deepClone(ETHLastSwapTemp), perETHOriginal: deepClone(perETHOriginal), tokenOutput })
-
-            console.log(' so sánh amount vs ETHOriginalAmount')
-
-            //(SwapInputTokenAmount * SwapInputTokenPrice)/ ETHPrice của giờ đó => đem so sánh với ETHOriginalAmount
-            if (BigNumber(amountOutCheck).gte(ETHOriginalAmount)) {
-              console.log('step 4.1')
-
-              console.log('so sánh perETH BTC vs perETHOriginal BTC')
-              if (BigNumber(tokenBTC?.perETH!).gte(perETHOriginal[tokenBTC!.symbol!])) {
-                amountInput = amountAfterSwap
-                outputSwap = tokenOutput?.symbol!
-                isSwap = true
-                arrCloneRef.current[indexCurrentRef.current][`est_${tokenOutput.symbol!}`] = amountAfterSwap
-                arrCloneRef.current[indexCurrentRef.current].outputSwap = tokenOutput.symbol!
-              }
-            }
-          }
-
-          console.log(`update ETHLastSwap ${tokenBTC!.symbol} = ${ETHLastSwapTemp[tokenBTC!.symbol!]}`)
-          ETHLastSwap[tokenBTC!.symbol!] = ETHLastSwapTemp[tokenBTC!.symbol!]
-          // ETHLastSwap[tokenETH!.symbol!] = ETHLastSwapTemp[tokenETH!.symbol!]
-        } else {
-          console.log('step 5 token other')
-          console.log('so sánh perETH token vs ETHLastSwap token')
-
-          console.log({ ETHLastSwap: deepClone(ETHLastSwap), tokenOutput })
-          if (BigNumber(tokenOutput?.perETH!).gte(ETHLastSwap[tokenOutput?.symbol!]!)) {
-            console.log('step 6')
-            console.log({ ETHLastSwapTemp: deepClone(ETHLastSwapTemp), perETHOriginal: deepClone(perETHOriginal), tokenOutput })
-
-            console.log(' so sánh amount vs ETHOriginalAmount')
-            //(SwapInputTokenAmount * SwapInputTokenPrice)/ ETHPrice của giờ đó => đem so sánh với ETHOriginalAmount
-            if (BigNumber(amountOutCheck).gte(ETHOriginalAmount)) {
-              console.log('step 6.1')
-              console.log('so sánh perETH token vs perETHOriginal token')
-              if (BigNumber(tokenOutput!.perETH!).gte(perETHOriginal[tokenOutput!.symbol!])) {
-                outputSwap = tokenOutput?.symbol!
-                amountInput = amountAfterSwap
-                isSwap = true
-                arrCloneRef.current[indexCurrentRef.current][`est_${tokenOutput.symbol!}`] = amountAfterSwap
-                arrCloneRef.current[indexCurrentRef.current].outputSwap = tokenOutput.symbol!
-              }
-            }
-          }
-          console.log(`update ETHLastSwap ${tokenInput!.symbol} = ${ETHLastSwapTemp[tokenInput!.symbol!]}`)
-
-          ETHLastSwap[tokenOutput!.symbol!] = ETHLastSwapTemp[tokenOutput!.symbol!]
-        }
-      }
-    }
-
-    return {
-      isSwap,
-      isStopAll,
-      amountInput,
-      outputSwap,
-      outputSwapTemp,
-      ETHLastSwap,
-      ETHLastSwapTemp,
-      perETHOriginal,
-    }
-  }
-
-  const updatePointBeforeCheck = (arrToken: PoolToken['arrToken'] = [], arrTokenPre: PoolToken['arrToken'] = []) => {
-    arrToken.forEach((token, index) => {
-      const tokenPre = arrTokenPre[index]
-
-      token.pointBeforeCheck = BigNumber(tokenPre.pointAfterCheck!).plus(token.changeByPoint!).toFixed()
-      arrToken[index] = token
-    })
-
-    return arrToken
-  }
-
-  const updatePointAfterCheckBeforeSwap = (arrToken: PoolToken['arrToken'] = [], arrTokenPre: PoolToken['arrToken'] = []) => {
-    arrToken.forEach((token, index) => {
-      const tokenPre = arrTokenPre[index]
-
-      token.pointAfterCheck = BigNumber(tokenPre.pointAfterCheck!).plus(token.changeByPoint!).toFixed()
-
-      arrToken[index] = token
-    })
-
-    return arrToken
-  }
-
-  const updatePointAfterCheckInSwap = (arrToken: PoolToken['arrToken'] = [], tokenOutput: Token) => {
-    arrToken!.forEach((token, index) => {
-      if (tokenOutput.symbol === token.symbol) {
-        token.pointAfterCheck = '1000'
-      }
-      arrToken[index] = token
-    })
-
-    arrToken!.forEach((token, index) => {
-      if (tokenOutput.symbol !== token.symbol) {
-        if (BigNumber(token.pointAfterCheck!).isLessThan(1000)) {
-          token.pointAfterCheck = '1000'
-        }
-      }
-      arrToken[index] = token
-    })
-
-    return arrToken
-  }
-
-  const updatePerETHOriginal = (arrToken: PoolToken['arrToken'] = [], arrTokenPre: PoolToken['arrToken'] = [], tokenInput: Token) => {
-    const perETHOriginal = getDataLocal(KEY_STORAGE.perETHOriginal) as ETHLastSwapTemp
-    let currentAmountMoreThanRest = 0
-    let preAmountMoreThanRest = 0
-    let isChangeETHAndBTC = false
-    const resetPoint = BigNumber(1000).plus(BigNumber(1000).multipliedBy(volatilityPercentage).dividedBy(100).multipliedBy(10)).toFixed() //2000 + 30% = 2600
-
-    arrTokenPre.forEach((token) => {
-      if (BigNumber(token.pointAfterCheck!).isGreaterThan(resetPoint)) {
-        preAmountMoreThanRest++
-      }
-    })
-
-    arrToken.forEach((token) => {
-      if (BigNumber(token.pointAfterCheck!).isGreaterThan(resetPoint)) {
-        currentAmountMoreThanRest++
-      }
-    })
-
-    if (currentAmountMoreThanRest >= 2 && preAmountMoreThanRest <= 1) {
-      arrToken.forEach((token) => {
-        if (token.symbol === 'ETH' || token.symbol === 'BTC') {
-          if (tokenInput.symbol !== token.symbol) {
-            isChangeETHAndBTC = true
-          }
-        } else {
-          if (tokenInput.symbol !== token.symbol) {
-            perETHOriginal[token.symbol!] = token.perETH!
-          }
-        }
-      })
-    }
-    if (isChangeETHAndBTC) {
-      arrToken.forEach((token) => {
-        if (token.symbol === 'ETH' || token.symbol === 'BTC') {
-          perETHOriginal[token.symbol!] = token.perETH!
-        }
-      })
-    }
-
-    return perETHOriginal
-  }
-
-  const checkToSwapV4 = async (tokenOutput: Token) => {
-    let isSwap = false
-    let isStopAll = false
-
-    let amountInput = getDataLocal(KEY_STORAGE.amountInput) as string
-    let ETHLastSwap = getDataLocal(KEY_STORAGE.ETHLastSwap) as ETHLastSwapTemp
-    let ETHLastSwapTemp = getDataLocal(KEY_STORAGE.ETHLastSwapTemp) as ETHLastSwapTemp
-    let perETHOriginal = getDataLocal(KEY_STORAGE.perETHOriginal) as ETHLastSwapTemp
-    let outputSwap = getDataLocal(KEY_STORAGE.outputSwap) as string
-    let outputSwapTemp = getDataLocal(KEY_STORAGE.outputSwapTemp) as string
-    const ETHOriginalAmount = getDataLocal(KEY_STORAGE.ETHOriginalAmount) as string
-    //v4
-    let poolToken = arrCloneRef.current[indexCurrentRef.current]
-    let poolTokenPre = arrCloneRef.current[indexCurrentRef.current - 1]
-
-    const tokenETH = poolToken.arrToken!.find((e) => {
-      return e.symbol === 'ETH'
-    })
-    const tokenBTC = poolToken.arrToken!.find((e) => {
-      return e.symbol === 'BTC'
-    })
-
-    const tokenInput: Token = poolToken.arrToken!.find((e) => {
-      if (e.symbol === outputSwap) {
-        return e
-      }
-    })!
-
-    //update pointBeforeCheck, pointAfterCheck before swap
-    poolToken.arrToken = updatePointBeforeCheck(poolToken.arrToken, poolTokenPre.arrToken)
-    poolToken.arrToken = updatePointAfterCheckBeforeSwap(poolToken.arrToken, poolTokenPre.arrToken)
-
-    if (
-      // outputSwapTemp !== tokenInput.symbol &&
-      outputSwapTemp !== tokenOutput.symbol &&
-      Number(tokenOutput.perETHChangePercentage!) < BigNumber(BigNumber(volatilityPercentage).dividedBy(100)).multipliedBy(-1).toNumber()
-    ) {
-      console.log(`=================== Item ${indexCurrentRef.current + 1} ==================`)
-
-      console.log('step 1')
-      if (tokenOutput!.symbol === 'ETH') {
-        console.log(`update ETHLastSwapTemp BTC = ${tokenBTC!.perETH}`)
-        ETHLastSwapTemp[tokenBTC!.symbol!] = tokenBTC!.perETH!
-      } else {
-        console.log(`update ETHLastSwapTemp ${tokenOutput.symbol} = ${tokenOutput.perETH}`)
-        ETHLastSwapTemp[tokenOutput.symbol!] = tokenOutput.perETH!
-      }
-
-      console.log(`update outputSwapTemp = ${tokenOutput.symbol}`)
-
-      outputSwapTemp = tokenOutput.symbol!
-      console.log({ outputSwap, tokenOutput, tokenInput, amountInput, ETHOriginalAmount })
-      if (outputSwap !== tokenOutput.symbol && tokenInput.symbol !== tokenOutput.symbol) {
-        // ;(SwapInputTokenAmount * SwapInputTokenPrice) / ETHPrice
-        const amountOutCheck = BigNumber(amountInput!).multipliedBy(tokenInput?.price!).dividedBy(tokenETH?.price!).toFixed()
-
-        //(SwapInputTokenAmount * (1 - AFFILIATE_FEE_PERENT))* SwapInputTokenPrice) / ETHPrice của giờ đó
-        const amountAfterSwap = BigNumber(amountInput!)
-          .multipliedBy(BigNumber(1).minus(BigNumber(affiliate).dividedBy(100)))
-          .multipliedBy(tokenInput?.price!)
-          .dividedBy(tokenOutput!.price!)
-
-          .toFixed()
-
-        console.log('step 2')
-        console.log({ amountOutCheck, amountAfterSwap })
-
-        if (tokenOutput?.symbol === 'ETH' || tokenOutput?.symbol === 'BTC') {
-          console.log('step 3 so sánh perETH BTC vs ETHLastSwap BTC ')
-          console.log({ ETHLastSwap: deepClone(ETHLastSwap), tokenBTC })
-
-          if (BigNumber(tokenBTC?.perETH!).gt(ETHLastSwap[tokenBTC!.symbol!])) {
-            console.log('step 4')
-            console.log({ ETHLastSwapTemp: deepClone(ETHLastSwapTemp), perETHOriginal: deepClone(perETHOriginal), tokenOutput })
-
-            console.log(' so sánh amount vs ETHOriginalAmount')
-
-            //(SwapInputTokenAmount * SwapInputTokenPrice)/ ETHPrice của giờ đó => đem so sánh với ETHOriginalAmount
-            if (BigNumber(amountOutCheck).gte(ETHOriginalAmount)) {
-              console.log('step 4.1')
-              console.log('so sánh perETH BTC vs perETHOriginal BTC')
-
-              //updatePointBeforeAfterCheckBeforeSwap
-              // poolToken.arrToken = updatePointBeforeAfterCheckBeforeSwap(poolToken.arrToken, poolTokenPre.arrToken)
-              if (BigNumber(tokenBTC?.perETH!).gte(perETHOriginal[tokenBTC!.symbol!])) {
-                // v4
-                poolToken.arrToken = updatePointAfterCheckInSwap(poolToken.arrToken, tokenOutput)
-                // perETHOriginal = updatePerETHOriginal(poolToken.arrToken, poolTokenPre.arrToken, tokenInput)
-                //-----
-                amountInput = amountAfterSwap
-                outputSwap = tokenOutput?.symbol!
-                isSwap = true
-                arrCloneRef.current[indexCurrentRef.current][`est_${tokenOutput.symbol!}`] = amountAfterSwap
-                arrCloneRef.current[indexCurrentRef.current].outputSwap = tokenOutput.symbol!
-              }
-            }
-          }
-
-          console.log(`update ETHLastSwap ${tokenBTC!.symbol} = ${ETHLastSwapTemp[tokenBTC!.symbol!]}`)
-          ETHLastSwap[tokenBTC!.symbol!] = ETHLastSwapTemp[tokenBTC!.symbol!]
-          // ETHLastSwap[tokenETH!.symbol!] = ETHLastSwapTemp[tokenETH!.symbol!]
-        } else {
-          console.log('step 5 token other')
-          console.log('so sánh perETH token vs ETHLastSwap token')
-
-          console.log({ ETHLastSwap: deepClone(ETHLastSwap), tokenOutput })
-          if (BigNumber(tokenOutput?.perETH!).gte(ETHLastSwap[tokenOutput?.symbol!]!)) {
-            console.log('step 6')
-            console.log({ ETHLastSwapTemp: deepClone(ETHLastSwapTemp), perETHOriginal: deepClone(perETHOriginal), tokenOutput })
-
-            console.log(' so sánh amount vs ETHOriginalAmount')
-            //(SwapInputTokenAmount * SwapInputTokenPrice)/ ETHPrice của giờ đó => đem so sánh với ETHOriginalAmount
-            if (BigNumber(amountOutCheck).gte(ETHOriginalAmount)) {
-              console.log('step 6.1')
-              console.log('so sánh perETH token vs perETHOriginal token')
-
-              //updatePointBeforeAfterCheckBeforeSwap
-              // poolToken.arrToken = updatePointBeforeAfterCheckBeforeSwap(poolToken.arrToken, poolTokenPre.arrToken)
-              if (BigNumber(tokenOutput!.perETH!).gte(perETHOriginal[tokenOutput!.symbol!])) {
-                // v4
-                poolToken.arrToken = updatePointAfterCheckInSwap(poolToken.arrToken, tokenOutput)
-                // perETHOriginal = updatePerETHOriginal(poolToken.arrToken, poolTokenPre.arrToken, tokenInput)
-                //-----
-                outputSwap = tokenOutput?.symbol!
-                amountInput = amountAfterSwap
-                isSwap = true
-                arrCloneRef.current[indexCurrentRef.current][`est_${tokenOutput.symbol!}`] = amountAfterSwap
-                arrCloneRef.current[indexCurrentRef.current].outputSwap = tokenOutput.symbol!
-              }
-            }
-          }
-          console.log(`update ETHLastSwap ${tokenInput!.symbol} = ${ETHLastSwapTemp[tokenInput!.symbol!]}`)
-
-          ETHLastSwap[tokenOutput!.symbol!] = ETHLastSwapTemp[tokenOutput!.symbol!]
-        }
-      }
-    }
-
-    perETHOriginal = updatePerETHOriginal(poolToken.arrToken, poolTokenPre.arrToken, tokenInput)
-
-    return {
-      isSwap,
-      isStopAll,
-      amountInput,
-      outputSwap,
-      outputSwapTemp,
-      ETHLastSwap,
-      ETHLastSwapTemp,
-      perETHOriginal,
-      arrToken: poolToken.arrToken,
-    }
-  }
-
-  const calculateData = async (isV4 = false) => {
-    try {
-      const poolTrade = arrCloneRef.current[indexCurrentRef.current]
-
-      indexCurrentUpdatePerETHOriginalRef.current = 0
-      if (indexCurrentRef.current > 0) {
-        const tokenMinChangePercentage = getTokenMinChangePercentage(poolTrade)
-
-        let res: {
-          isSwap: boolean
-          isStopAll: boolean
-          amountInput: string
-          outputSwap: string
-          outputSwapTemp: string
-          ETHLastSwap: ETHLastSwapTemp
-          ETHLastSwapTemp: ETHLastSwapTemp
-          //v4
-          perETHOriginal: ETHLastSwapTemp
-          arrToken: PoolToken['arrToken']
-        } = (await checkToSwap(tokenMinChangePercentage)) as any
-
-        if (isV4) {
-          res = await checkToSwapV4(tokenMinChangePercentage)
-        }
-
-        saveDataLocal(KEY_STORAGE.amountInput, res.amountInput)
-        saveDataLocal(KEY_STORAGE.perETHOriginal, res.perETHOriginal)
-        saveDataLocal(KEY_STORAGE.ETHLastSwapTemp, res.ETHLastSwapTemp)
-        saveDataLocal(KEY_STORAGE.ETHLastSwap, res.ETHLastSwap)
-        saveDataLocal(KEY_STORAGE.outputSwapTemp, res.outputSwapTemp)
-        saveDataLocal(KEY_STORAGE.outputSwap, res.outputSwap)
-        poolTrade.isSwap = res.isSwap
-
-        if (isV4) {
-          poolTrade.arrToken = res.arrToken
-        }
-      }
-
-      arrCloneRef.current[indexCurrentRef.current] = poolTrade
-      if (indexCurrentRef.current < arrCloneRef.current.length - 1) {
-        indexCurrentRef.current++
-
-        await calculateData(isV4)
-      } else {
-        return
-      }
-    } catch (error) {
-      console.log({ errorIndexcalculateData: indexCurrentRef.current, error })
-    }
-  }
-
-  const initData = (index = 0, isV4 = false) => {
-    try {
-      const poolTrade = arrCloneRef.current[index]
-      const isETH = outputStart === 'ETH'
-
-      const tokenETH = poolTrade.arrToken!.find((e) => {
-        return e.symbol === 'ETH'
-      })
-
-      if (index > 0) {
-        const poolTradePre = arrCloneRef.current[index - 1]
-
-        //get perETHChangePercentage in List token
-        poolTrade.arrToken!.forEach((token, indexToken) => {
-          const tokenPre = poolTradePre.arrToken![indexToken]
-
-          if (token.symbol === 'ETH') {
-            token.perETH = '1'
-            token.perETHChangePercentage = BigNumber(BigNumber(token!.price!).minus(tokenPre?.price!))
-              .dividedBy(tokenPre!.price!)
-
-              .toFixed()
-          } else {
-            token.perETH = BigNumber(token!.price!).dividedBy(tokenETH!.price!).toFixed()
-
-            token.perETHChangePercentage = BigNumber(BigNumber(token.perETH!).minus(tokenPre.perETH!))
-              .dividedBy(tokenPre.perETH!)
-
-              .toFixed()
-          }
-
-          if (isV4) {
-            const price1Point = getDataLocal(KEY_STORAGE.price1Point) || ({} as ETHLastSwapTemp)
-
-            // ・ETHChangeByPoint: bằng (ETHPrice giờ đó / ETHPrice1Point) -  (ETHPrice giờ trước đó / ETHPrice1Point)
-            token.changeByPoint = BigNumber(BigNumber(token!.price!).dividedBy(price1Point[token.symbol!]))
-              .minus(BigNumber(tokenPre!.price!).dividedBy(price1Point[token.symbol!]))
-
-              .toFixed()
-          }
-
-          poolTrade.arrToken![indexToken] = token
-        })
-      } else {
-        poolTrade.arrToken!.forEach((token, index) => {
-          if (token.symbol === 'ETH') {
-            token.perETHChangePercentage = '0'
-            token.perETH = '1'
-          } else {
-            token.perETH = BigNumber(token!.price!).dividedBy(tokenETH!.price!).toFixed()
-            token.perETHChangePercentage = '0'
-          }
-
-          //save to local
-          const ETHLastSwap = getDataLocal(KEY_STORAGE.ETHLastSwap) || ({} as ETHLastSwapTemp)
-          const ETHLastSwapTemp = getDataLocal(KEY_STORAGE.ETHLastSwapTemp) || ({} as ETHLastSwapTemp)
-          const perETHOriginal = getDataLocal(KEY_STORAGE.perETHOriginal) || ({} as ETHLastSwapTemp)
-
-          ETHLastSwap[token!.symbol!] = token.perETH
-          ETHLastSwapTemp[token.symbol!] = token.perETH
-          perETHOriginal[token.symbol!] = token.perETH
-
-          if (token.symbol === outputStart) {
-            if (isETH) {
-              saveDataLocal(KEY_STORAGE.ETHOriginalAmount, amountStart + '')
-            } else {
-              const amount = BigNumber(amountStart).multipliedBy(token!.price!).dividedBy(tokenETH!.price!).toFixed()
-
-              saveDataLocal(KEY_STORAGE.ETHOriginalAmount, amount)
-            }
-          }
-
-          saveDataLocal(KEY_STORAGE.ETHLastSwap, ETHLastSwap)
-          saveDataLocal(KEY_STORAGE.ETHLastSwapTemp, ETHLastSwapTemp)
-          saveDataLocal(KEY_STORAGE.perETHOriginal, perETHOriginal)
-
-          //v4
-          if (isV4) {
-            token.changeByPoint = '0'
-            token.pointAfterCheck = '1000'
-            token.pointBeforeCheck = '1000'
-
-            const price1Point = getDataLocal(KEY_STORAGE.price1Point) || ({} as ETHLastSwapTemp)
-
-            price1Point[token.symbol!] = BigNumber(token.price!).dividedBy(1000).toNumber()
-
-            saveDataLocal(KEY_STORAGE.price1Point, price1Point)
-          }
-
-          poolTrade.arrToken![index] = token
-        })
-      }
-
-      arrCloneRef.current[index] = poolTrade
-      if (index < arrCloneRef.current.length - 1) {
-        initData(index + 1, isV4)
-      } else {
-        return
-      }
-    } catch (error) {
-      console.log({ errorIndexcalculateData: index, error })
-    }
-  }
-
-  const filterSwap = () => {
-    const arrSwap = arrCloneRef.current.filter((e) => {
-      return e.isSwap
-    })
-
-    setArrSwapFilter(arrSwap)
-
-    console.log({ arrSwap })
-  }
-
-  const rollUpData = async () => {
-    saveDataLocal(KEY_STORAGE.amountInput, amountStart + '')
-    saveDataLocal(KEY_STORAGE.outputSwap, outputStart.toLocaleUpperCase().trim())
-    saveDataLocal(KEY_STORAGE.outputSwapTemp, outputStart.toLocaleUpperCase().trim())
-
+  const rollUpData = () => {
     if (arrCloneDefaultRef.current.length === 0) {
-      arrCloneRef.current = arrCloneDefaultRef.current = JSON.parse(JSON.stringify(arrData))
-    } else {
-      arrCloneRef.current = JSON.parse(JSON.stringify(arrCloneDefaultRef.current))
+      arrCloneDefaultRef.current = cloneData(arrData)
     }
-    indexCurrentRef.current = 0
-    initData(0, version === 'v4')
-    setTimeout(async () => {
-      await calculateData(version === 'v4')
-      setArrData(arrCloneRef.current)
-      filterSwap()
-      console.log({ arrFinal: arrCloneRef.current, amountInput: getDataLocal(KEY_STORAGE.amountInput) })
-    }, 500)
+
+    const helper = getHelper()
+    const res = helper.run(arrCloneDefaultRef.current)
+
+    setArrData(res.arrData)
+    setArrSwapFilter(res.arrSwap)
+    setSummary(getRebalanceSummary(res, { amountStart, outputStart, volatilityPercentage, affiliate }))
+
+    console.log({ version, arrFinal: res.arrData, arrSwap: res.arrSwap, state: res.state })
   }
 
   const formatData = (data: any[] = []): PoolToken[] => {
+    const helper = getHelper()
+
     function excelDateToJSDate(serial: number) {
       try {
         const excelEpoch = new Date(Date.UTC(1899, 11, 30)) // dùng UTC để cố định
@@ -662,7 +91,7 @@ export default function Home() {
         if (key !== 'TIME' && key !== 'Time' && key !== 'No.' && key !== 'Date' && key !== 'Time.') {
           poolToken.arrToken!.push({
             symbol: key,
-            price: value as number,
+            price: helper.formatPrice(value as number),
           })
         }
       })
@@ -767,13 +196,14 @@ export default function Home() {
                       id='version-select'
                       value={version}
                       onChange={(e) => {
-                        const v = e.target.value as 'v1' | 'v4'
+                        const v = e.target.value as 'v1' | 'v4' | 'v5'
 
                         setVersion(v)
                       }}
                     >
                       <option value='v1'>v1</option>
                       <option value='v4'>v4</option>
+                      <option value='v5'>v5</option>
                     </select>
                   </div>
 
@@ -795,9 +225,9 @@ export default function Home() {
                       onClick={() => {
                         setFileImport('')
                         setIsUpload(false)
-                        arrCloneRef.current = []
                         arrCloneDefaultRef.current = []
                         setArrData([])
+                        setSummary(null)
                       }}
                     >
                       Clear
@@ -905,6 +335,45 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Summary: start amount / end amount / PnL quy về token input */}
+            {summary && (
+              <div className='mb-6 p-4 bg-gray-900/50 border border-gray-600/50 rounded-xl'>
+                <h3 className='text-sm font-medium text-gray-300 mb-3'>Summary</h3>
+
+                <div className='grid grid-cols-2 gap-4'>
+                  <div>
+                    <span className='text-xs text-gray-400'>Start Amount</span>
+                    <div className='text-lg font-mono text-white'>
+                      {formatNumberToShow(summary.startAmount)} <span className='text-sm text-gray-400'>{summary.symbolStart}</span>
+                    </div>
+                    <div className='text-sm font-mono text-gray-400'>${formatNumberToShow(summary.startValueUsd)}</div>
+                  </div>
+                  <div>
+                    <span className='text-xs text-gray-400'>End Amount</span>
+                    <div className='text-lg font-mono text-white'>
+                      {formatNumberToShow(summary.endAmount)} <span className='text-sm text-gray-400'>{summary.symbolEnd}</span>
+                    </div>
+                    <div className='text-sm font-mono text-gray-400'>${formatNumberToShow(summary.endValueUsd)}</div>
+                  </div>
+                </div>
+
+                <div className='mt-4 pt-4 border-t border-gray-700/50'>
+                  <span className='text-xs text-gray-400'>Profit / Loss (USD)</span>
+                  <div className={`text-2xl font-mono ${BigNumber(summary.profitUsd).gte(0) ? 'text-green-400' : 'text-red-400'}`}>
+                    {BigNumber(summary.profitUsd).gte(0) ? '+' : '-'}${formatNumberToShow(BigNumber(summary.profitUsd).abs().toFixed())}
+                    <span className='ml-2 text-base'>
+                      ({BigNumber(summary.profitPercentage).gte(0) ? '+' : ''}
+                      {formatNumberToShow(summary.profitPercentage)}%)
+                    </span>
+                  </div>
+                </div>
+
+                <p className='text-[11px] text-gray-500 mt-3'>
+                  Start: giá {summary.symbolStart} ở item đầu · End: giá {summary.symbolEnd} ở item cuối.
+                </p>
+              </div>
+            )}
+
             <div className='max-h-[85vh] overflow-y-auto space-y-4 custom-scrollbar'>
               {arrData.length === 0 ? (
                 <div className='text-center py-12'>
@@ -941,7 +410,7 @@ export default function Home() {
                             </span>
                           )}
                         </div>
-                        <div className='text-sm text-gray-400'>{item.time ? new Date(item.time).toLocaleString() : 'N/A'}</div>
+                        <div className='text-sm text-gray-400'>{item.time || 'N/A'}</div>
                       </div>
 
                       {/* Swap Results */}
@@ -1001,7 +470,7 @@ export default function Home() {
                                 </div>
 
                                 {/* V4 specific fields */}
-                                {version === 'v4' && token.changeByPoint && (
+                                {version !== 'v1' && token.changeByPoint && (
                                   <>
                                     <div>
                                       <span className='text-gray-400'>Point Change:</span>
