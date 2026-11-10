@@ -87,6 +87,16 @@ class DcaHelper {
     return BigNumber(priceToken).gt(derived.avgPrice) && !derived.isValidSell && derived.isValidCapital
   }
 
+  private static shouldByTokenTH5(
+    priceToken: string,
+    derived: { avgPrice: string; isValidSell: boolean; isValidCapital: boolean },
+    ratioPriceChangeSetting: string
+  ) {
+    const ratioPriceByAvg = this.getRatioPrice(derived.avgPrice, priceToken)
+
+    return BigNumber(priceToken).gt(derived.avgPrice) && derived.isValidCapital && BigNumber(ratioPriceByAvg).lt(ratioPriceChangeSetting)
+  }
+
   private static shouldSellToken(priceToken: string, derived: { avgPrice: string; isValidSell: boolean }) {
     return BigNumber(priceToken).gt(derived.avgPrice) && derived.isValidSell
   }
@@ -113,9 +123,16 @@ class DcaHelper {
       return this.buyToken(config, priceToken, 'TH4')
     }
 
-    // TH5. Khi giá > giá trung bình và giá > giá lịch sử  => bán
+    // TH5: Khi giá > giá trung bình và ko lớn hơn % giao động giá đã set  => mua
+    if (this.shouldByTokenTH5(priceToken, derived, config.ratioPriceChange)) {
+      console.log('shouldByTokenTH5')
+
+      return this.buyToken(config, priceToken, 'TH5')
+    }
+
+    // TH6. Khi giá > giá trung bình và giá > giá lịch sử  => bán
     if (this.shouldSellToken(priceToken, derived)) {
-      return this.sellToken(config, priceToken, 'TH5')
+      return this.sellToken(config, priceToken, 'TH6')
     }
 
     return null

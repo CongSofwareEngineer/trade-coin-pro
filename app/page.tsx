@@ -251,7 +251,7 @@ export default function Home() {
               </div>
 
               <div>
-                <div className='block text-sm font-medium text-gray-300 mb-2'>Output Token</div>
+                <div className='block text-sm font-medium text-gray-300 mb-2'>Input Token</div>
                 <input
                   className='w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
                   placeholder='e.g., ETH, BTC, BNB...'
