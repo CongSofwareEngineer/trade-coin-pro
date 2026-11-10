@@ -143,12 +143,12 @@ export default function Home() {
     }
   }
 
-  const formatNumberToShow = (value: any) => {
+  const formatNumberToShow = (value: any, decimal: number = 8) => {
     if (BigNumber(value).isNaN()) {
       return '-'
     }
 
-    return BigNumber(value).decimalPlaces(8, BigNumber.ROUND_DOWN).toFormat()
+    return BigNumber(value).decimalPlaces(decimal, BigNumber.ROUND_DOWN).toFormat()
   }
 
   return (
@@ -289,18 +289,12 @@ export default function Home() {
             </div>
 
             {/* Action Buttons */}
-            <div className='flex gap-4 mt-8'>
+            <div className='mt-8'>
               <button
-                className='flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl'
+                className='w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl'
                 onClick={() => setStartData(!startData)}
               >
                 🚀 Analyze Swaps
-              </button>
-              <button
-                className='flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl'
-                onClick={() => setShowIsSwap(!showIsSwap)}
-              >
-                {showIsSwap ? `📊 Show All (${arrData.length})` : `✨ Show Swaps (${arrSwapFilter.length})`}
               </button>
             </div>
 
@@ -344,28 +338,30 @@ export default function Home() {
                   <div>
                     <span className='text-xs text-gray-400'>Start Amount</span>
                     <div className='text-lg font-mono text-white'>
-                      {formatNumberToShow(summary.startAmount)} <span className='text-sm text-gray-400'>{summary.symbolStart}</span>
+                      {formatNumberToShow(summary.startAmount, 6)} <span className='text-sm text-gray-400'>{summary.symbolStart}</span>
                     </div>
+                    <span className='font-bold text-xs   font-mono text-gray-400'>Price: ${formatNumberToShow(summary.priceStartUsd)}</span>
+
                     <div className='text-sm mt-1 font-mono text-gray-400'>${formatNumberToShow(summary.startValueUsd)}</div>
-                    <span className='font-bold text-xs mt-1 font-mono text-gray-400'>Price: ${formatNumberToShow(summary.priceStartUsd)}</span>
                   </div>
                   <div>
                     <span className='text-xs text-gray-400'>End Amount</span>
                     <div className='text-lg font-mono text-white'>
-                      {formatNumberToShow(summary.endAmount)} <span className='text-sm text-gray-400'>{summary.symbolEnd}</span>
+                      {formatNumberToShow(summary.endAmount, 6)} <span className='text-sm text-gray-400'>{summary.symbolEnd}</span>
                     </div>
-                    <div className='text-sm font-mono text-gray-400'>${formatNumberToShow(summary.endValueUsd)}</div>
-                    <span className='font-bold text-xs mt-1 font-mono text-gray-400'>Price: ${formatNumberToShow(summary.priceEndUsd)}</span>
+                    <span className='font-bold text-xs font-mono text-gray-400'>Price: ${formatNumberToShow(summary.priceEndUsd)}</span>
+
+                    <div className='text-sm  mt-1 font-mono text-gray-400'>${formatNumberToShow(summary.endValueUsd)}</div>
                   </div>
                 </div>
 
                 <div className='mt-4 pt-4 border-t border-gray-700/50'>
                   <span className='text-xs text-gray-400'>Profit / Loss (USD)</span>
                   <div className={`text-2xl font-mono ${BigNumber(summary.profitUsd).gte(0) ? 'text-green-400' : 'text-red-400'}`}>
-                    {BigNumber(summary.profitUsd).gte(0) ? '+' : '-'}${formatNumberToShow(BigNumber(summary.profitUsd).abs().toFixed())}
+                    {BigNumber(summary.profitUsd).gte(0) ? '+' : '-'}${formatNumberToShow(BigNumber(summary.profitUsd).abs().toFixed(), 4)}
                     <span className='ml-2 text-base'>
                       ({BigNumber(summary.profitPercentage).gte(0) ? '+' : ''}
-                      {formatNumberToShow(summary.profitPercentage)}%)
+                      {formatNumberToShow(summary.profitPercentage, 4)}%)
                     </span>
                   </div>
                 </div>
@@ -373,6 +369,24 @@ export default function Home() {
                 <p className='text-[11px] text-gray-500 mt-1'>
                   Start: {summary.symbolStart} price at the first item · End: {summary.symbolEnd} price at the last swap.
                 </p>
+
+                {/* View Tabs */}
+                <div className='flex gap-1 mt-4 p-1 bg-gray-800/70 border border-gray-700/50 rounded-lg'>
+                  {[
+                    { key: false, label: `📊 All (${arrData.length})` },
+                    { key: true, label: `✨ Swaps (${arrSwapFilter.length})` },
+                  ].map((tab) => (
+                    <button
+                      key={String(tab.key)}
+                      className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
+                        showIsSwap === tab.key ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                      }`}
+                      onClick={() => setShowIsSwap(tab.key)}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
