@@ -15,20 +15,21 @@ export const getRebalanceHelper = (version: Version, config: RebalanceConfig): R
 }
 
 /**
- * Quy giá trị USD của token input lúc bắt đầu và token output lúc kết thúc để xem chênh lệch.
- * startValueUsd = amountStart * giá token input ở item đầu
- * endValueUsd   = amountInput cuối * giá token output ở item cuối
+ * USD value of the input token at the start vs the output token at the end.
+ * startValueUsd = amountStart * input token price at the first item
+ * endValueUsd   = final amountInput * output token price at the row of the last swap
+ *                 (no swap at all → price at the first item, the amount never changed)
  */
 export const getRebalanceSummary = (res: RebalanceResult, config: RebalanceConfig): RebalanceSummary | null => {
   const poolTokenFirst = res.arrData[0]
-  const poolTokenLast = res.arrData[res.arrData.length - 1]
+  const poolTokenLastSwap = res.arrSwap[res.arrSwap.length - 1] || poolTokenFirst
 
-  if (!poolTokenFirst || !poolTokenLast) return null
+  if (!poolTokenFirst) return null
 
   const symbolStart = String(config.outputStart).toLocaleUpperCase().trim()
   const symbolEnd = res.state.outputSwap
   const priceStart = poolTokenFirst.arrToken?.find((e) => e.symbol === symbolStart)?.price
-  const priceEnd = poolTokenLast.arrToken?.find((e) => e.symbol === symbolEnd)?.price
+  const priceEnd = poolTokenLastSwap.arrToken?.find((e) => e.symbol === symbolEnd)?.price
 
   if (!priceStart || !priceEnd) return null
 

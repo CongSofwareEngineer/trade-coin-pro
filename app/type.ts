@@ -29,7 +29,7 @@ export interface RebalanceResult {
   state: RebalanceState
 }
 
-//tổng kết kết quả chạy: vào bao nhiêu, ra bao nhiêu, chênh lệch giá trị USD
+//run summary: amount in, amount out, USD value difference
 export interface RebalanceSummary {
   symbolStart: string
   symbolEnd: string

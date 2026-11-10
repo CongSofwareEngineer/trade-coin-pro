@@ -307,15 +307,15 @@ export default function Home() {
             {/* Swap Indicators */}
             {arrSwapFilter.length > 0 && (
               <div className='mt-6 p-4 bg-green-900/30 border border-green-700/50 rounded-lg'>
-                <h3 className='text-sm font-medium text-green-400 mb-2'>Successful Swaps Found</h3>
+                <h3 className='text-sm font-medium text-green-400 mb-2'>Successful Swaps Found ({arrSwapFilter.length})</h3>
                 <div className='gap-2'>
                   {arrData.map((e, index) => {
                     if (!e?.isSwap) return null
 
                     return (
-                      <div key={index} className='px-2 py-1 bg-green-700/50 text-green-300 rounded text-xs font-medium'>
-                        {index + 1}
-                      </div>
+                      <span key={index} className='px-2 py-1 bg-green-700/50 text-green-300 rounded text-xs font-medium'>
+                        {index + 1 + 1}
+                      </span>
                     )
                   })}
                 </div>
@@ -335,7 +335,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Summary: start amount / end amount / PnL quy về token input */}
+            {/* Summary: start amount / end amount / PnL in USD */}
             {summary && (
               <div className='mb-6 p-4 bg-gray-900/50 border border-gray-600/50 rounded-xl'>
                 <h3 className='text-sm font-medium text-gray-300 mb-3'>Summary</h3>
@@ -346,10 +346,8 @@ export default function Home() {
                     <div className='text-lg font-mono text-white'>
                       {formatNumberToShow(summary.startAmount)} <span className='text-sm text-gray-400'>{summary.symbolStart}</span>
                     </div>
-                    <div className='text-sm font-mono text-gray-400'>${formatNumberToShow(summary.startValueUsd)}</div>
-                    <div className='text-xs font-mono text-gray-500'>
-                      Giá: ${formatNumberToShow(summary.priceStartUsd)} / {summary.symbolStart}
-                    </div>
+                    <div className='text-sm mt-1 font-mono text-gray-400'>${formatNumberToShow(summary.startValueUsd)}</div>
+                    <span className='font-bold text-xs mt-1 font-mono text-gray-400'>Price: ${formatNumberToShow(summary.priceStartUsd)}</span>
                   </div>
                   <div>
                     <span className='text-xs text-gray-400'>End Amount</span>
@@ -357,9 +355,7 @@ export default function Home() {
                       {formatNumberToShow(summary.endAmount)} <span className='text-sm text-gray-400'>{summary.symbolEnd}</span>
                     </div>
                     <div className='text-sm font-mono text-gray-400'>${formatNumberToShow(summary.endValueUsd)}</div>
-                    <div className='text-xs font-mono text-gray-500'>
-                      Giá: ${formatNumberToShow(summary.priceEndUsd)} / {summary.symbolEnd}
-                    </div>
+                    <span className='font-bold text-xs mt-1 font-mono text-gray-400'>Price: ${formatNumberToShow(summary.priceEndUsd)}</span>
                   </div>
                 </div>
 
@@ -374,8 +370,8 @@ export default function Home() {
                   </div>
                 </div>
 
-                <p className='text-[11px] text-gray-500 mt-3'>
-                  Start: giá {summary.symbolStart} ở item đầu · End: giá {summary.symbolEnd} ở item cuối.
+                <p className='text-[11px] text-gray-500 mt-1'>
+                  Start: {summary.symbolStart} price at the first item · End: {summary.symbolEnd} price at the last swap.
                 </p>
               </div>
             )}

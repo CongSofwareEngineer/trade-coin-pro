@@ -14,3 +14,4 @@
 + Fix: select version bị lặp 2 `option v4` → `v4` + `v5` (page.tsx)
 + Thêm `getRebalanceSummary(res, config)`: start amount / end amount + giá trị USD 2 đầu (giá item đầu cho token in, item cuối cho token out) → P/L USD + % (helpers.ts, page.tsx)
 + Results Analysis hiện block Summary: Start/End amount kèm $, giá 1 token ($/symbol) 2 đầu, Profit/Loss USD xanh khi lời đỏ khi lỗ (page.tsx, helpers.ts)
++ Summary: giá End Amount lấy ở dòng swap cuối (`arrSwap` cuối) thay vì item cuối file; chưa swap lần nào → giá item đầu (helpers.ts)
