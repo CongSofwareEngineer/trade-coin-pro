@@ -409,7 +409,7 @@ export default function Home() {
                       <div className='flex items-center justify-between mb-4'>
                         <div className='flex items-center gap-3'>
                           <div className={`w-3 h-3 rounded-full ${item.isSwap ? 'bg-green-500' : 'bg-gray-500'}`} />
-                          <h3 className='font-semibold text-lg'>Item #{index + 1}</h3>
+                          <h3 className='font-semibold text-lg'>Item #{index + 1 + 1}</h3>
                           {item.isSwap && (
                             <span className='px-2 py-1 bg-green-900/50 border border-green-700/50 text-green-300 rounded-md text-xs font-medium'>
                               SWAP
