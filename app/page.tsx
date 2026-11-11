@@ -369,7 +369,13 @@ export default function Home() {
                     <div className='text-lg font-mono text-white'>
                       {formatNumberToShow(summary.startAmount, 6)} <span className='text-sm text-gray-400'>{summary.symbolStart}</span>
                     </div>
-                    <span className='font-bold text-xs   font-mono text-gray-400'>Price: ${formatNumberToShow(summary.priceStartUsd)}</span>
+                    <span className='font-bold text-xs   font-mono text-gray-400'>
+                      Price: ${formatNumberToShow(summary.priceStartUsd)}
+                      <span className={`ml-1 ${BigNumber(summary.declinePercentage).gt(0) ? 'text-red-400' : 'text-green-400'}`}>
+                        ({BigNumber(summary.declinePercentage).gt(0) ? '⬇︎' : '⬆︎'}%:{' '}
+                        {formatNumberToShow(BigNumber(summary.declinePercentage).abs().toFixed(), 4)})
+                      </span>
+                    </span>
 
                     <div className='text-sm mt-1 font-mono text-gray-400'>${formatNumberToShow(summary.startValueUsd)}</div>
                   </div>

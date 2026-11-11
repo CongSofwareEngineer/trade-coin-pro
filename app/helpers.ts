@@ -24,6 +24,7 @@ export const getRebalanceHelper = (version: Version, config: RebalanceConfig): R
  */
 export const getRebalanceSummary = (res: RebalanceResult, config: RebalanceConfig): RebalanceSummary | null => {
   const poolTokenFirst = res.arrData[0]
+  const poolTokenLast = res.arrData[res.arrData.length - 1] || poolTokenFirst
   const poolTokenLastSwap = res.arrSwap[res.arrSwap.length - 1] || poolTokenFirst
 
   if (!poolTokenFirst) return null
@@ -32,6 +33,7 @@ export const getRebalanceSummary = (res: RebalanceResult, config: RebalanceConfi
   const symbolEnd = uppercase(res.state.outputSwap)
   const priceStart = poolTokenFirst.arrToken?.find((e) => uppercase(e.symbol) === symbolStart)?.price
   const priceEnd = poolTokenLastSwap.arrToken?.find((e) => uppercase(e.symbol) === symbolEnd)?.price
+  const priceStartLastRow = poolTokenLast.arrToken?.find((e) => uppercase(e.symbol) === symbolStart)?.price
 
   if (!priceStart || !priceEnd) return null
 
@@ -41,6 +43,8 @@ export const getRebalanceSummary = (res: RebalanceResult, config: RebalanceConfi
   const endValueUsd = BigNumber(endAmount).multipliedBy(priceEnd).toFixed()
   const profitUsd = BigNumber(endValueUsd).minus(startValueUsd).toFixed()
   const profitPercentage = BigNumber(startValueUsd).gt(0) ? BigNumber(profitUsd).dividedBy(startValueUsd).multipliedBy(100).toFixed() : '0'
+  const declinePercentage =
+    priceStartLastRow && BigNumber(priceStart).gt(0) ? BigNumber(priceStart).minus(priceStartLastRow).dividedBy(priceStart).toFixed() : '0'
 
   return {
     symbolStart,
@@ -49,6 +53,7 @@ export const getRebalanceSummary = (res: RebalanceResult, config: RebalanceConfi
     endAmount,
     priceStartUsd: String(priceStart),
     priceEndUsd: String(priceEnd),
+    declinePercentage,
     startValueUsd,
     endValueUsd,
     profitUsd,

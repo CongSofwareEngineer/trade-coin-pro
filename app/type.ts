@@ -37,6 +37,8 @@ export interface RebalanceSummary {
   endAmount: string
   priceStartUsd: string
   priceEndUsd: string
+  //(price input token first row - price input token last row) / price input token first row
+  declinePercentage: string
   startValueUsd: string
   endValueUsd: string
   profitUsd: string
