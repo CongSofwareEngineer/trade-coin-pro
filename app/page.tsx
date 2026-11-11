@@ -50,15 +50,57 @@ export default function Home() {
   const formatData = (data: any[] = []): PoolToken[] => {
     const helper = getHelper()
 
-    function excelDateToJSDate(serial: number) {
+    function excelDateToJSDate(rawTime: number) {
       try {
-        const excelEpoch = new Date(Date.UTC(1899, 11, 30)) // dùng UTC để cố định
-        const msInDay = 24 * 60 * 60 * 1000
+        if (!rawTime) return ''
 
-        // số mili-giây thêm vào (bao gồm cả phần ngày + phần giờ)
-        const date = new Date(excelEpoch.getTime() + serial * msInDay)
+        let date
 
-        return date.toISOString()
+        // Trường hợp 1: Nếu đọc lên là dạng số Serial Number của Excel (vd: 46276.8333...)
+        if (typeof rawTime === 'number') {
+          const millisecondsPerDay = 24 * 60 * 60 * 1000
+          // Dùng UTC để tránh bị cộng/trừ lệch múi giờ cục bộ của máy tính
+          const utcTimestamp = (rawTime - 25569) * millisecondsPerDay
+
+          date = new Date(utcTimestamp)
+
+          const day = String(date.getUTCDate()).padStart(2, '0')
+          const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+          const year = date.getUTCFullYear()
+          const hours = String(date.getUTCHours()).padStart(2, '0')
+          const minutes = String(date.getUTCMinutes()).padStart(2, '0')
+          const seconds = String(date.getUTCSeconds()).padStart(2, '0') // Nếu bạn muốn lấy giây thay vì phút
+
+          return `${month}/${day}/${year} ${hours}:${minutes}`
+        }
+
+        // Trường hợp 2: Nếu đọc lên là chuỗi (vd: "2026-09-10 00:00:00" hoặc tương tự)
+        // Cắt chuỗi trực tiếp để lấy đúng 100% giá trị gốc trong file, không qua bộ dịch Date của JS
+        const strTime = String(rawTime).trim()
+        // Khớp mẫu YYYY-MM-DD HH:mm:ss hoặc YYYY-MM-DDTHH:mm:ss
+        const regex = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/
+        const match = strTime.match(regex)
+
+        if (match) {
+          const [, year, month, day, hours, minutes] = match
+
+          // Trả về định dạng DD/MM/YYYY HH:mm
+          return `${month}/${day}/${year} ${hours}:${minutes}`
+        }
+
+        // Fallback phòng hờ nếu chuỗi ở định dạng khác
+        date = new Date(strTime)
+        if (!isNaN(date.getTime())) {
+          const day = String(date.getDate()).padStart(2, '0')
+          const month = String(date.getMonth() + 1).padStart(2, '0')
+          const year = date.getFullYear()
+          const hours = String(date.getHours()).padStart(2, '0')
+          const minutes = String(date.getMinutes()).padStart(2, '0')
+
+          return `${month}/${day}/${year} ${hours}:${minutes}`
+        }
+
+        return strTime // Trả về nguyên gốc nếu không nhận diện được
       } catch {
         return ''
       }
@@ -488,7 +530,7 @@ export default function Home() {
                             </span>
                           )}
                         </div>
-                        <div className='text-sm text-gray-400'>{formatTime(item.time) || 'N/A'}</div>
+                        <div className='text-sm text-gray-400'>{item.time || 'N/A'}</div>
                       </div>
 
                       {/* Swap Results */}

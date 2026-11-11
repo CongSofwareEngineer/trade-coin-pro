@@ -18,13 +18,28 @@ export function cloneData<T>(data: T): T {
 export const formatTime = (value?: string | number | Date | null) => {
   if (!value) return ''
 
-  const date = new Date(value)
+  const pad = (num: number) => num.toString().padStart(2, '0')
+
+  // chuỗi dd/mm/yyyy phải tự parse, new Date() hiểu nhầm thành mm/dd/yyyy
+  const matchDMY = typeof value === 'string' ? value.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[\s,T]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/) : null
+
+  const date = matchDMY
+    ? new Date(
+        Date.UTC(
+          Number(matchDMY[3]),
+          Number(matchDMY[2]) - 1,
+          Number(matchDMY[1]),
+          Number(matchDMY[4] || 0),
+          Number(matchDMY[5] || 0),
+          Number(matchDMY[6] || 0)
+        )
+      )
+    : new Date(value)
 
   if (isNaN(date.getTime())) return ''
 
-  const pad = (num: number) => num.toString().padStart(2, '0')
   const day = `${pad(date.getUTCDate())}/${pad(date.getUTCMonth() + 1)}/${date.getUTCFullYear()}`
-  const time = `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`
+  const time = `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`
 
   return `${day} ${time}`
 }
