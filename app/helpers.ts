@@ -6,6 +6,8 @@ import RebalanceV1 from './helpersV1'
 import RebalanceV4 from './helpersV4'
 import RebalanceV5 from './helpersV5'
 
+import { uppercase } from '@/utils/functions'
+
 export const getRebalanceHelper = (version: Version, config: RebalanceConfig): RebalanceHelper => {
   if (version === 'v4') return new RebalanceV4(config)
 
@@ -26,10 +28,10 @@ export const getRebalanceSummary = (res: RebalanceResult, config: RebalanceConfi
 
   if (!poolTokenFirst) return null
 
-  const symbolStart = String(config.outputStart).toLocaleUpperCase().trim()
-  const symbolEnd = res.state.outputSwap
-  const priceStart = poolTokenFirst.arrToken?.find((e) => e.symbol === symbolStart)?.price
-  const priceEnd = poolTokenLastSwap.arrToken?.find((e) => e.symbol === symbolEnd)?.price
+  const symbolStart = uppercase(config.outputStart)
+  const symbolEnd = uppercase(res.state.outputSwap)
+  const priceStart = poolTokenFirst.arrToken?.find((e) => uppercase(e.symbol) === symbolStart)?.price
+  const priceEnd = poolTokenLastSwap.arrToken?.find((e) => uppercase(e.symbol) === symbolEnd)?.price
 
   if (!priceStart || !priceEnd) return null
 

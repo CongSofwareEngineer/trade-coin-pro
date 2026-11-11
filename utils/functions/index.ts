@@ -4,6 +4,13 @@ export const lowercase = (value?: string) => {
   return value.toLowerCase()
 }
 
+//symbol token luôn uppercase, dùng chung cho mọi so sánh / key
+export const uppercase = (value?: string | number) => {
+  if (!value) return ''
+
+  return String(value).trim().toUpperCase()
+}
+
 export function cloneData<T>(data: T): T {
   return JSON.parse(JSON.stringify(data))
 }

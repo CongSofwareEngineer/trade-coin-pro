@@ -7,7 +7,7 @@ import { RebalanceSummary, Version } from './type'
 import { getRebalanceHelper, getRebalanceSummary } from './helpers'
 
 import { PoolToken } from '@/types/app'
-import { cloneData, formatTime } from '@/utils/functions'
+import { cloneData, formatTime, uppercase } from '@/utils/functions'
 
 const DECIMAL = 8
 
@@ -26,6 +26,7 @@ export default function Home() {
   const [showIsSwap, setShowIsSwap] = useState(false)
   const [version, setVersion] = useState<Version>('v1')
   const [summary, setSummary] = useState<RebalanceSummary | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const getHelper = () => {
     return getRebalanceHelper(version, { amountStart, outputStart, volatilityPercentage, affiliate })
@@ -90,7 +91,7 @@ export default function Home() {
       Object.entries(e).forEach(([key, value]) => {
         if (key !== 'TIME' && key !== 'Time' && key !== 'No.' && key !== 'Date' && key !== 'Time.') {
           poolToken.arrToken!.push({
-            symbol: key,
+            symbol: uppercase(key),
             price: helper.formatPrice(value as number),
           })
         }
@@ -105,9 +106,23 @@ export default function Home() {
   }
 
   useEffect(() => {
-    if (isUpload) {
-      rollUpData()
+    if (!isUpload) return
+
+    const runAnalyze = async () => {
+      setIsAnalyzing(true)
+      // nhường 1 frame để spinner kịp render trước khi chạy logic đồng bộ
+      await new Promise((resolve) => setTimeout(resolve, 50))
+
+      try {
+        rollUpData()
+      } catch (error) {
+        console.log({ error })
+      }
+
+      setIsAnalyzing(false)
     }
+
+    runAnalyze()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startData])
 
@@ -256,7 +271,7 @@ export default function Home() {
                   className='w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
                   placeholder='e.g., ETH, BTC, BNB...'
                   value={outputStart}
-                  onChange={(e) => setOutputStart(e.target.value as any)}
+                  onChange={(e) => setOutputStart(uppercase(e.target.value))}
                 />
                 <p className='text-xs text-gray-500 mt-1'>Starting output token symbol</p>
               </div>
@@ -291,10 +306,24 @@ export default function Home() {
             {/* Action Buttons */}
             <div className='mt-8'>
               <button
-                className='w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl'
+                className='w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-blue-600 disabled:hover:to-blue-700'
+                disabled={isAnalyzing || !isUpload}
                 onClick={() => setStartData(!startData)}
               >
-                🚀 Analyze Swaps
+                {isAnalyzing ? (
+                  <>
+                    <svg className='w-5 h-5 animate-spin' fill='none' stroke='currentColor' strokeWidth={2} viewBox='0 0 24 24'>
+                      <path
+                        d='M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                      />
+                    </svg>
+                    Analyzing...
+                  </>
+                ) : (
+                  <>🚀 Analyze Swaps</>
+                )}
               </button>
             </div>
 

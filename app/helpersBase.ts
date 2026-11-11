@@ -3,7 +3,7 @@ import { BigNumber } from 'bignumber.js'
 import { RebalanceConfig, RebalanceResult, RebalanceState, Version } from './type'
 
 import { PoolToken, Token } from '@/types/app'
-import { cloneData } from '@/utils/functions'
+import { cloneData, uppercase } from '@/utils/functions'
 
 /**
  * Logic rebalance dùng chung cho mọi version.
@@ -31,6 +31,7 @@ abstract class RebalanceHelper {
 
   run(arrDataBase: PoolToken[]): RebalanceResult {
     this.arrData = cloneData(arrDataBase)
+    this.normalizeSymbol()
     this.state = this.getStateDefault()
 
     this.initData()
@@ -47,10 +48,21 @@ abstract class RebalanceHelper {
     return cloneData(this.state)
   }
 
+  // ================== Symbol ==================
+
+  //đồng nhất mọi symbol token về uppercase ngay khi nhận data
+  protected normalizeSymbol() {
+    this.arrData.forEach((poolToken) => {
+      poolToken.arrToken?.forEach((token) => {
+        token.symbol = uppercase(token.symbol)
+      })
+    })
+  }
+
   // ================== State ==================
 
   protected getStateDefault(): RebalanceState {
-    const outputStart = this.config.outputStart.toLocaleUpperCase().trim()
+    const outputStart = uppercase(this.config.outputStart)
 
     return {
       amountInput: String(this.config.amountStart),
@@ -75,7 +87,7 @@ abstract class RebalanceHelper {
       try {
         const poolToken = this.arrData[index]
         const tokenETH = poolToken.arrToken!.find((e) => {
-          return e.symbol === 'ETH'
+          return uppercase(e.symbol) === 'ETH'
         })!
 
         if (index === 0) {
@@ -92,10 +104,13 @@ abstract class RebalanceHelper {
   }
 
   protected initFirstItem(poolToken: PoolToken, tokenETH: Token) {
-    const isETH = this.config.outputStart === 'ETH'
+    const outputStart = uppercase(this.config.outputStart)
+    const isETH = outputStart === 'ETH'
 
     poolToken.arrToken!.forEach((token, index) => {
-      if (token.symbol === 'ETH') {
+      const symbol = uppercase(token.symbol)
+
+      if (symbol === 'ETH') {
         token.perETH = '1'
         token.perETHChangePercentage = '0'
       } else {
@@ -103,11 +118,11 @@ abstract class RebalanceHelper {
         token.perETHChangePercentage = '0'
       }
 
-      this.state.ETHLastSwap[token.symbol!] = token.perETH!
-      this.state.ETHLastSwapTemp[token.symbol!] = token.perETH!
-      this.state.perETHOriginal[token.symbol!] = token.perETH!
+      this.state.ETHLastSwap[symbol] = token.perETH!
+      this.state.ETHLastSwapTemp[symbol] = token.perETH!
+      this.state.perETHOriginal[symbol] = token.perETH!
 
-      if (token.symbol === this.config.outputStart) {
+      if (symbol === outputStart) {
         this.state.ETHOriginalAmount = isETH
           ? String(this.config.amountStart)
           : BigNumber(this.config.amountStart).multipliedBy(token!.price!).dividedBy(tokenETH!.price!).toFixed()
@@ -122,7 +137,7 @@ abstract class RebalanceHelper {
     poolToken.arrToken!.forEach((token, index) => {
       const tokenPre = poolTokenPre.arrToken![index]
 
-      if (token.symbol === 'ETH') {
+      if (uppercase(token.symbol) === 'ETH') {
         token.perETH = '1'
         token.perETHChangePercentage = BigNumber(BigNumber(token!.price!).minus(tokenPre?.price!)).dividedBy(tokenPre!.price!).toFixed()
       } else {
@@ -167,33 +182,37 @@ abstract class RebalanceHelper {
     const poolTokenPre = this.arrData[index - 1]
     const tokenOutput = this.getTokenMinChangePercentage(poolToken)
     const tokenETH = poolToken.arrToken!.find((e) => {
-      return e.symbol === 'ETH'
+      return uppercase(e.symbol) === 'ETH' || uppercase(e.symbol) === 'WETH'
     })
     const tokenBTC = poolToken.arrToken!.find((e) => {
-      return e.symbol === 'BTC'
+      return uppercase(e.symbol) === 'BTC' || uppercase(e.symbol) === 'CBBTC' || uppercase(e.symbol) === 'WBTC'
     })
     const tokenInput: Token = poolToken.arrToken!.find((e) => {
-      return e.symbol === this.state.outputSwap
+      return uppercase(e.symbol) === this.state.outputSwap
     })!
+    const symbolOutput = uppercase(tokenOutput.symbol)
+    const symbolInput = uppercase(tokenInput?.symbol)
+    const symbolBTC = uppercase(tokenBTC?.symbol)
+
     const limitChangePercentage = BigNumber(BigNumber(this.config.volatilityPercentage).dividedBy(100)).multipliedBy(-1).toNumber()
 
     //v4: update pointBeforeCheck, pointAfterCheck before swap
     this.beforeCheckSwap(poolToken, poolTokenPre)
 
-    if (this.state.outputSwapTemp !== tokenOutput.symbol && Number(tokenOutput.perETHChangePercentage!) < limitChangePercentage) {
+    if (this.state.outputSwapTemp !== symbolOutput && Number(tokenOutput.perETHChangePercentage!) < limitChangePercentage) {
       this.log(`=================== Item ${index + 1} ==================`)
 
       this.log('step 1')
-      if (tokenOutput!.symbol === 'ETH') {
+      if (symbolOutput === 'ETH') {
         this.log(`update ETHLastSwapTemp BTC = ${tokenBTC!.perETH}`)
-        this.state.ETHLastSwapTemp[tokenBTC!.symbol!] = tokenBTC!.perETH!
+        this.state.ETHLastSwapTemp[symbolBTC] = tokenBTC!.perETH!
       } else {
-        this.log(`update ETHLastSwapTemp ${tokenOutput.symbol} = ${tokenOutput.perETH}`)
-        this.state.ETHLastSwapTemp[tokenOutput.symbol!] = tokenOutput.perETH!
+        this.log(`update ETHLastSwapTemp ${symbolOutput} = ${tokenOutput.perETH}`)
+        this.state.ETHLastSwapTemp[symbolOutput] = tokenOutput.perETH!
       }
 
-      this.log(`update outputSwapTemp = ${tokenOutput.symbol}`)
-      this.state.outputSwapTemp = tokenOutput.symbol!
+      this.log(`update outputSwapTemp = ${symbolOutput}`)
+      this.state.outputSwapTemp = symbolOutput
       this.log({
         outputSwap: this.state.outputSwap,
         tokenOutput,
@@ -202,7 +221,7 @@ abstract class RebalanceHelper {
         ETHOriginalAmount: this.state.ETHOriginalAmount,
       })
 
-      if (this.state.outputSwap !== tokenOutput.symbol && tokenInput.symbol !== tokenOutput.symbol) {
+      if (this.state.outputSwap !== symbolOutput && symbolInput !== symbolOutput) {
         //(SwapInputTokenAmount * SwapInputTokenPrice) / ETHPrice
         const amountOutCheck = BigNumber(this.state.amountInput!).multipliedBy(tokenInput?.price!).dividedBy(tokenETH?.price!).toFixed()
 
@@ -216,11 +235,11 @@ abstract class RebalanceHelper {
         this.log('step 2')
         this.log({ amountOutCheck, amountAfterSwap })
 
-        if (tokenOutput?.symbol === 'ETH' || tokenOutput?.symbol === 'BTC') {
+        if (symbolOutput === 'ETH' || symbolOutput === 'BTC') {
           this.log('step 3 so sánh perETH BTC vs ETHLastSwap BTC ')
           this.log({ ETHLastSwap: cloneData(this.state.ETHLastSwap), tokenBTC })
 
-          if (BigNumber(tokenBTC?.perETH!).gt(this.state.ETHLastSwap[tokenBTC!.symbol!])) {
+          if (BigNumber(tokenBTC?.perETH!).gt(this.state.ETHLastSwap[symbolBTC])) {
             this.log('step 4')
             this.log({ ETHLastSwapTemp: cloneData(this.state.ETHLastSwapTemp), perETHOriginal: cloneData(this.state.perETHOriginal), tokenOutput })
             this.log(' so sánh amount vs ETHOriginalAmount')
@@ -230,20 +249,20 @@ abstract class RebalanceHelper {
               this.log('step 4.1')
               this.log('so sánh perETH BTC vs perETHOriginal BTC')
 
-              if (BigNumber(tokenBTC?.perETH!).gte(this.state.perETHOriginal[tokenBTC!.symbol!])) {
+              if (BigNumber(tokenBTC?.perETH!).gte(this.state.perETHOriginal[symbolBTC])) {
                 this.onSwap(poolToken, tokenOutput, amountAfterSwap)
               }
             }
           }
 
-          this.log(`update ETHLastSwap ${tokenBTC!.symbol} = ${this.state.ETHLastSwapTemp[tokenBTC!.symbol!]}`)
-          this.state.ETHLastSwap[tokenBTC!.symbol!] = this.state.ETHLastSwapTemp[tokenBTC!.symbol!]
+          this.log(`update ETHLastSwap ${symbolBTC} = ${this.state.ETHLastSwapTemp[symbolBTC]}`)
+          this.state.ETHLastSwap[symbolBTC] = this.state.ETHLastSwapTemp[symbolBTC]
         } else {
           this.log('step 5 token other')
           this.log('so sánh perETH token vs ETHLastSwap token')
           this.log({ ETHLastSwap: cloneData(this.state.ETHLastSwap), tokenOutput })
 
-          if (BigNumber(tokenOutput?.perETH!).gte(this.state.ETHLastSwap[tokenOutput?.symbol!]!)) {
+          if (BigNumber(tokenOutput?.perETH!).gte(this.state.ETHLastSwap[symbolOutput]!)) {
             this.log('step 6')
             this.log({ ETHLastSwapTemp: cloneData(this.state.ETHLastSwapTemp), perETHOriginal: cloneData(this.state.perETHOriginal), tokenOutput })
             this.log(' so sánh amount vs ETHOriginalAmount')
@@ -253,14 +272,14 @@ abstract class RebalanceHelper {
               this.log('step 6.1')
               this.log('so sánh perETH token vs perETHOriginal token')
 
-              if (BigNumber(tokenOutput!.perETH!).gte(this.state.perETHOriginal[tokenOutput!.symbol!])) {
+              if (BigNumber(tokenOutput!.perETH!).gte(this.state.perETHOriginal[symbolOutput])) {
                 this.onSwap(poolToken, tokenOutput, amountAfterSwap)
               }
             }
           }
 
-          this.log(`update ETHLastSwap ${tokenOutput!.symbol} = ${this.state.ETHLastSwapTemp[tokenOutput!.symbol!]}`)
-          this.state.ETHLastSwap[tokenOutput!.symbol!] = this.state.ETHLastSwapTemp[tokenOutput!.symbol!]
+          this.log(`update ETHLastSwap ${symbolOutput} = ${this.state.ETHLastSwapTemp[symbolOutput]}`)
+          this.state.ETHLastSwap[symbolOutput] = this.state.ETHLastSwapTemp[symbolOutput]
         }
       }
     }
@@ -272,12 +291,14 @@ abstract class RebalanceHelper {
   protected onSwap(poolToken: PoolToken, tokenOutput: Token, amountAfterSwap: string) {
     this.onSwapExtra(poolToken, tokenOutput)
 
+    const symbolOutput = uppercase(tokenOutput.symbol)
+
     this.state.amountInput = amountAfterSwap
-    this.state.outputSwap = tokenOutput.symbol!
+    this.state.outputSwap = symbolOutput
 
     poolToken.isSwap = true
-    poolToken[`est_${tokenOutput.symbol!}`] = amountAfterSwap
-    poolToken.outputSwap = tokenOutput.symbol!
+    poolToken[`est_${symbolOutput}`] = amountAfterSwap
+    poolToken.outputSwap = symbolOutput
   }
 
   // ================== Hooks cho từng version ==================

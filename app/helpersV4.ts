@@ -4,6 +4,7 @@ import { Version } from './type'
 import RebalanceHelper from './helpersBase'
 
 import { PoolToken, Token } from '@/types/app'
+import { uppercase } from '@/utils/functions'
 
 /**
  * v4 = v1 + hệ thống point:
@@ -20,11 +21,11 @@ class RebalanceV4 extends RebalanceHelper {
     token.pointAfterCheck = '1000'
     token.pointBeforeCheck = '1000'
 
-    this.state.price1Point[token.symbol!] = BigNumber(token.price!).dividedBy(1000).toFixed()
+    this.state.price1Point[uppercase(token.symbol)] = BigNumber(token.price!).dividedBy(1000).toFixed()
   }
 
   protected initToken(token: Token, tokenPre: Token) {
-    const price1Point = this.state.price1Point[token.symbol!]
+    const price1Point = this.state.price1Point[uppercase(token.symbol)]
 
     // ・ETHChangeByPoint: bằng (ETHPrice giờ đó / ETHPrice1Point) -  (ETHPrice giờ trước đó / ETHPrice1Point)
     token.changeByPoint = BigNumber(BigNumber(token!.price!).dividedBy(price1Point))
@@ -70,15 +71,17 @@ class RebalanceV4 extends RebalanceHelper {
   }
 
   protected updatePointAfterCheckInSwap(arrToken: PoolToken['arrToken'] = [], tokenOutput: Token) {
+    const symbolOutput = uppercase(tokenOutput.symbol)
+
     arrToken.forEach((token, index) => {
-      if (tokenOutput.symbol === token.symbol) {
+      if (symbolOutput === uppercase(token.symbol)) {
         token.pointAfterCheck = '1000'
       }
       arrToken[index] = token
     })
 
     arrToken.forEach((token, index) => {
-      if (tokenOutput.symbol !== token.symbol) {
+      if (symbolOutput !== uppercase(token.symbol)) {
         if (BigNumber(token.pointAfterCheck!).isLessThan(1000)) {
           token.pointAfterCheck = '1000'
         }
@@ -92,6 +95,8 @@ class RebalanceV4 extends RebalanceHelper {
   protected updatePerETHOriginal(arrToken: PoolToken['arrToken'] = [], arrTokenPre: PoolToken['arrToken'] = [], tokenInput: Token) {
     const perETHOriginal = this.state.perETHOriginal
     const resetPoint = BigNumber(1000).plus(BigNumber(1000).multipliedBy(this.config.volatilityPercentage).dividedBy(100).multipliedBy(10)).toFixed() //2000 + 30% = 2600
+
+    const symbolInput = uppercase(tokenInput?.symbol)
 
     let currentAmountMoreThanRest = 0
     let preAmountMoreThanRest = 0
@@ -111,13 +116,15 @@ class RebalanceV4 extends RebalanceHelper {
 
     if (currentAmountMoreThanRest >= 2 && preAmountMoreThanRest <= 1) {
       arrToken.forEach((token) => {
-        if (token.symbol === 'ETH' || token.symbol === 'BTC') {
-          if (tokenInput.symbol !== token.symbol) {
+        const symbol = uppercase(token.symbol)
+
+        if (symbol === 'ETH' || symbol === 'BTC') {
+          if (symbolInput !== symbol) {
             isChangeETHAndBTC = true
           }
         } else {
-          if (tokenInput.symbol !== token.symbol) {
-            perETHOriginal[token.symbol!] = token.perETH!
+          if (symbolInput !== symbol) {
+            perETHOriginal[symbol] = token.perETH!
           }
         }
       })
@@ -125,8 +132,10 @@ class RebalanceV4 extends RebalanceHelper {
 
     if (isChangeETHAndBTC) {
       arrToken.forEach((token) => {
-        if (token.symbol === 'ETH' || token.symbol === 'BTC') {
-          perETHOriginal[token.symbol!] = token.perETH!
+        const symbol = uppercase(token.symbol)
+
+        if (symbol === 'ETH' || symbol === 'BTC') {
+          perETHOriginal[symbol] = token.perETH!
         }
       })
     }
