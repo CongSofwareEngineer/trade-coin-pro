@@ -11,12 +11,6 @@ import { cloneData, formatTime, uppercase } from '@/utils/functions'
 
 const DECIMAL = 8
 
-const TREND_LABEL: Record<'up' | 'down' | 'flat', string> = {
-  up: 'Up',
-  down: 'Down',
-  flat: 'Flat',
-}
-
 export default function Home() {
   const arrCloneDefaultRef = useRef<PoolToken[]>([])
   const [arrData, setArrData] = useState<PoolToken[]>([])
@@ -400,56 +394,53 @@ export default function Home() {
                   <table className='w-full text-sm border-collapse'>
                     <tbody className='[&>tr>td]:border [&>tr>td]:border-gray-600/50 [&>tr>td]:px-3 [&>tr>td]:py-2'>
                       <tr>
-                        <td className='text-gray-300 whitespace-nowrap'>Time</td>
+                        <td className='text-gray-300 whitespace-nowrap'>Time (期間)</td>
                         <td className='font-mono text-white whitespace-nowrap'>
                           {formatTime(summary.timeStart) || '-'} ~ {formatTime(summary.timeEnd) || '-'}
                         </td>
                       </tr>
                       <tr>
-                        <td className='text-gray-300 whitespace-nowrap'>Start Price of Input Token</td>
+                        <td className='text-gray-300 whitespace-nowrap'>Start Price of Input Token (開始価格)</td>
                         <td className='font-mono text-white'>${formatNumberToShow(summary.priceStartUsd, 4)}</td>
                       </tr>
                       <tr>
-                        <td className='text-gray-300 whitespace-nowrap'>End Price of Input Token</td>
+                        <td className='text-gray-300 whitespace-nowrap'>End Price of Input Token (終了価格)</td>
                         <td className='font-mono text-white'>${formatNumberToShow(summary.priceEndInputUsd, 4)}</td>
                       </tr>
                       <tr>
-                        <td className='text-gray-300 whitespace-nowrap'>Price Change</td>
+                        <td className='text-gray-300 whitespace-nowrap'>Price Change (％チェンジ)</td>
                         <td className={`font-mono ${BigNumber(summary.priceChangePercentage).gte(0) ? 'text-green-400' : 'text-red-400'}`}>
+                          {BigNumber(summary.priceChangePercentage).gte(0) ? '⬆︎' : '⬇︎'}{' '}
                           {BigNumber(summary.priceChangePercentage).gt(0) ? '+' : ''}
                           {formatNumberToShow(summary.priceChangePercentage, 4)}%
                         </td>
                       </tr>
                       <tr>
-                        <td className='text-gray-300 whitespace-nowrap'>{summary.symbolStart} Trend</td>
-                        <td className={`font-mono ${summary.trend === 'down' ? 'text-red-400' : 'text-green-400'}`}>{TREND_LABEL[summary.trend]}</td>
-                      </tr>
-                      <tr>
-                        <td className='text-gray-300 whitespace-nowrap'>Start Amount of Input Token</td>
+                        <td className='text-gray-300 whitespace-nowrap'>Start Amount of Input Token (期初数量)</td>
                         <td className='font-mono text-white'>{formatNumberToShow(summary.startAmount, 2)}</td>
                       </tr>
                       <tr>
-                        <td className='text-gray-300 whitespace-nowrap'>Max Unrealized Gain</td>
+                        <td className='text-gray-300 whitespace-nowrap'>Max Unrealized Gain (最大含み益)</td>
                         <td className='font-mono text-green-400'>
                           {BigNumber(summary.maxUnrealizedGain).gte(0) ? '+' : ''}
-                          {formatNumberToShow(summary.maxUnrealizedGain, 8)} / {BigNumber(summary.maxUnrealizedGainPercentage).gte(0) ? '+' : ''}
+                          {formatNumberToShow(summary.maxUnrealizedGain, 6)} / {BigNumber(summary.maxUnrealizedGainPercentage).gte(0) ? '+' : ''}
                           {formatNumberToShow(summary.maxUnrealizedGainPercentage, 4)}%
                         </td>
                       </tr>
                       <tr>
-                        <td className='text-gray-300 whitespace-nowrap'>Max Unrealized Loss</td>
+                        <td className='text-gray-300 whitespace-nowrap'>Max Unrealized Loss (最大含み損)</td>
                         <td className='font-mono text-red-400'>
                           {BigNumber(summary.maxUnrealizedLoss).gte(0) ? '+' : ''}
-                          {formatNumberToShow(summary.maxUnrealizedLoss, 8)} / {BigNumber(summary.maxUnrealizedLossPercentage).gte(0) ? '+' : ''}
+                          {formatNumberToShow(summary.maxUnrealizedLoss, 6)} / {BigNumber(summary.maxUnrealizedLossPercentage).gte(0) ? '+' : ''}
                           {formatNumberToShow(summary.maxUnrealizedLossPercentage, 4)}%
                         </td>
                       </tr>
                       <tr>
-                        <td className='text-gray-300 whitespace-nowrap'>End Input Token Balance</td>
+                        <td className='text-gray-300 whitespace-nowrap'>End Input Token Balance (期末数量)</td>
                         <td className='font-mono text-white'>{formatNumberToShow(summary.endInputTokenBalance, 4)}</td>
                       </tr>
                       <tr>
-                        <td className='text-gray-300 whitespace-nowrap'>Number of Swaps</td>
+                        <td className='text-gray-300 whitespace-nowrap'>Number of Swaps (取引数回)</td>
                         <td className='font-mono text-white'>{summary.totalSwaps}</td>
                       </tr>
                     </tbody>
