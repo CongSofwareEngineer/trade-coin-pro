@@ -37,10 +37,27 @@ export interface RebalanceSummary {
   endAmount: string
   priceStartUsd: string
   priceEndUsd: string
+  //giá input token tại dòng CUỐI CÙNG của data (khác priceEndUsd: giá output token tại dòng swap cuối)
+  priceEndInputUsd: string
   //(price input token first row - price input token last row) / price input token first row
   declinePercentage: string
   startValueUsd: string
   endValueUsd: string
   profitUsd: string
   profitPercentage: string
+  //thống kê theo input token (quy đổi mọi dòng về input token)
+  timeStart: string
+  timeEnd: string
+  //(price input token last row - price input token first row) / price input token first row
+  priceChangePercentage: string
+  trend: 'up' | 'down' | 'flat'
+  //MAX(amount quy đổi về input token của từng dòng) - amount input ban đầu
+  maxUnrealizedGain: string
+  maxUnrealizedGainPercentage: string
+  //MIN(amount quy đổi về input token của từng dòng) - amount input ban đầu
+  maxUnrealizedLoss: string
+  maxUnrealizedLossPercentage: string
+  //amount dòng cuối cùng quy đổi về input token tại giá dòng cuối cùng
+  endInputTokenBalance: string
+  totalSwaps: number
 }

@@ -11,6 +11,12 @@ import { cloneData, formatTime, uppercase } from '@/utils/functions'
 
 const DECIMAL = 8
 
+const TREND_LABEL: Record<'up' | 'down' | 'flat', string> = {
+  up: 'Up',
+  down: 'Down',
+  flat: 'Flat',
+}
+
 export default function Home() {
   const arrCloneDefaultRef = useRef<PoolToken[]>([])
   const [arrData, setArrData] = useState<PoolToken[]>([])
@@ -371,10 +377,10 @@ export default function Home() {
                     </div>
                     <span className='font-bold text-xs   font-mono text-gray-400'>
                       Price: ${formatNumberToShow(summary.priceStartUsd)}
-                      <span className={`ml-1 ${BigNumber(summary.declinePercentage).gt(0) ? 'text-red-400' : 'text-green-400'}`}>
+                      {/* <span className={`ml-1 ${BigNumber(summary.declinePercentage).gt(0) ? 'text-red-400' : 'text-green-400'}`}>
                         ({BigNumber(summary.declinePercentage).gt(0) ? '⬇︎' : '⬆︎'}%:{' '}
                         {formatNumberToShow(BigNumber(summary.declinePercentage).abs().toFixed(), 4)})
-                      </span>
+                      </span> */}
                     </span>
 
                     <div className='text-sm mt-1 font-mono text-gray-400'>${formatNumberToShow(summary.startValueUsd)}</div>
@@ -390,19 +396,69 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className='mt-4 pt-4 border-t border-gray-700/50'>
-                  <span className='text-xs text-gray-400'>Profit / Loss (USD)</span>
-                  <div className={`text-2xl font-mono ${BigNumber(summary.profitUsd).gte(0) ? 'text-green-400' : 'text-red-400'}`}>
-                    {BigNumber(summary.profitUsd).gte(0) ? '+' : '-'}${formatNumberToShow(BigNumber(summary.profitUsd).abs().toFixed(), 4)}
-                    <span className='ml-2 text-base'>
-                      ({BigNumber(summary.profitPercentage).gte(0) ? '+' : ''}
-                      {formatNumberToShow(summary.profitPercentage, 4)}%)
-                    </span>
-                  </div>
+                <div className='mt-4 pt-4 border-t border-gray-700/50 overflow-x-auto custom-scrollbar'>
+                  <table className='w-full text-sm border-collapse'>
+                    <tbody className='[&>tr>td]:border [&>tr>td]:border-gray-600/50 [&>tr>td]:px-3 [&>tr>td]:py-2'>
+                      <tr>
+                        <td className='text-gray-300 whitespace-nowrap'>Time</td>
+                        <td className='font-mono text-white whitespace-nowrap'>
+                          {formatTime(summary.timeStart) || '-'} ~ {formatTime(summary.timeEnd) || '-'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className='text-gray-300 whitespace-nowrap'>Start Price of Input Token</td>
+                        <td className='font-mono text-white'>${formatNumberToShow(summary.priceStartUsd, 4)}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-gray-300 whitespace-nowrap'>End Price of Input Token</td>
+                        <td className='font-mono text-white'>${formatNumberToShow(summary.priceEndInputUsd, 4)}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-gray-300 whitespace-nowrap'>Price Change</td>
+                        <td className={`font-mono ${BigNumber(summary.priceChangePercentage).gte(0) ? 'text-green-400' : 'text-red-400'}`}>
+                          {BigNumber(summary.priceChangePercentage).gt(0) ? '+' : ''}
+                          {formatNumberToShow(summary.priceChangePercentage, 4)}%
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className='text-gray-300 whitespace-nowrap'>{summary.symbolStart} Trend</td>
+                        <td className={`font-mono ${summary.trend === 'down' ? 'text-red-400' : 'text-green-400'}`}>{TREND_LABEL[summary.trend]}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-gray-300 whitespace-nowrap'>Start Amount of Input Token</td>
+                        <td className='font-mono text-white'>{formatNumberToShow(summary.startAmount, 2)}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-gray-300 whitespace-nowrap'>Max Unrealized Gain</td>
+                        <td className='font-mono text-green-400'>
+                          {BigNumber(summary.maxUnrealizedGain).gte(0) ? '+' : ''}
+                          {formatNumberToShow(summary.maxUnrealizedGain, 8)} / {BigNumber(summary.maxUnrealizedGainPercentage).gte(0) ? '+' : ''}
+                          {formatNumberToShow(summary.maxUnrealizedGainPercentage, 4)}%
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className='text-gray-300 whitespace-nowrap'>Max Unrealized Loss</td>
+                        <td className='font-mono text-red-400'>
+                          {BigNumber(summary.maxUnrealizedLoss).gte(0) ? '+' : ''}
+                          {formatNumberToShow(summary.maxUnrealizedLoss, 8)} / {BigNumber(summary.maxUnrealizedLossPercentage).gte(0) ? '+' : ''}
+                          {formatNumberToShow(summary.maxUnrealizedLossPercentage, 4)}%
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className='text-gray-300 whitespace-nowrap'>End Input Token Balance</td>
+                        <td className='font-mono text-white'>{formatNumberToShow(summary.endInputTokenBalance, 4)}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-gray-300 whitespace-nowrap'>Number of Swaps</td>
+                        <td className='font-mono text-white'>{summary.totalSwaps}</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
 
-                <p className='text-[11px] text-gray-500 mt-1'>
-                  Start: {summary.symbolStart} price at the first item · End: {summary.symbolEnd} price at the last swap.
+                <p className='text-[11px] text-gray-500 mt-2'>
+                  Mỗi dòng giá: SwapOutputTokenAmount × giá đồng đó ÷ giá {summary.symbolStart} tại dòng đó. Max/Min của các số đó trừ đi amount input
+                  ban đầu = Max Unrealized Gain / Loss.
                 </p>
 
                 {/* View Tabs */}

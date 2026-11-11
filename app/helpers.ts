@@ -21,6 +21,11 @@ export const getRebalanceHelper = (version: Version, config: RebalanceConfig): R
  * startValueUsd = amountStart * input token price at the first item
  * endValueUsd   = final amountInput * output token price at the row of the last swap
  *                 (no swap at all → price at the first item, the amount never changed)
+ *
+ * Mỗi dòng: holding hiện tại (SwapOutputTokenAmount) * giá đồng đó / giá input token tại dòng đó
+ * → maxUnrealizedGain = MAX(các số trên) - amount input ban đầu
+ * → maxUnrealizedLoss = MIN(các số trên) - amount input ban đầu
+ * → endInputTokenBalance = số quy đổi của dòng CUỐI CÙNG
  */
 export const getRebalanceSummary = (res: RebalanceResult, config: RebalanceConfig): RebalanceSummary | null => {
   const poolTokenFirst = res.arrData[0]
@@ -46,6 +51,52 @@ export const getRebalanceSummary = (res: RebalanceResult, config: RebalanceConfi
   const declinePercentage =
     priceStartLastRow && BigNumber(priceStart).gt(0) ? BigNumber(priceStart).minus(priceStartLastRow).dividedBy(priceStart).toFixed() : '0'
 
+  //quy đổi holding của từng dòng về input token: amount * giá đồng đang giữ / giá input token tại dòng đó
+  let amountHold = startAmount
+  let symbolHold = symbolStart
+  let maxAmountInput = ''
+  let minAmountInput = ''
+  let endInputTokenBalance = startAmount
+
+  res.arrData.forEach((poolToken) => {
+    const symbolSwap = uppercase(poolToken.outputSwap as string)
+
+    if (poolToken.isSwap && symbolSwap && poolToken[`est_${symbolSwap}`]) {
+      amountHold = String(poolToken[`est_${symbolSwap}`])
+      symbolHold = symbolSwap
+    }
+
+    const priceHold = poolToken.arrToken?.find((e) => uppercase(e.symbol) === symbolHold)?.price
+    const priceInput = poolToken.arrToken?.find((e) => uppercase(e.symbol) === symbolStart)?.price
+
+    if (!priceHold || !priceInput) return
+
+    const amountInputToken = BigNumber(amountHold).multipliedBy(priceHold).dividedBy(priceInput).toFixed()
+
+    if (!maxAmountInput || BigNumber(amountInputToken).gt(maxAmountInput)) maxAmountInput = amountInputToken
+    if (!minAmountInput || BigNumber(amountInputToken).lt(minAmountInput)) minAmountInput = amountInputToken
+
+    endInputTokenBalance = amountInputToken
+  })
+
+  const maxUnrealizedGain = BigNumber(maxAmountInput || startAmount)
+    .minus(startAmount)
+    .toFixed()
+  const maxUnrealizedLoss = BigNumber(minAmountInput || startAmount)
+    .minus(startAmount)
+    .toFixed()
+  const maxUnrealizedGainPercentage = BigNumber(startAmount).gt(0)
+    ? BigNumber(maxUnrealizedGain).dividedBy(startAmount).multipliedBy(100).toFixed()
+    : '0'
+  const maxUnrealizedLossPercentage = BigNumber(startAmount).gt(0)
+    ? BigNumber(maxUnrealizedLoss).dividedBy(startAmount).multipliedBy(100).toFixed()
+    : '0'
+  const priceChangePercentage =
+    priceStartLastRow && BigNumber(priceStart).gt(0)
+      ? BigNumber(priceStartLastRow).minus(priceStart).dividedBy(priceStart).multipliedBy(100).toFixed()
+      : '0'
+  const trend: RebalanceSummary['trend'] = BigNumber(priceChangePercentage).gt(0) ? 'up' : BigNumber(priceChangePercentage).lt(0) ? 'down' : 'flat'
+
   return {
     symbolStart,
     symbolEnd,
@@ -53,11 +104,22 @@ export const getRebalanceSummary = (res: RebalanceResult, config: RebalanceConfi
     endAmount,
     priceStartUsd: String(priceStart),
     priceEndUsd: String(priceEnd),
+    priceEndInputUsd: String(priceStartLastRow || priceStart),
     declinePercentage,
     startValueUsd,
     endValueUsd,
     profitUsd,
     profitPercentage,
+    timeStart: poolTokenFirst.time || '',
+    timeEnd: poolTokenLast.time || '',
+    priceChangePercentage,
+    trend,
+    maxUnrealizedGain,
+    maxUnrealizedGainPercentage,
+    maxUnrealizedLoss,
+    maxUnrealizedLossPercentage,
+    endInputTokenBalance,
+    totalSwaps: res.arrSwap.length,
   }
 }
 
