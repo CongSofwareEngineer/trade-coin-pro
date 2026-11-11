@@ -273,7 +273,7 @@ export default function Home() {
                   value={outputStart}
                   onChange={(e) => setOutputStart(uppercase(e.target.value))}
                 />
-                <p className='text-xs text-gray-500 mt-1'>Starting output token symbol</p>
+                <p className='text-xs text-gray-500 mt-1'>Starting input token symbol</p>
               </div>
 
               <div>
@@ -286,7 +286,7 @@ export default function Home() {
                   value={volatilityPercentage}
                   onChange={(e) => setVolatilityPercentage(e.target.value as any)}
                 />
-                <p className='text-xs text-gray-500 mt-1'>Expected ETH price decline percentage</p>
+                <p className='text-xs text-gray-500 mt-1'> Expected Input Token Price Decline Percentage</p>
               </div>
 
               <div>
