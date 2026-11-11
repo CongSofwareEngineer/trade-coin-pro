@@ -24,7 +24,7 @@ export default function Home() {
   const [startData, setStartData] = useState(false)
   const [arrSwapFilter, setArrSwapFilter] = useState<PoolToken[]>([])
   const [showIsSwap, setShowIsSwap] = useState(false)
-  const [version, setVersion] = useState<Version>('v1')
+  const [version] = useState<Version>('v4')
   const [summary, setSummary] = useState<RebalanceSummary | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
@@ -201,27 +201,6 @@ export default function Home() {
                     }}
                   />
 
-                  {/* Version selector */}
-                  <div className='flex items-center gap-3 ml-4 pl-4 border-l border-gray-600'>
-                    <label className='text-xs font-medium text-gray-400' htmlFor='version-select'>
-                      Version
-                    </label>
-                    <select
-                      className='bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white cursor-pointer hover:bg-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none'
-                      id='version-select'
-                      value={version}
-                      onChange={(e) => {
-                        const v = e.target.value as 'v1' | 'v4' | 'v5'
-
-                        setVersion(v)
-                      }}
-                    >
-                      <option value='v1'>v1</option>
-                      <option value='v4'>v4</option>
-                      <option value='v5'>v5</option>
-                    </select>
-                  </div>
-
                   {isUploading && (
                     <div className='ml-4 animate-spin'>
                       <svg className='w-5 h-5 text-blue-500' fill='none' stroke='currentColor' strokeWidth={2} viewBox='0 0 24 24'>
@@ -290,7 +269,7 @@ export default function Home() {
               </div>
 
               <div>
-                <div className='block text-sm font-medium text-gray-300 mb-2'>Transaction Fee (%)</div>
+                <div className='block text-sm font-medium text-gray-300 mb-2'>Gas fee</div>
                 <input
                   className='w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
                   placeholder='0.15'
@@ -299,7 +278,7 @@ export default function Home() {
                   value={affiliate}
                   onChange={(e) => setAffiliate(e.target.value as any)}
                 />
-                <p className='text-xs text-gray-500 mt-1'>Affiliate fee percentage</p>
+                <p className='text-xs text-gray-500 mt-1'>Suggest of Gas fee</p>
               </div>
             </div>
 
@@ -337,7 +316,8 @@ export default function Home() {
 
                     return (
                       <span key={index} className='px-2 py-1 bg-green-700/50 text-green-300 rounded text-xs font-medium'>
-                        {index + 1 + 1}
+                        <span className='font-bold '>#{index + 1}</span>
+                        <span className='text-[10px]'>{e.outputSwap ? ` : ${e.inputSwap || '?'} → ${e.outputSwap}` : ''}</span>
                       </span>
                     )
                   })}
@@ -501,10 +481,10 @@ export default function Home() {
                       <div className='flex items-center justify-between mb-4'>
                         <div className='flex items-center gap-3'>
                           <div className={`w-3 h-3 rounded-full ${item.isSwap ? 'bg-green-500' : 'bg-gray-500'}`} />
-                          <h3 className='font-semibold text-lg'>Item #{index + 1 + 1}</h3>
+                          <h3 className='font-semibold text-lg'>Item #{index + 1}</h3>
                           {item.isSwap && (
                             <span className='px-2 py-1 bg-green-900/50 border border-green-700/50 text-green-300 rounded-md text-xs font-medium'>
-                              SWAP
+                              SWAP{item.outputSwap ? `: ${item.inputSwap || '?'} → ${item.outputSwap}` : ''}
                             </span>
                           )}
                         </div>
@@ -550,7 +530,19 @@ export default function Home() {
                           {item.arrToken?.map((token, tokenIndex) => (
                             <div key={tokenIndex} className='bg-gray-800/50 rounded-lg p-3'>
                               <div className='flex items-center justify-between mb-2'>
-                                <span className='font-semibold text-white'>{token.symbol}</span>
+                                <span className='font-semibold text-white flex items-center gap-2'>
+                                  {token.symbol}
+                                  {item.isSwap && uppercase(token.symbol) === uppercase(item.outputSwap) && (
+                                    <span className='px-2 py-[2px] bg-green-900/50 border border-green-700/50 text-green-300 rounded text-[10px] font-medium'>
+                                      SWAP TO
+                                    </span>
+                                  )}
+                                  {item.isSwap && uppercase(token.symbol) === uppercase(item.inputSwap) && (
+                                    <span className='px-2 py-[2px] bg-orange-900/50 border border-orange-700/50 text-orange-300 rounded text-[10px] font-medium'>
+                                      SWAP FROM
+                                    </span>
+                                  )}
+                                </span>
                                 <span className='text-sm text-gray-400'>Price: ${token.price?.toLocaleString()}</span>
                               </div>
 

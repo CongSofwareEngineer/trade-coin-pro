@@ -292,12 +292,14 @@ abstract class RebalanceHelper {
     this.onSwapExtra(poolToken, tokenOutput)
 
     const symbolOutput = uppercase(tokenOutput.symbol)
+    const symbolInput = this.state.outputSwap
 
     this.state.amountInput = amountAfterSwap
     this.state.outputSwap = symbolOutput
 
     poolToken.isSwap = true
     poolToken[`est_${symbolOutput}`] = amountAfterSwap
+    poolToken.inputSwap = symbolInput
     poolToken.outputSwap = symbolOutput
   }
 
