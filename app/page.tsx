@@ -269,7 +269,7 @@ export default function Home() {
               </div>
 
               <div>
-                <div className='block text-sm font-medium text-gray-300 mb-2'>Gas fee</div>
+                <div className='block text-sm font-medium text-gray-300 mb-2'>Transaction fee/Gas fee</div>
                 <input
                   className='w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
                   placeholder='0.15'
@@ -278,7 +278,7 @@ export default function Home() {
                   value={affiliate}
                   onChange={(e) => setAffiliate(e.target.value as any)}
                 />
-                <p className='text-xs text-gray-500 mt-1'>Suggest of Gas fee</p>
+                <p className='text-xs text-gray-500 mt-1'>Affiliate fee percentage/Suggest of Gas fee </p>
               </div>
             </div>
 
