@@ -15,7 +15,7 @@ export default function Home() {
   const arrCloneDefaultRef = useRef<PoolToken[]>([])
   const [arrData, setArrData] = useState<PoolToken[]>([])
   const [amountStart, setAmountStart] = useState<number>(1)
-  const [outputStart, setOutputStart] = useState<string>('ETH')
+  const [inputStart, setInputStart] = useState<string>('ETH')
   const [volatilityPercentage, setVolatilityPercentage] = useState<number>(0.3)
   const [affiliate, setAffiliate] = useState<number>(0.15)
   const [isUpload, setIsUpload] = useState(false)
@@ -29,7 +29,7 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const getHelper = () => {
-    return getRebalanceHelper(version, { amountStart, outputStart, volatilityPercentage, affiliate })
+    return getRebalanceHelper(version, { amountStart, inputStart, volatilityPercentage, affiliate })
   }
 
   const rollUpData = () => {
@@ -42,7 +42,7 @@ export default function Home() {
 
     setArrData(res.arrData)
     setArrSwapFilter(res.arrSwap)
-    setSummary(getRebalanceSummary(res, { amountStart, outputStart, volatilityPercentage, affiliate }))
+    setSummary(getRebalanceSummary(res, { amountStart, inputStart, volatilityPercentage, affiliate }))
 
     console.log({ version, arrFinal: res.arrData, arrSwap: res.arrSwap, state: res.state })
   }
@@ -291,8 +291,8 @@ export default function Home() {
                 <input
                   className='w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
                   placeholder='e.g., ETH, BTC, BNB...'
-                  value={outputStart}
-                  onChange={(e) => setOutputStart(uppercase(e.target.value))}
+                  value={inputStart}
+                  onChange={(e) => setInputStart(uppercase(e.target.value))}
                 />
                 <p className='text-xs text-gray-500 mt-1'>Starting input token symbol</p>
               </div>

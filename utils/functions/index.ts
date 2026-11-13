@@ -43,3 +43,27 @@ export const formatTime = (value?: string | number | Date | null) => {
 
   return `${day} ${time}`
 }
+
+const SYMBOL_ETH = ['ETH', 'WETH', 'CBETH']
+const SYMBOL_BTC = ['BTC', 'WBTC', 'CBBTC']
+
+//ETH/WETH/CBETH coi là ETH, BTC/WBTC/CBBTC coi là BTC
+export const isSymbolETHOrBTC = (symbol?: string, type: 'eth' | 'btc' = 'eth') => {
+  if (type === 'eth') return SYMBOL_ETH.includes(uppercase(symbol))
+
+  return SYMBOL_BTC.includes(uppercase(symbol))
+}
+
+//so sánh 2 symbol, cùng họ ETH hoặc cùng họ BTC vẫn tính là một
+export const isSameSymbol = (symbolA?: string, symbolB?: string) => {
+  const a = uppercase(symbolA)
+  const b = uppercase(symbolB)
+
+  if (!a || !b) return false
+
+  if (a === b) return true
+
+  if (isSymbolETHOrBTC(a, 'eth') && isSymbolETHOrBTC(b, 'eth')) return true
+
+  return isSymbolETHOrBTC(a, 'btc') && isSymbolETHOrBTC(b, 'btc')
+}

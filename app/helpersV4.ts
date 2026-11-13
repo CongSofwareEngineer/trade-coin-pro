@@ -4,7 +4,7 @@ import { Version } from './type'
 import RebalanceHelper from './helpersBase'
 
 import { PoolToken, Token } from '@/types/app'
-import { uppercase } from '@/utils/functions'
+import { isSymbolETHOrBTC, uppercase } from '@/utils/functions'
 
 /**
  * v4 = v1 + hệ thống point:
@@ -118,7 +118,7 @@ class RebalanceV4 extends RebalanceHelper {
       arrToken.forEach((token) => {
         const symbol = uppercase(token.symbol)
 
-        if (symbol === 'ETH' || symbol === 'BTC') {
+        if (isSymbolETHOrBTC(symbol, 'eth') || isSymbolETHOrBTC(symbol, 'btc')) {
           if (symbolInput !== symbol) {
             isChangeETHAndBTC = true
           }
@@ -134,7 +134,7 @@ class RebalanceV4 extends RebalanceHelper {
       arrToken.forEach((token) => {
         const symbol = uppercase(token.symbol)
 
-        if (symbol === 'ETH' || symbol === 'BTC') {
+        if (isSymbolETHOrBTC(symbol, 'eth') || isSymbolETHOrBTC(symbol, 'btc')) {
           perETHOriginal[symbol] = token.perETH!
         }
       })

@@ -6,7 +6,7 @@ import RebalanceV1 from './helpersV1'
 import RebalanceV4 from './helpersV4'
 import RebalanceV5 from './helpersV5'
 
-import { uppercase } from '@/utils/functions'
+import { isSameSymbol, uppercase } from '@/utils/functions'
 
 export const getRebalanceHelper = (version: Version, config: RebalanceConfig): RebalanceHelper => {
   if (version === 'v4') return new RebalanceV4(config)
@@ -34,11 +34,11 @@ export const getRebalanceSummary = (res: RebalanceResult, config: RebalanceConfi
 
   if (!poolTokenFirst) return null
 
-  const symbolStart = uppercase(config.outputStart)
+  const symbolStart = uppercase(config.inputStart)
   const symbolEnd = uppercase(res.state.outputSwap)
-  const priceStart = poolTokenFirst.arrToken?.find((e) => uppercase(e.symbol) === symbolStart)?.price
-  const priceEnd = poolTokenLastSwap.arrToken?.find((e) => uppercase(e.symbol) === symbolEnd)?.price
-  const priceStartLastRow = poolTokenLast.arrToken?.find((e) => uppercase(e.symbol) === symbolStart)?.price
+  const priceStart = poolTokenFirst.arrToken?.find((e) => isSameSymbol(e.symbol, symbolStart))?.price
+  const priceEnd = poolTokenLastSwap.arrToken?.find((e) => isSameSymbol(e.symbol, symbolEnd))?.price
+  const priceStartLastRow = poolTokenLast.arrToken?.find((e) => isSameSymbol(e.symbol, symbolStart))?.price
 
   if (!priceStart || !priceEnd) return null
 
@@ -66,8 +66,8 @@ export const getRebalanceSummary = (res: RebalanceResult, config: RebalanceConfi
       symbolHold = symbolSwap
     }
 
-    const priceHold = poolToken.arrToken?.find((e) => uppercase(e.symbol) === symbolHold)?.price
-    const priceInput = poolToken.arrToken?.find((e) => uppercase(e.symbol) === symbolStart)?.price
+    const priceHold = poolToken.arrToken?.find((e) => isSameSymbol(e.symbol, symbolHold))?.price
+    const priceInput = poolToken.arrToken?.find((e) => isSameSymbol(e.symbol, symbolStart))?.price
 
     if (!priceHold || !priceInput) return
 

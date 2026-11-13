@@ -5,7 +5,8 @@ export type Version = 'v1' | 'v4' | 'v5'
 //config user nhập trên UI
 export interface RebalanceConfig {
   amountStart: string | number
-  outputStart: string
+  //symbol token bỏ vào lúc đầu (trước tên là outputStart)
+  inputStart: string
   volatilityPercentage: string | number
   affiliate: string | number
 }
