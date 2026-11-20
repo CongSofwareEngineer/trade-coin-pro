@@ -127,6 +127,17 @@ class DcaHelper {
 
     // Giá ≥ maxPrice → chỉ xét bán (TH6), không mua
     if (isSellOnly) {
+      if (BigNumber(priceToken).lt(derived.priceHistory)) {
+        const configClone = cloneData(config) as DcaTokenConfig
+
+        configClone.lastHistoryPrice = priceToken
+
+        return {
+          item: { price: priceToken } as History,
+          config: configClone,
+        }
+      }
+
       if (this.shouldSellToken(priceToken, derived)) return this.sellToken(config, priceToken, 'TH6')
 
       return null
