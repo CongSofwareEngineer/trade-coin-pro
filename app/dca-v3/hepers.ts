@@ -75,7 +75,7 @@ class DcaHelper {
       .dividedBy(config.initialCapital)
       .multipliedBy(100)
     const inventoryThreshold = config.inventoryThreshold ?? '30'
-    const isValidSell = BigNumber(ratioStableBought).gte(inventoryThreshold)
+    const isValidSell = BigNumber(ratioStableBought).gte(inventoryThreshold) && BigNumber(priceToken).gte(config.minPrice)
 
     return {
       priceHistory,

@@ -7,4 +7,5 @@ export enum LOCAL_STORE_KEY {
   Language = 'Language',
   ConnectMethod = 'ConnectMethod',
   ENABLE_DCA_V3 = 'ENABLE_DCA_V3',
+  MvrvData = 'MvrvData',
 }

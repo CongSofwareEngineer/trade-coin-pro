@@ -17,3 +17,17 @@ export type UserConfig = {
   lastHistoryPrice: string
   inventoryThreshold: string
 }
+
+export type PortfolioStatsInfo = {
+  ethBought: string
+  usdtSpent: string
+  currentCapital: string
+  initialCapital: number
+  slippageTolerance: number
+  avgPrice: number
+  profitLoss: number
+  profitLossPercentage: number
+  currentETHPrice: number
+  totalPortfolioValue: number
+  ratioPriceChange: number
+}

@@ -231,7 +231,10 @@ Path alias: `@/*` → repo root (`tsconfig.json`). There is no `src/`.
 
 ## 9. Feature Logs
 
-None yet. Add entries here as `docs/logs/log<Feature>.md` files are created.
+| Feature | Log |
+|---|---|
+| `/trade-info` MA200 market trend panel + header components | `docs/logs/logTradeInfoMarketTrend.md` |
+| `/trade-info` MVRV panel (`/api/mvrv` proxy + cache 30') | `docs/logs/logTradeInfoMvrv.md` |
 
 ## 10. Logic Changelog (required)
 

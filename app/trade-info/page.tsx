@@ -3,6 +3,10 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { BigNumber } from 'bignumber.js'
 
 import { UserConfig } from './type'
+import Header from './components/Header'
+import MarketTrend from './components/MarketTrend'
+import MarketMvrv from './components/MarketMvrv'
+import PortfolioStats from './components/PortfolioStats'
 
 import useUserConfig from '@/hooks/tank-query/useUserConfig'
 import { useTradeHistory } from '@/hooks/tank-query/useTradeHistory'
@@ -171,13 +175,6 @@ function TradeInfoPage() {
     }
   }
 
-  // Loading component
-  const LoadingSpinner = () => (
-    <div className='flex items-center justify-center'>
-      <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500' />
-    </div>
-  )
-
   const TableSkeleton = () => (
     <div className='bg-gray-800 rounded-lg shadow-lg border border-gray-700 overflow-hidden'>
       <div className='overflow-x-auto'>
@@ -233,130 +230,30 @@ function TradeInfoPage() {
     <div className='min-h-screen bg-gray-900 p-12 flex justify-center '>
       <div className='min-h-screen w-full container'>
         <div className='max-w-7xl mx-auto'>
+          {/* Market Trend MA200 */}
+          <MarketTrend tokenInput={userConfigCurrent?.tokenInput} />
+
+          {/* MVRV BTC */}
+          <MarketMvrv />
+
           {/* Header */}
-          <div className='bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6 mb-6'>
-            <div className='flex justify-between items-center mb-4'>
-              <h1 className='text-lg font-semibold text-white'>Trade History</h1>
-              <div className='flex gap-3'>
-                <button
-                  className='px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-lg flex items-center gap-2'
-                  onClick={openSettingsModal}
-                >
-                  <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path
-                      d='M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                    />
-                    <path d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} />
-                  </svg>
-                  Settings
-                </button>
-                <button
-                  className='px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors shadow-lg'
-                  disabled={isLoadingTradeHistory || isLoadingUserConfig}
-                  onClick={refreshData}
-                >
-                  <svg
-                    className={`w-4 h-4 ${isLoadingTradeHistory || isLoadingUserConfig ? 'animate-spin' : ''}`}
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                    />
-                  </svg>
-                  {isLoadingTradeHistory || isLoadingUserConfig ? 'Loading...' : 'Refresh Data'}
-                </button>
-              </div>
-            </div>
-
-            {/* Version Selector */}
-            <div className='flex flex-wrap gap-3'>
-              {dataUserConfig?.users?.map((item: any) => {
-                return (
-                  <button
-                    key={item._id}
-                    className={`px-4 cursor-pointer py-2 rounded-lg border-2 font-medium transition-all ${
-                      userConfigCurrent?._id === item._id
-                        ? 'bg-blue-500 border-blue-500 text-white shadow-md'
-                        : 'bg-gray-700 border-gray-600 text-gray-200 hover:border-blue-400 hover:text-blue-400 hover:bg-gray-600'
-                    }`}
-                    onClick={() => setUserConfigCurrent(item)}
-                  >
-                    TOKEN {item.tokenInput}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Stats */}
-            {isLoadingTradeHistory ? (
-              <div className='mt-4 text-sm text-gray-400 flex items-center gap-2'>
-                <LoadingSpinner />
-                <span>Loading trade data...</span>
-              </div>
-            ) : history && history.length > 0 ? (
-              <div className='mt-4 text-sm text-gray-400'>
-                Total Trades: <span className='font-semibold text-white'>{totalTrades}</span> | Page:{' '}
-                <span className='font-semibold text-white'>{currentPage}</span> of <span className='font-semibold text-white'>{totalPages}</span>
-              </div>
-            ) : null}
-          </div>
+          <Header
+            currentPage={currentPage}
+            hasHistory={!!history && history.length > 0}
+            isLoading={isLoadingTradeHistory || isLoadingUserConfig}
+            isLoadingTradeHistory={isLoadingTradeHistory}
+            totalPages={totalPages}
+            totalTrades={totalTrades}
+            userConfigCurrent={userConfigCurrent}
+            users={dataUserConfig?.users || []}
+            onOpenSettings={openSettingsModal}
+            onRefresh={refreshData}
+            onSelectUser={setUserConfigCurrent}
+          />
 
           {/* Portfolio Stats - Compact */}
           {userConfigCurrent && portfolioStats && !isLoadingTokenPrice && (
-            <div className='bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-4 mb-6'>
-              <div className='flex flex-wrap items-center justify-between gap-4'>
-                <div>
-                  {' '}
-                  <h2 className='text-xl font-bold text-white'>Portfolio</h2>
-                  <span className='  text-white'>
-                    Price {userConfigCurrent.tokenInput} now:{' '}
-                    {BigNumber(dataTokenPrice?.price || '0')
-                      .decimalPlaces(4)
-                      .toFormat()}{' '}
-                    <span className={`${portfolioStats.ratioPriceChange > 0 ? 'text-green-500' : 'text-red-600'} text-sm`}>
-                      {portfolioStats.ratioPriceChange}%
-                    </span>
-                  </span>
-                </div>
-
-                <div className='flex flex-wrap gap-4 text-sm'>
-                  <div className='text-center'>
-                    <div className='text-gray-400 text-xs'>Initial Capital</div>
-                    <div className='text-white font-bold'>${BigNumber(portfolioStats.initialCapital).decimalPlaces(4).toFormat()}</div>
-                  </div>
-
-                  <div className='text-center'>
-                    <div className='text-gray-400 text-xs'>USD Buy</div>
-                    <div className='text-white font-bold'>${BigNumber(portfolioStats.totalPortfolioValue).decimalPlaces(4).toFormat()}</div>
-                  </div>
-                  <div className='text-center'>
-                    <div className='text-gray-400 text-xs'>P&L</div>
-                    <div className={`font-bold ${portfolioStats.profitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {portfolioStats.profitLossPercentage >= 0 ? '+' : ''}
-                      {portfolioStats.profitLossPercentage.toFixed(4)}%
-                    </div>
-                  </div>
-                  {portfolioStats.avgPrice > 0 && (
-                    <div className='text-center'>
-                      <div className='text-gray-400 text-xs'>Avg Price</div>
-                      <div className='text-white font-bold'>${BigNumber(portfolioStats.avgPrice).decimalPlaces(4).toFormat()}</div>
-                    </div>
-                  )}
-                  <div className='text-center'>
-                    <div className='text-gray-400 text-xs'>Slippage</div>
-                    <div className='text-white font-bold'>{portfolioStats.slippageTolerance}%</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <PortfolioStats portfolioStats={portfolioStats} priceNow={dataTokenPrice?.price} userConfigCurrent={userConfigCurrent} />
           )}
 
           {/* Table */}
