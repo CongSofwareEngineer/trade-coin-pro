@@ -6,6 +6,8 @@ import { UserConfig } from './type'
 import Header from './components/Header'
 import MarketTrend from './components/MarketTrend'
 import MarketMvrv from './components/MarketMvrv'
+import MarketCycleHigh from './components/MarketCycleHigh'
+import MarketFearGreed from './components/MarketFearGreed'
 import PortfolioStats from './components/PortfolioStats'
 
 import useUserConfig from '@/hooks/tank-query/useUserConfig'
@@ -235,6 +237,12 @@ function TradeInfoPage() {
 
           {/* MVRV BTC */}
           <MarketMvrv />
+
+          {/* Đỉnh chu kỳ 4 năm (BTC, nến tuần 200) */}
+          <MarketCycleHigh />
+
+          {/* Fear & Greed Index */}
+          <MarketFearGreed />
 
           {/* Header */}
           <Header

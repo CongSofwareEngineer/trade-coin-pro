@@ -116,7 +116,7 @@ const MarketMvrv = () => {
 
             <div className='mt-3 text-xs text-gray-400'>
               {MVRV_ZONES.map((item) => (
-                <div key={item.key}>
+                <div key={item.key} className='mb-1'>
                   {item.icon} {item.key} — {item.max === Infinity ? `> ${MVRV_ZONES[MVRV_ZONES.length - 2].max}` : `< ${item.max}`}
                 </div>
               ))}

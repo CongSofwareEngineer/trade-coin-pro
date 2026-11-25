@@ -22,7 +22,7 @@ const getData = async ({ queryKey }: { queryKey: any }): Promise<MA200Info | nul
   if (!symbol) return null
 
   try {
-    const res = await fetcher({ url: `${BINANCE_ENDPOINT.Klines}?symbol=${symbol}&interval=${interval}&limit=${MA_PERIOD}` })
+    const res = await fetcher({ url: `${BINANCE_ENDPOINT.KlinesProxy}?symbol=${symbol}&interval=${interval}&limit=${MA_PERIOD}` })
     const klines: any[] = res?.data || []
 
     if (klines.length === 0) return null

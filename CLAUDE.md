@@ -173,6 +173,9 @@ Path alias: `@/*` → repo root (`tsconfig.json`). There is no `src/`.
 - The DCA bot backend is the Koyeb host hard-coded in `hooks/tank-query/*`
   (`https://exuberant-jade-diencong-6e4aa722.koyeb.app`, endpoints `/dca/all`, `/dca/price`, `/user-dca/all`).
   There is no API base-URL config yet; if you add one, put it in `configs/app.ts` and update all three hooks.
+- Binance klines are proxied through `app/api/klines/route.ts` — the browser calls `/api/klines`
+  (`BINANCE_ENDPOINT.KlinesProxy`), never `api.binance.com` (CORS). `BINANCE_ENDPOINT.Klines` is server-side only.
+  The DCA bot host (`DCA_BOT_API_URL`, Koyeb) is **not** proxied — it has no CORS problem, keep the direct calls.
 - CoinMarketCap-style price history is proxied through `app/api/token/[...params]/route.ts` to Binance's public
   `bapi/composite/...` endpoint — the browser must call `/api/token/...`, never the upstream directly.
 - Env vars: typed in `environment.d.ts` (`NEXT_PUBLIC_APP_ENV`, `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_URL`,
@@ -235,6 +238,8 @@ Path alias: `@/*` → repo root (`tsconfig.json`). There is no `src/`.
 |---|---|
 | `/trade-info` MA200 market trend panel + header components | `docs/logs/logTradeInfoMarketTrend.md` |
 | `/trade-info` MVRV panel (`/api/mvrv` proxy + cache 30') | `docs/logs/logTradeInfoMvrv.md` |
+| `/trade-info` đỉnh chu kỳ 4 năm BTC (200 nến tuần, `/api/klines`) | `docs/logs/logTradeInfoCycleHigh.md` |
+| `/trade-info` Fear & Greed panel (`/api/fear-greed` proxy) | `docs/logs/logTradeInfoFearGreed.md` |
 
 ## 10. Logic Changelog (required)
 

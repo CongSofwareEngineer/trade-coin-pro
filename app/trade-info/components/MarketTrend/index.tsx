@@ -27,12 +27,14 @@ const MaCard = ({ title, subTitle, data }: { title: string; subTitle: string; da
   }
 
   const isUp = data.isUpTrend
+  const textClass = isUp ? 'text-green-400' : 'text-red-400'
+  const cardClass = isUp ? 'bg-green-900/20 border-green-700' : 'bg-red-900/20 border-red-700'
 
   return (
-    <div className='flex-1 min-w-[220px] bg-gray-700/40 rounded-lg border border-gray-600 p-4'>
+    <div className={`flex-1 min-w-[220px] rounded-lg border p-4 ${cardClass}`}>
       <div className='flex items-center justify-between gap-2'>
         <div>
-          <div className='text-sm font-semibold text-white'>{title}</div>
+          <div className={`text-sm font-semibold ${textClass}`}>{title}</div>
           <div className='text-xs text-gray-400'>{subTitle}</div>
         </div>
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${isUp ? 'bg-green-600 text-green-100' : 'bg-red-600 text-red-100'}`}>
@@ -43,15 +45,15 @@ const MaCard = ({ title, subTitle, data }: { title: string; subTitle: string; da
       <div className='mt-3 flex flex-wrap gap-4 text-sm'>
         <div>
           <div className='text-gray-400 text-xs'>MA{MA_PERIOD}</div>
-          <div className='text-white font-bold'>{formatPrice(data.ma200)}</div>
+          <div className='text-yellow-400 font-bold'>{formatPrice(data.ma200)}</div>
         </div>
         <div>
           <div className='text-gray-400 text-xs'>Close</div>
-          <div className='text-white font-bold'>{formatPrice(data.lastClose)}</div>
+          <div className={`font-bold ${textClass}`}>{formatPrice(data.lastClose)}</div>
         </div>
         <div>
           <div className='text-gray-400 text-xs'>vs MA{MA_PERIOD}</div>
-          <div className={`font-bold ${isUp ? 'text-green-400' : 'text-red-400'}`}>
+          <div className={`font-bold ${textClass}`}>
             {data.diffPercent > 0 ? '+' : ''}
             {data.diffPercent}%
           </div>
@@ -86,7 +88,7 @@ const MarketTrend = ({ tokenInput }: Props) => {
     <div className='bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-4 mb-6'>
       <div className='flex flex-wrap items-center justify-between gap-3 mb-3'>
         <div>
-          <h2 className='text-xl font-bold text-white'>
+          <h2 className={`text-xl font-bold ${trend?.className || 'text-white'}`}>
             Market Trend MA{MA_PERIOD} <span className='text-sm text-gray-400'>({symbol})</span>
           </h2>
           {trend && <div className={`text-sm font-semibold ${trend.className}`}>{trend.label}</div>}

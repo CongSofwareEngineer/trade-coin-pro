@@ -4,4 +4,6 @@ export const QUERY_KEY = {
   TokenPrice: 'TokenPrice',
   MA200: 'MA200',
   Mvrv: 'Mvrv',
+  CycleHigh: 'CycleHigh',
+  FearGreed: 'FearGreed',
 }
