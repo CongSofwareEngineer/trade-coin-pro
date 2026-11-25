@@ -1,6 +1,7 @@
 # Changelog — API Proxy
 
 ## 2026-11-25
++ Fix: Bybit cũng chặn IP US nên fallback vô nghĩa, cả 3 proxy chết trên prod → `preferredRegion = 'sin1'`, function chạy ở Singapore (klines/route.ts, funding-rate/route.ts, open-interest/route.ts)
 + Fix deploy Vercel: Binance chặn IP US trả 451 → `/api/klines` fallback sang Bybit, response thêm `source` (app/api/klines/route.ts)
 + Thêm `BybitApi.getKlines / getFundingRate / getOpenInterest` làm nguồn dự phòng; Bybit trả mới nhất trước → luôn `reverse()` (utils/bybit/index.ts)
 + Kline Bybit cùng layout index `0..5` với Binance nên `useMA200` / `useCycleHigh` không đổi (utils/bybit/index.ts)

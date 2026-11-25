@@ -5,6 +5,9 @@ import { OPEN_INTEREST_ENDPOINT } from '@/constants/api'
 import BybitApi from '@/utils/bybit'
 import fetcher from '@/configs/fetcher'
 
+// Binance + Bybit chặn IP datacenter US (Vercel mặc định iad1 → 451/403) → chạy function ở Singapore
+export const preferredRegion = 'sin1'
+
 // Proxy Open Interest Binance Futures: browser không gọi fapi.binance.com trực tiếp (CORS)
 const getFromBinance = async (symbol: string, period: string, limit: number) => {
   const [resNow, resHistory, resLongShort] = await Promise.all([
