@@ -240,6 +240,7 @@ Path alias: `@/*` → repo root (`tsconfig.json`). There is no `src/`.
 | `/trade-info` MVRV panel (`/api/mvrv` proxy + cache 30') | `docs/logs/logTradeInfoMvrv.md` |
 | `/trade-info` đỉnh chu kỳ 4 năm BTC (200 nến tuần, `/api/klines`) | `docs/logs/logTradeInfoCycleHigh.md` |
 | `/trade-info` Fear & Greed panel (`/api/fear-greed` proxy) | `docs/logs/logTradeInfoFearGreed.md` |
+| `/trade-info` Funding Rate / Open Interest / ví mới + fallback Bybit | `docs/logs/logTradeInfoDerivatives.md` |
 
 ## 10. Logic Changelog (required)
 

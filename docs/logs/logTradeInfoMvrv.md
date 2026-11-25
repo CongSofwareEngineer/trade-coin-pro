@@ -66,3 +66,12 @@
 | `LOCAL_STORE_KEY.MvrvData` | `'MvrvData'` | `constants/storage.ts` |
 | `QUERY_KEY.Mvrv` | `'Mvrv'` | `constants/reactQuery.ts` |
 | `MVRV_MAX_SCALE` | `4` (chỉ để vẽ thanh scale) | `components/MarketMvrv/index.tsx` |
+
+## Chart 90 Ngày (bổ sung 2026-11-25)
+- `GET /api/mvrv?days=90` trả thêm `history: { date, mvrv, timestamp }[]` (tăng dần theo thời gian) từ CoinMetrics
+  `page_size=MVRV_HISTORY_DAYS`, `paging_from=end`.
+- History đã chứa record mới nhất → route lấy luôn làm `now`, không gọi thêm endpoint `page_size=1`.
+- `useMVRV` tính thêm `high` / `low` / `changeDay` / `changeWeek`; cache localStorage cũ thiếu `history`
+  bị coi là hết hạn nên chart xuất hiện ngay lần load đầu sau khi update.
+- Panel render `LineChart` full width dưới 2 card, dải màu theo `MVRV_ZONES`, grid tại `1 / 1.5 / 2.4 / 3.5`.
+- Nguồn dự phòng BGeometrics chỉ trả giá trị cuối → `history` rỗng, chart ẩn và hiện dòng giải thích.

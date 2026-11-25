@@ -6,4 +6,7 @@ export const QUERY_KEY = {
   Mvrv: 'Mvrv',
   CycleHigh: 'CycleHigh',
   FearGreed: 'FearGreed',
+  FundingRate: 'FundingRate',
+  NewWallet: 'NewWallet',
+  OpenInterest: 'OpenInterest',
 }

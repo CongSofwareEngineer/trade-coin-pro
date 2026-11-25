@@ -8,6 +8,9 @@ import MarketTrend from './components/MarketTrend'
 import MarketMvrv from './components/MarketMvrv'
 import MarketCycleHigh from './components/MarketCycleHigh'
 import MarketFearGreed from './components/MarketFearGreed'
+import MarketFundingRate from './components/MarketFundingRate'
+import MarketOpenInterest from './components/MarketOpenInterest'
+import MarketNewWallet from './components/MarketNewWallet'
 import PortfolioStats from './components/PortfolioStats'
 
 import useUserConfig from '@/hooks/tank-query/useUserConfig'
@@ -243,6 +246,15 @@ function TradeInfoPage() {
 
           {/* Fear & Greed Index */}
           <MarketFearGreed />
+
+          {/* Funding Rate perp */}
+          <MarketFundingRate />
+
+          {/* Open Interest perp */}
+          <MarketOpenInterest />
+
+          {/* Ví mới hoạt động (unique addresses / ngày) */}
+          <MarketNewWallet />
 
           {/* Header */}
           <Header

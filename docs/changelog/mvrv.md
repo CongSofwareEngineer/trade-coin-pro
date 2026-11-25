@@ -1,6 +1,12 @@
 # Changelog — MVRV
 
 ## 2026-11-25
++ `/api/mvrv?days=90` trả thêm `history` từ CoinMetrics → panel vẽ chart 90 ngày (app/api/mvrv/route.ts)
++ History đã có record cuối → bỏ call `page_size=1`, tiết kiệm 1 request/lần (route.ts)
++ `useMVRV` thêm `history`, `high`, `low`, `changeDay`, `changeWeek` (useMVRV.ts)
++ Cache localStorage cũ không có `history` → coi như hết hạn, tránh chart rỗng sau khi update (useMVRV.ts)
++ Thêm `MVRV_HISTORY_DAYS = 90`, `MVRV_ENDPOINT.CoinMetricsHistory` (app.ts, api.ts)
++ Fallback BGeometrics chỉ có giá trị cuối → chart ẩn, hiện dòng báo thay vì lỗi (MarketMvrv/index.tsx)
 + Thêm API proxy `GET /api/mvrv`: CoinMetrics (chính) → BGeometrics (dự phòng), trả `{ date, mvrv, source }`, cả 2 fail → `status: 500` (app/api/mvrv/route.ts)
 + Gọi qua server để tránh CORS, browser chỉ call `/api/mvrv` (route.ts)
 + Thêm hook `useMVRV()`: đọc cache localStorage trước, chỉ fetch lại khi cache > 30 phút (chống rate limit) (useMVRV.ts)

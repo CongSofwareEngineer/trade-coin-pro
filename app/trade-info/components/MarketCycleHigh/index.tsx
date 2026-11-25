@@ -90,7 +90,7 @@ const MarketCycleHigh = ({ tokenInput }: Props) => {
               </div>
               <div>
                 <div className='text-gray-400 text-xs'>So với đỉnh</div>
-                <div className={`font-bold ${data.fromHighPercent < 0 ? 'text-red-400' : 'text-green-400'}`}>
+                <div className={`font-bold ${data.fromHighPercent < 0 ? '!text-red-400' : '!text-green-400'}`}>
                   {data.fromHighPercent > 0 ? '+' : ''}
                   {data.fromHighPercent}%
                 </div>
