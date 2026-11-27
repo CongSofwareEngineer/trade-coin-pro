@@ -8,7 +8,6 @@ interface EnvironmentVariables {
   readonly GOOGLE_SERVICE_ACCOUNT_EMAIL: string
   readonly GOOGLE_PRIVATE_KEY: string
   readonly GOOGLE_ECONOMY_SHEET_ID: string
-  readonly GOOGLE_SHEETS_ID: string
   readonly GOOGLE_ECONOMY_DOC_ID: string
 }
 

@@ -1,6 +1,7 @@
 # Changelog — Economy
 
 ## 2026-11-27
++ Fix: sheet Thảo luận đọc nhầm `GOOGLE_SHEETS_ID` (sheet log chat) → bỏ fallback đó, chỉ `GOOGLE_ECONOMY_SHEET_ID` || `16YKbi…`, khớp source `hodiencong-info` (constants/economy.ts)
 + Fix: `GOOGLE_PRIVATE_KEY` bị bọc dấu `"` (Vercel không tự bỏ) → `crypto.sign` báo `DECODER routines::unsupported`; nay strip nháy + `\n` literal + ép newline cuối (services/Google/auth.ts)
 + Sheet ID đọc thêm `GOOGLE_SHEETS_ID` ngoài `GOOGLE_ECONOMY_SHEET_ID`, khớp tên env đang dùng (constants/economy.ts)
 + Thêm trang `/economy` 2 tab Thảo luận / Kiến thức, port logic từ source `hodiencong-info` (app/economy/*)
