@@ -9,4 +9,6 @@ export const QUERY_KEY = {
   FundingRate: 'FundingRate',
   NewWallet: 'NewWallet',
   OpenInterest: 'OpenInterest',
+  EconomyDiscussion: 'EconomyDiscussion',
+  EconomyKnowledge: 'EconomyKnowledge',
 }

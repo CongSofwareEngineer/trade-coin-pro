@@ -67,3 +67,6 @@ export const isSameSymbol = (symbolA?: string, symbolB?: string) => {
 
   return isSymbolETHOrBTC(a, 'btc') && isSymbolETHOrBTC(b, 'btc')
 }
+
+//gộp class tailwind, bỏ các nhánh false/undefined. Không dùng lib ngoài
+export const cn = (...classes: any[]) => classes.filter(Boolean).join(' ')

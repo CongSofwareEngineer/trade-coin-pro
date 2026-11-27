@@ -77,3 +77,6 @@ export const LONG_SHORT_ZONES = [
 export const NEW_WALLET_LIMIT = 90
 
 export const NEW_WALLET_CACHE_TIME = 30 * 60 * 1000
+
+//mốc đổi bảng sang list trên mobile
+export const BREAKPOINT_MOBILE = 1024

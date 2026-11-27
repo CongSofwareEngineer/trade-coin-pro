@@ -66,6 +66,7 @@ Path alias: `@/*` → repo root (`tsconfig.json`). There is no `src/`.
 | `/get-histories` | `app/get-histories/page.tsx` | Pull historical prices through `/api/token/*` |
 | `/uni` | `app/uni/page.tsx` + `client.tsx` | Uniswap v4 pool state / quotes on Base (client-only gate) |
 | `/secure` | `app/secure/page.tsx` | Encrypt / decrypt helper UI on top of `/api/secure/*` |
+| `/economy` | `app/economy/page.tsx` | Kinh tế: tab Thảo luận (Google Sheets) + Kiến thức (Google Docs) qua `/api/economy/*` |
 
 ### Reference Implementations (copy these shapes)
 
@@ -241,6 +242,7 @@ Path alias: `@/*` → repo root (`tsconfig.json`). There is no `src/`.
 | `/trade-info` đỉnh chu kỳ 4 năm BTC (200 nến tuần, `/api/klines`) | `docs/logs/logTradeInfoCycleHigh.md` |
 | `/trade-info` Fear & Greed panel (`/api/fear-greed` proxy) | `docs/logs/logTradeInfoFearGreed.md` |
 | `/trade-info` Funding Rate / Open Interest / ví mới + fallback Bybit | `docs/logs/logTradeInfoDerivatives.md` |
+| `/economy` Thảo luận (Google Sheets) + Kiến thức (Google Docs) | `docs/logs/logEconomy.md` |
 
 ## 10. Logic Changelog (required)
 
