@@ -13,7 +13,8 @@ export const GOOGLE_TOKEN_TTL = 3600 as number
 export const ECONOMY_SHEET_ID = '16YKbiF1WxbvjU5eH5vwFQibWGRHiZMMHNB7SSWWDX9I' as const
 export const ECONOMY_DOC_ID = '1A9TQPmELQS0mBDN9kUT7uUstGQCcbbIhYLWCCih9Pa8' as const
 
-export const getEconomySheetId = () => process.env.GOOGLE_ECONOMY_SHEET_ID || ECONOMY_SHEET_ID
+//GOOGLE_SHEETS_ID là tên đang dùng trong .env.local, giữ cả 2 cho khỏi lệch
+export const getEconomySheetId = () => process.env.GOOGLE_ECONOMY_SHEET_ID || process.env.GOOGLE_SHEETS_ID || ECONOMY_SHEET_ID
 export const getEconomyDocId = () => process.env.GOOGLE_ECONOMY_DOC_ID || ECONOMY_DOC_ID
 
 export const getEconomySheetUrl = () => `https://docs.google.com/spreadsheets/d/${getEconomySheetId()}/edit`

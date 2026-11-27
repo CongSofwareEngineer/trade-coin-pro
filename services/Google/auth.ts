@@ -9,8 +9,24 @@ export const isGoogleConfigured = () => Boolean(process.env.GOOGLE_SERVICE_ACCOU
 
 const base64url = (input: Buffer | string) => Buffer.from(input).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 
-// Hosting env vars usually store line breaks as a literal "\n"
-const readPrivateKey = () => (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n')
+/**
+ * Chuẩn hoá PEM lấy từ env. Vercel / docker giữ nguyên cặp nháy khi paste cả dòng
+ * `GOOGLE_PRIVATE_KEY="-----BEGIN...\n"`, và newline thường bị lưu thành "\n" literal,
+ * cả 2 làm OpenSSL báo `DECODER routines::unsupported`.
+ */
+const readPrivateKey = () => {
+  const raw = (process.env.GOOGLE_PRIVATE_KEY || '').trim()
+
+  // Bỏ cặp nháy bọc ngoài nếu có
+  const unquoted = raw.replace(/^(['"])([\s\S]*)\1$/, '$2')
+
+  const key = unquoted.replace(/\\n/g, '\n').trim()
+
+  if (!key.includes('-----BEGIN')) throw new Error('GOOGLE_PRIVATE_KEY không phải PEM, thiếu dòng -----BEGIN PRIVATE KEY-----')
+
+  // PEM phải kết thúc bằng newline, không có thì OpenSSL parse lỗi
+  return key.endsWith('\n') ? key : `${key}\n`
+}
 
 /** Service account JWT, RS256 signed. Replaces google-auth-library so no new dependency is needed. */
 const buildAssertion = () => {
