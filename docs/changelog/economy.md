@@ -11,3 +11,5 @@
 + Thêm `QUERY_KEY.EconomyDiscussion` / `EconomyKnowledge`, hook staleTime 30s, `refetchOnWindowFocus: false` (useEconomy.ts)
 + Thay `useMutation` + toast store bằng handler async + `isPending` + lỗi inline, theo convention repo (DiscussionForm.tsx, KnowledgeForm.tsx, ConfirmDelete.tsx)
 + Thêm `cn()` gộp class (utils/functions/index.ts) và `useMedia` đổi bảng → list dưới 1024px (hooks/useMedia.ts)
++ Copy `useModal` + store zustand `modal` / `drawer` + `MyModal` / `MyDrawer` từ source gốc thay modal tự dựng; desktop ra modal, mobile ra drawer `bottom` (useModal.ts, zustand/modal.ts, zustand/drawer.ts)
++ `MyModal` / `MyDrawer` mount 1 lần qua `ClientRender` trong layout, thêm dep `zustand` (app/layout.tsx, components/ClientRender)

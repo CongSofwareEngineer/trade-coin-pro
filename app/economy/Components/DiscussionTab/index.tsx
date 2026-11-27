@@ -5,31 +5,30 @@ import ConfirmDelete from '../ConfirmDelete'
 import DiscussionForm from '../DiscussionForm'
 import DiscussionList from '../DiscussionList'
 import DiscussionTable from '../DiscussionTable'
-import { SearchIcon } from '../Icons'
-import Modal from '../Modal'
 import Pagination from '../Pagination'
 import { EmptyState, ErrorState, LoadingState, NoticeState } from '../StateView'
 
+import { SearchIcon } from '@/components/Icons'
+import { BREAKPOINT_MOBILE } from '@/constants/app'
 import { ECONOMY_PAGE_SIZE } from '@/constants/economy'
 import { useEconomyDiscussions } from '@/hooks/tank-query/useEconomy'
 import useMedia from '@/hooks/useMedia'
+import useModal from '@/hooks/useModal'
 import EconomyApi from '@/services/EconomyApi'
 import { DiscussionItem } from '@/types/economy'
 import { collectTags, hasTag, headlineOf, matchesKeyword } from '@/utils/economy'
 import { cn } from '@/utils/functions'
 
 const DiscussionTab = () => {
+  const { openModal, closeModal } = useModal()
   // Columns do not fit a phone, so below this width the records stack instead
-  const { isMobile } = useMedia()
+  const { isMobile } = useMedia(BREAKPOINT_MOBILE)
   const { data, isLoading, isFetching, isError, error, refetch } = useEconomyDiscussions()
 
   const [keyword, setKeyword] = useState('')
   const [tag, setTag] = useState('')
   const [page, setPage] = useState(1)
   const [expandedRows, setExpandedRows] = useState<number[]>([])
-  const [formItem, setFormItem] = useState<DiscussionItem | null>(null)
-  const [isFormOpen, setIsFormOpen] = useState(false)
-  const [deleteItem, setDeleteItem] = useState<DiscussionItem | null>(null)
 
   const fields = useMemo(() => data?.fields || [], [data?.fields])
   const items = useMemo(() => data?.items || [], [data?.items])
@@ -55,15 +54,28 @@ const DiscussionTab = () => {
 
   const pageItems = useMemo(() => filtered.slice((page - 1) * ECONOMY_PAGE_SIZE, page * ECONOMY_PAGE_SIZE), [filtered, page])
 
-  const openForm = (item?: DiscussionItem) => {
-    setFormItem(item || null)
-    setIsFormOpen(true)
-  }
+  // The modal store keeps the element it was opened with, so each form owns its own
+  // submitting state and closes the modal itself once the write went through.
+  const openForm = (item?: DiscussionItem) =>
+    openModal({
+      title: item ? 'Sửa chủ đề' : 'Chủ đề mới',
+      classNames: { container: 'md:w-[640px]' },
+      children: <DiscussionForm fields={fields} item={item} refetch={refetch} onCancel={() => closeModal()} onSuccess={() => closeModal()} />,
+    })
 
-  const closeForm = () => {
-    setIsFormOpen(false)
-    setFormItem(null)
-  }
+  const openDelete = (item: DiscussionItem) =>
+    openModal({
+      title: 'Xác nhận xoá',
+      children: (
+        <ConfirmDelete
+          refetch={refetch}
+          subject={headlineOf(fields, item)}
+          onCancel={() => closeModal()}
+          onConfirm={() => EconomyApi.deleteDiscussion(item.row)}
+          onSuccess={() => closeModal()}
+        />
+      ),
+    })
 
   const toggleRow = (row: number) =>
     setExpandedRows((previous) => (previous.includes(row) ? previous.filter((item) => item !== row) : [...previous, row]))
@@ -180,7 +192,7 @@ const DiscussionTab = () => {
                 canWrite={canWrite}
                 fields={fields}
                 items={pageItems}
-                onDelete={setDeleteItem}
+                onDelete={openDelete}
                 onEdit={openForm}
                 onTagClick={setTag}
               />
@@ -191,7 +203,7 @@ const DiscussionTab = () => {
                 expandedRows={expandedRows}
                 fields={fields}
                 items={pageItems}
-                onDelete={setDeleteItem}
+                onDelete={openDelete}
                 onEdit={openForm}
                 onTagClick={setTag}
                 onToggleRow={toggleRow}
@@ -219,24 +231,6 @@ const DiscussionTab = () => {
       )}
 
       {renderBody()}
-
-      {isFormOpen && (
-        <Modal title={formItem ? 'Sửa chủ đề' : 'Chủ đề mới'} onClose={closeForm}>
-          <DiscussionForm fields={fields} item={formItem || undefined} refetch={refetch} onCancel={closeForm} onSuccess={closeForm} />
-        </Modal>
-      )}
-
-      {deleteItem && (
-        <Modal className='max-w-md' title='Xác nhận xoá' onClose={() => setDeleteItem(null)}>
-          <ConfirmDelete
-            refetch={refetch}
-            subject={headlineOf(fields, deleteItem)}
-            onCancel={() => setDeleteItem(null)}
-            onConfirm={() => EconomyApi.deleteDiscussion(deleteItem.row)}
-            onSuccess={() => setDeleteItem(null)}
-          />
-        </Modal>
-      )}
     </section>
   )
 }

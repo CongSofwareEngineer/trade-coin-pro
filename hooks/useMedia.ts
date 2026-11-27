@@ -1,24 +1,30 @@
-'use client'
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 
-import { BREAKPOINT_MOBILE } from '@/constants/app'
+const useMedia = (maxWidth = 768) => {
+  const [isMobile, setIsMobile] = useState(true)
 
-//bảng của /economy không vừa màn hình hẹp, dưới mốc này đổi sang dạng list
-const useMedia = (breakpoint: number = BREAKPOINT_MOBILE) => {
-  const [isMobile, setIsMobile] = useState(false)
+  useLayoutEffect(() => {
+    let mounted = true
+    const mql = window.matchMedia(`(max-width: ${maxWidth}px)`)
+    const onChange = () => {
+      if (!mounted) {
+        return
+      }
+      setIsMobile(!!mql.matches)
+    }
 
-  useEffect(() => {
-    const query = window.matchMedia(`(max-width: ${breakpoint - 1}px)`)
+    mql.addEventListener('change', onChange)
+    setIsMobile(mql.matches)
 
-    const update = () => setIsMobile(query.matches)
+    return () => {
+      mounted = false
+      mql.removeEventListener('change', onChange)
+    }
+  }, [maxWidth])
 
-    update()
-    query.addEventListener('change', update)
-
-    return () => query.removeEventListener('change', update)
-  }, [breakpoint])
-
-  return { isMobile }
+  return {
+    isMobile: isMobile || false,
+  }
 }
 
 export default useMedia

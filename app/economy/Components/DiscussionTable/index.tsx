@@ -1,7 +1,7 @@
 'use client'
 import FieldValue from '../FieldValue'
-import { EditIcon } from '../Icons'
 
+import { EditIcon } from '@/components/Icons'
 import { DiscussionField, DiscussionItem } from '@/types/economy'
 import { cn } from '@/utils/functions'
 

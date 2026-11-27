@@ -1,8 +1,9 @@
 # Log — `/economy` (Thảo luận + Kiến thức)
 
 Trang Kinh tế: 2 tab đọc / ghi trực tiếp vào 1 Google Sheet (thảo luận) và 1 Google Doc (kiến thức), qua proxy
-`/api/economy/*`. Logic + nội dung port từ source `hodiencong-info`, UI viết lại theo style `trade-coin-pro`
-(Tailwind inline, dark `bg-gray-900/800`, không daisyUI, không i18n, không toast store).
+`/api/economy/*`. Logic + nội dung port từ source `hodiencong-info`, kèm nguyên bộ `useModal` + 2 store zustand
+(`modal`, `drawer`) + `MyModal` / `MyDrawer`. UI theo style `trade-coin-pro` (Tailwind inline, dark
+`bg-gray-900/800`, không daisyUI, không i18n, không toast store).
 
 ## Route And Entry Points
 
@@ -23,7 +24,9 @@ Trang Kinh tế: 2 tab đọc / ghi trực tiếp vào 1 Google Sheet (thảo lu
 | 1 ô theo role cột | `app/economy/Components/FieldValue/index.tsx` |
 | Render block Google Docs | `app/economy/Components/DocBlocks/index.tsx` |
 | Form thêm / sửa | `app/economy/Components/DiscussionForm`, `KnowledgeForm` |
-| Modal / confirm / state / pagination / icons | `app/economy/Components/{Modal,ConfirmDelete,StateView,Pagination,Icons}` |
+| Confirm / state / pagination | `app/economy/Components/{ConfirmDelete,StateView,Pagination}` |
+| Modal / drawer dùng chung | `hooks/useModal.ts`, `zustand/modal.ts`, `zustand/drawer.ts`, `components/MyModal`, `components/MyDrawer`, `components/ClientRender`, `constants/zustand.ts` |
+| Icons dùng chung | `components/Icons/index.tsx` (`CloseIcon`, `SearchIcon`, `EditIcon`) |
 | React Query hooks | `hooks/tank-query/useEconomy.ts` |
 | Client API wrapper | `services/EconomyApi/index.ts` |
 | Google auth (JWT RS256, `node:crypto`) | `services/Google/auth.ts` |
@@ -38,10 +41,13 @@ Trang Kinh tế: 2 tab đọc / ghi trực tiếp vào 1 Google Sheet (thảo lu
 ## State And Flow
 
 - Tab active: `useState` trong `app/economy/page.tsx` (không đẩy lên URL như bên source cũ).
-- Tab thảo luận: `keyword`, `tag`, `page`, `expandedRows`, `formItem`/`isFormOpen`, `deleteItem`.
-- Tab kiến thức: `keyword`, `activeId` (mục lục), `formSection`/`isFormOpen`, `deleteSection`.
-- Form giữ pending state riêng (`isPending`) và báo lỗi inline; ghi xong gọi `refetch()` rồi tự đóng modal.
-- `useMedia(1024)`: dưới 1024px bảng đổi sang list dọc.
+- Tab thảo luận: `keyword`, `tag`, `page`, `expandedRows`.
+- Tab kiến thức: `keyword`, `activeId` (mục lục).
+- Form / confirm mở qua `useModal().openModal({ title, classNames, children })`; store giữ đúng element lúc mở nên
+  mỗi form tự giữ pending state (`isPending`), báo lỗi inline, ghi xong `refetch()` rồi `closeModal()`.
+- `useModal` tự chọn: desktop → `MyModal`, mobile (`useMedia()` mặc định 768px) → `MyDrawer` placement `bottom`.
+  `MyModal` / `MyDrawer` mount 1 lần trong `components/ClientRender` ở `app/layout.tsx`.
+- `useMedia(BREAKPOINT_MOBILE)` trong tab thảo luận: dưới 1024px bảng đổi sang list dọc.
 
 ## APIs
 
@@ -100,6 +106,9 @@ Proxy giữ service account key ở server; mọi request đi qua `guardApi` (al
 `ECONOMY_MAX_CELL_LENGTH`, `ECONOMY_MAX_DOC_TEXT_LENGTH`, `ECONOMY_MAX_TITLE_LENGTH`, `ECONOMY_DEFAULT_HEADERS`,
 `ECONOMY_FIELD_ROLES`, `ECONOMY_AUTO_DATE_PATTERN`, `ECONOMY_PAGE_SIZE` (15), `ECONOMY_LONG_TEXT_LENGTH` (80),
 `ECONOMY_WORDS_PER_MINUTE` (200), `ECONOMY_STATUS_TONE`, `ECONOMY_TAB`.
+
+`constants/zustand.ts`: `ZUSTAND.Modal`, `ZUSTAND.Drawer`. `constants/app.ts`: `BREAKPOINT_MOBILE` (1024).
+`app/globals.css`: `--animate-zoom` + keyframes `zoom` cho `MyModal`.
 
 Env (server only): `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`, tuỳ chọn `GOOGLE_ECONOMY_SHEET_ID`,
 `GOOGLE_ECONOMY_DOC_ID`. Phải share cả 2 file Google cho email service account với quyền Editor.

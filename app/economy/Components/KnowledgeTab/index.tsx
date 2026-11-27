@@ -3,13 +3,13 @@ import { useMemo, useState } from 'react'
 
 import ConfirmDelete from '../ConfirmDelete'
 import DocBlocks from '../DocBlocks'
-import { EditIcon, SearchIcon } from '../Icons'
 import KnowledgeForm from '../KnowledgeForm'
-import Modal from '../Modal'
 import { EmptyState, ErrorState, LoadingState, NoticeState } from '../StateView'
 
+import { EditIcon, SearchIcon } from '@/components/Icons'
 import { ECONOMY_WORDS_PER_MINUTE } from '@/constants/economy'
 import { useEconomyKnowledge } from '@/hooks/tank-query/useEconomy'
+import useModal from '@/hooks/useModal'
 import EconomyApi from '@/services/EconomyApi'
 import { DocBlock, KnowledgeSection } from '@/types/economy'
 import { cn } from '@/utils/functions'
@@ -24,13 +24,11 @@ const countWords = (blocks: DocBlock[]): number =>
   }, 0)
 
 const KnowledgeTab = () => {
+  const { openModal, closeModal } = useModal()
   const { data, isLoading, isFetching, isError, error, refetch } = useEconomyKnowledge()
 
   const [keyword, setKeyword] = useState('')
   const [activeId, setActiveId] = useState('')
-  const [formSection, setFormSection] = useState<KnowledgeSection | null>(null)
-  const [isFormOpen, setIsFormOpen] = useState(false)
-  const [deleteSection, setDeleteSection] = useState<KnowledgeSection | null>(null)
 
   const sections = useMemo(() => data?.sections || [], [data?.sections])
   const canWrite = Boolean(data?.canWrite)
@@ -49,16 +47,36 @@ const KnowledgeTab = () => {
     return Math.max(1, Math.round(words / ECONOMY_WORDS_PER_MINUTE))
   }, [data?.intro, sections])
 
-  // The revision captured when the form opens is exactly what the user saw
-  const openForm = (section?: KnowledgeSection) => {
-    setFormSection(section || null)
-    setIsFormOpen(true)
-  }
+  // Each form owns its submitting state: the modal store never re-renders the element
+  // it was opened with, and the revision captured here is exactly what the user saw.
+  const openForm = (section?: KnowledgeSection) =>
+    openModal({
+      title: section ? 'Sửa mục kiến thức' : 'Mục kiến thức mới',
+      classNames: { container: 'md:w-[640px]' },
+      children: (
+        <KnowledgeForm
+          refetch={refetch}
+          revisionId={data?.revisionId}
+          section={section}
+          onCancel={() => closeModal()}
+          onSuccess={() => closeModal()}
+        />
+      ),
+    })
 
-  const closeForm = () => {
-    setIsFormOpen(false)
-    setFormSection(null)
-  }
+  const openDelete = (section: KnowledgeSection) =>
+    openModal({
+      title: 'Xác nhận xoá',
+      children: (
+        <ConfirmDelete
+          refetch={refetch}
+          subject={section.title}
+          onCancel={() => closeModal()}
+          onConfirm={() => EconomyApi.deleteSection({ startIndex: section.startIndex, endIndex: section.endIndex, revisionId: data?.revisionId })}
+          onSuccess={() => closeModal()}
+        />
+      ),
+    })
 
   const scrollTo = (id: string) => {
     setActiveId(id)
@@ -111,7 +129,7 @@ const KnowledgeTab = () => {
               <button
                 className='px-3 py-1.5 bg-gray-700 hover:bg-red-600 border border-gray-600 rounded-lg text-[11px] uppercase text-gray-300 transition-colors'
                 type='button'
-                onClick={() => setDeleteSection(section)}
+                onClick={() => openDelete(section)}
               >
                 Xoá
               </button>
@@ -217,32 +235,6 @@ const KnowledgeTab = () => {
       </div>
 
       {renderBody()}
-
-      {isFormOpen && (
-        <Modal title={formSection ? 'Sửa mục kiến thức' : 'Mục kiến thức mới'} onClose={closeForm}>
-          <KnowledgeForm
-            refetch={refetch}
-            revisionId={data?.revisionId}
-            section={formSection || undefined}
-            onCancel={closeForm}
-            onSuccess={closeForm}
-          />
-        </Modal>
-      )}
-
-      {deleteSection && (
-        <Modal className='max-w-md' title='Xác nhận xoá' onClose={() => setDeleteSection(null)}>
-          <ConfirmDelete
-            refetch={refetch}
-            subject={deleteSection.title}
-            onCancel={() => setDeleteSection(null)}
-            onConfirm={() =>
-              EconomyApi.deleteSection({ startIndex: deleteSection.startIndex, endIndex: deleteSection.endIndex, revisionId: data?.revisionId })
-            }
-            onSuccess={() => setDeleteSection(null)}
-          />
-        </Modal>
-      )}
     </section>
   )
 }

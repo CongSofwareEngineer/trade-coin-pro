@@ -20,12 +20,13 @@
     "bignumber.js": "^9.3.1",
     "crypto-js": "^4.2.0",
     "lodash": "^4.17.21",
-    "next": "15.5.9",
+    "next": "16.4.6",
     "next-sitemap": "^4.2.3",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
     "viem": "^2.37.12",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/compat": "1.2.8",
